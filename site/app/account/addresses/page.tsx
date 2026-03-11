@@ -148,29 +148,36 @@ function AddressForm({
           <div>{field('phone', 'Phone', false, 'tel')}</div>
         </div>
 
-        {/* Default address selector */}
+        {/* Default address selector — independent toggle pills */}
         <div>
           <label className="block text-xs font-medium text-charcoal mb-2">Set as default</label>
-          <div className="flex flex-wrap gap-3">
-            {(['', 'shipping', 'billing', 'both'] as DefaultType[]).map((option) => {
-              const labels: Record<DefaultType, string> = {
-                '': 'None',
-                shipping: 'Default Shipping',
-                billing: 'Default Billing',
-                both: 'Default Shipping & Billing',
-              };
+          <div className="flex flex-wrap gap-2">
+            {([
+              { type: 'shipping' as const, label: 'Default Shipping', activeClass: 'bg-sage/15 text-sage border-sage/50' },
+              { type: 'billing' as const, label: 'Default Billing', activeClass: 'bg-terra/15 text-terra border-terra/50' },
+            ]).map(({ type, label, activeClass }) => {
+              const isOn = setDefault === type || setDefault === 'both';
               return (
-                <label key={option} className="flex items-center gap-1.5 text-sm text-charcoal cursor-pointer">
-                  <input
-                    type="radio"
-                    name="defaultType"
-                    value={option}
-                    checked={setDefault === option}
-                    onChange={() => setSetDefault(option)}
-                    className="accent-charcoal"
-                  />
-                  {labels[option]}
-                </label>
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    const shippingOn = setDefault === 'shipping' || setDefault === 'both';
+                    const billingOn = setDefault === 'billing' || setDefault === 'both';
+                    const newShipping = type === 'shipping' ? !shippingOn : shippingOn;
+                    const newBilling = type === 'billing' ? !billingOn : billingOn;
+                    setSetDefault(
+                      newShipping && newBilling ? 'both' :
+                      newShipping ? 'shipping' :
+                      newBilling ? 'billing' : ''
+                    );
+                  }}
+                  className={`px-3 py-1.5 text-xs rounded-full border transition-colors font-medium ${
+                    isOn ? activeClass : 'bg-white text-charcoal-light border-border hover:border-charcoal hover:text-charcoal'
+                  }`}
+                >
+                  {isOn ? '✓ ' : ''}{label}
+                </button>
               );
             })}
           </div>

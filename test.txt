@@ -1,0 +1,64 @@
+Using the browser, run through the following tests.  Fix any found errors and redeploy site
+
+1. Create order - registered user (username: jen@example.com password: 123)
+  a. As a registered user, buy a random collection of products and check out
+  b. make sure new order shows up under my account -> my orders
+
+2. Create order - anonymous
+  a. As anonymous (not logged in) user, buy a random collection of products and check out
+
+3. Create subscription
+  a. as a registered user, buy a subscription product and check out
+  b. make sure the newly created subscription shows up under 'my subscriptions'
+
+4. Create order with multiple ship-to addresses (split shipment)
+  a. As a registered user, add at least 2 products to the cart
+  b. At checkout, enable "Ship to multiple addresses"
+  c. Add a second shipping address
+  d. Assign at least one item to each address
+  e. Complete checkout
+  f. Verify the order appears under my account -> my orders
+
+5. My Account — Profile
+  a. Sign in as registered user
+  b. Go to My Account → Profile
+  c. Change first name to a new value and save
+  d. Verify "Profile updated successfully" message appears
+  e. Verify the updated name reflects in the account header/nav
+  f. Restore the original name and save again
+
+6. My Account — Orders
+  a. Sign in as registered user
+  b. Go to My Account → Orders
+  c. Verify at least one order is listed with order number, date, and total
+  d. Click "View details" on any order
+  e. Verify the order detail page loads with line items, shipping, and totals
+
+7. My Account — Subscriptions
+  a. Sign in as registered user
+  b. Go to My Account → Subscriptions
+  c. If subscriptions exist:
+     - Verify each subscription shows product name, schedule, status badge, and total
+     - Click "Pause" on an Active subscription; verify it changes to Paused
+     - Click "Resume" on the Paused subscription; verify it returns to Active
+  d. If no subscriptions: verify the empty state with "Shop Subscribe & Save" link
+
+8. My Account — Addresses
+  a. Sign in as registered user
+  b. Go to My Account → Addresses
+  c. Click "Add Address", fill in all fields (use nickname "Test Addr")
+  d. Verify the new address appears in the list
+  e. Click "Edit" on the new address
+  f. Change the city field; verify Default Shipping and Default Billing pills
+     can each be toggled independently (one on, both on, neither on)
+  g. Save and verify the updated city appears in the card
+  h. Click "Remove" on the test address and verify it disappears from the list
+
+9. My Account — Payment Methods
+  a. Sign in as registered user
+  b. Go to My Account → Payment Methods
+  c. Click "Add Card", fill in cardholder name, card number (4111 1111 1111 1111), expiry (12/28)
+  d. Verify the new Visa card appears in the list showing last 4 digits (1111)
+  e. If another card exists, click "Set Default" on the new card and verify the Default badge
+  f. Click "Remove" on the new card and verify it disappears from the list
+
