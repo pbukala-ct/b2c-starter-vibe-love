@@ -152,10 +152,66 @@ Neither file is committed to version control (covered by `.gitignore`).
 
 ---
 
+## End-to-End Testing
+
+The `test/` directory contains a [Playwright](https://playwright.dev) test suite that runs three end-to-end scenarios against the **live Netlify deployment**. Tests run serially (one worker) to avoid conflicts between tests that share the same commercetools customer account.
+
+### Test scenarios
+
+| # | File | What it covers |
+|---|---|---|
+| 1 | `tests/1-registered-checkout.spec.ts` | Sign in as Jennifer, add 3 products, go through checkout, verify the new order appears in **My Account → Orders** |
+| 2 | `tests/2-anonymous-checkout.spec.ts` | Add 2 products without signing in, complete a guest checkout, verify the confirmation page |
+| 3 | `tests/3-subscription-checkout.spec.ts` | Sign in, add a Subscribe & Save product, complete checkout, verify the subscription appears in **My Account → Subscriptions** |
+
+### Demo account
+
+All signed-in tests use a pre-seeded account:
+
+```
+Email:    jen@example.com
+Password: 123
+```
+
+Test card for checkout: `4111 1111 1111 1111` (any future expiry, any CVV).
+
+### Running the tests
+
+```bash
+cd test
+npm install          # first time only
+npx playwright install chromium   # first time only
+
+# Run against the live site (default)
+npx playwright test
+
+# Run against a local dev server
+BASE_URL=http://localhost:3000 npx playwright test
+
+# Open the interactive HTML report after a run
+npx playwright show-report
+```
+
+The `BASE_URL` environment variable controls the target. It defaults to `https://b2c-starter.netlify.app`.
+
+### Configuration
+
+Key settings in `test/playwright.config.ts`:
+
+| Setting | Value | Reason |
+|---|---|---|
+| `workers` | `1` | Prevents race conditions — Tests 1 & 3 share Jennifer's CT cart |
+| `timeout` | `180 000 ms` | Allows for Netlify cold-start latency on serverless functions |
+| `retries` | `1` | One automatic retry for transient network or timing issues |
+| `headless` | `true` | Runs without a visible browser window |
+
+---
+
 ## Tech Stack
 
 - [Next.js 14](https://nextjs.org) App Router + Server Components
 - [Tailwind CSS v4](https://tailwindcss.com) with `@theme` block (no config file)
 - [commercetools](https://commercetools.com) headless commerce platform
+- [Playwright](https://playwright.dev) for end-to-end testing
 - TypeScript throughout
 - Hosted on [Netlify](https://netlify.com)
