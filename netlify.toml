@@ -1,0 +1,15 @@
+# Netlify build configuration for Vibe Home
+# Push to the main branch triggers a deployment automatically
+# (once the GitHub repo is connected in the Netlify UI)
+
+[build]
+  base    = "site"
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Required for Next.js App Router (Server Components, API routes, etc.)
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
