@@ -58,8 +58,11 @@ test.describe('Test 1 — Registered user checkout', () => {
     console.log(`Order created: ${orderId}`);
 
     // ── 10. Check My Orders ───────────────────────────────────────────────────
+    // The orders page shows "Order #{orderNumber}" (a short sequential number),
+    // not the UUID.  The UUID appears in the "View details →" link href, so we
+    // assert on that link being present instead.
     await page.goto('/account/orders');
-    await expect(page.getByText(orderId!).first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator(`a[href*="${orderId}"]`).first()).toBeVisible({ timeout: 15_000 });
     console.log('✅ Order visible in My Orders');
   });
 

@@ -14,6 +14,15 @@ export async function GET(req: NextRequest) {
 
   try {
     const cart = await getCart(session.cartId);
+    // Discard non-Active carts (e.g. Ordered, Merged) so the client sees an
+    // empty cart rather than an unmodifiable one with stale items.
+    if (cart.cartState && cart.cartState !== 'Active') {
+      const newSession = { ...session, cartId: undefined };
+      const token = await createSessionToken(newSession);
+      const resp = NextResponse.json({ cart: null });
+      setSessionCookie(resp, token);
+      return resp;
+    }
     return NextResponse.json({ cart });
   } catch {
     // Cart not found - clear it

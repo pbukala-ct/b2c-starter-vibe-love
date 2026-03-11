@@ -23,9 +23,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let initialCart = null;
   if (session.cartId) {
     try {
-      initialCart = await getCart(session.cartId);
+      const cart = await getCart(session.cartId);
+      // Only expose Active carts to the client. Ordered/Merged carts should
+      // not appear in the UI — GET /api/cart will clear the stale cartId.
+      if (cart.cartState === 'Active') {
+        initialCart = cart;
+      }
     } catch {
-      // Cart not found
+      // Cart not found — initialCart stays null
     }
   }
 
