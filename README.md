@@ -1,5 +1,7 @@
 # Vibe Home
 
+> **FORK THIS REPO FIRST!** Do not clone directly — click the **Fork** button at the top-right of this page to create your own copy, then clone your fork. This ensures you have your own repository to push changes to and connect to your own Netlify site for automatic deployments.
+
 A full-featured B2C ecommerce storefront built with **Next.js 14 App Router**, **TypeScript**, **Tailwind CSS v4**, and **commercetools** as the headless commerce backend.
 
 Features include product catalog & search, cart, checkout with Subscribe & Save, customer accounts, address book, order history, and recurring order management.
@@ -9,7 +11,7 @@ Features include product catalog & search, cart, checkout with Subscribe & Save,
 ## Project Structure
 
 ```
-vibe2/
+b2c-starter/
 ├── site/          # Next.js storefront
 ├── tools/         # Admin scripts for CT setup and data exploration
 ├── netlify.toml   # Netlify build configuration
@@ -26,41 +28,27 @@ vibe2/
 
 ---
 
-## Step 1 — Create the Storefront API Client
+## Step 1 — Create the Storefront API Client and Save the `.env` File
 
-In the CT Merchant Center go to **Settings → Developer → API Clients** and create a new client named `vibe-storefront`. Grant **only** the following scopes — do **not** select `manage_project`:
+In the CT Merchant Center go to **Settings → Developer → API Clients** and create a new API Client.  
+
+Select **Frontend B2C** as the template, and add these additional scopes:
 
 | Scope | Used for |
 |---|---|
-| `view_products` | Product catalog search and categories |
-| `view_project_settings` | Country and currency configuration |
-| `manage_customers` | Sign-in, registration, profile, addresses |
-| `manage_orders` | Cart, checkout, order history, shipping methods |
 | `manage_payments` | Payment records at checkout |
 | `manage_recurring_orders` | Subscribe & Save orders and recurrence policies |
 | `manage_custom_objects` | Stored payment methods (masked card records) |
 
-After creating the client, copy the **Client ID** and **Client Secret** — they are shown only once.
+After creating the client, the Merchant Center will show the credentials. Download the **Environment Variables (.env) file** and save it as `site/.env` in your project.
 
----
-
-## Step 2 — Create `site/.env`
-
-Create a file named `.env` inside the `site/` directory:
+Then open `site/.env` and add this line at the bottom:
 
 ```
-CTP_PROJECT_KEY=your-project-key
-CTP_CLIENT_ID=your-client-id
-CTP_CLIENT_SECRET=your-client-secret
-CTP_AUTH_URL=https://auth.us-central1.gcp.commercetools.com
-CTP_API_URL=https://api.us-central1.gcp.commercetools.com
-CTP_SCOPES=view_products:your-project-key view_project_settings:your-project-key manage_customers:your-project-key manage_orders:your-project-key manage_payments:your-project-key manage_recurring_orders:your-project-key manage_custom_objects:your-project-key
 SESSION_SECRET=replace-with-a-long-random-string
 ```
 
-**Region:** The URLs above are for US-Central (GCP). See [CT region endpoints](https://docs.commercetools.com/api/general-concepts#regions) if your project is hosted elsewhere.
-
-**SESSION_SECRET:** Must be a long, unpredictable string used to sign session cookies. Generate one with:
+Generate a value for `SESSION_SECRET` with:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
@@ -68,7 +56,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ---
 
-## Step 3 — Install and Run Locally
+## Step 2 — Install and Run Locally
 
 ```bash
 cd site
@@ -76,7 +64,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open http://localhost:8888
 
 ---
 
@@ -86,7 +74,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### First deploy
 
-1. Push this repository to GitHub.
+1. Push your new repository to GitHub.
 2. In the [Netlify dashboard](https://app.netlify.com), click **Add new site → Import an existing project**.
 3. Connect to GitHub and select this repository.
 4. Netlify will detect `netlify.toml` and pre-fill the build settings — no changes needed.
@@ -114,24 +102,19 @@ Once the GitHub repo is connected, every push to the **main** branch automatical
 
 The `tools/` directory contains Node.js scripts for catalog exploration, tax setup, shipping configuration, and other administrative tasks. These use a **separate CT API client** with full `manage_project` scope and should never be mixed with the storefront credentials.
 
+You will likely create your own tools -- it's super easy, just ask Claude Code to write a tool to perform a certain task and put it in the tools directory.  Claude Code will start by exploring what's there and build (and run) whatever you ask it to.  
+
+This is much more powerful and useful than hooking up MCP, for example, and has the advantage of being repeatable / deterministic.
+
 The shared admin CT client lives in **`tools/ct-admin.mjs`** and is imported by all tool scripts.
 
 ### Create the admin credentials
 
-Create **`tools/.env`**:
+Create an API Client with the **Admin client** scope and download to **`tools/.env`**
 
-```
-CTP_PROJECT_KEY=your-project-key
-CTP_CLIENT_ID=your-admin-client-id
-CTP_CLIENT_SECRET=your-admin-client-secret
-CTP_AUTH_URL=https://auth.us-central1.gcp.commercetools.com
-CTP_API_URL=https://api.us-central1.gcp.commercetools.com
-CTP_SCOPES=manage_project:your-project-key
-```
+Do NOT use an admin client for `site/.env`.
 
-Create a **separate** API client in the CT Merchant Center with `manage_project` scope for use with these tools. Never copy this credential into `site/.env`.
-
-### Run a tool
+### Run a tool -- example
 
 ```bash
 cd tools
@@ -154,56 +137,13 @@ Neither file is committed to version control (covered by `.gitignore`).
 
 ## End-to-End Testing
 
-The `test/` directory contains a [Playwright](https://playwright.dev) test suite that runs three end-to-end scenarios against the **live Netlify deployment**. Tests run serially (one worker) to avoid conflicts between tests that share the same commercetools customer account.
+**Testing is finally easy and useful!!!**
 
-### Test scenarios
+I have a high-level description of tests in test.txt.   If I change this file, I simply tell Claude Code:
 
-| # | File | What it covers |
-|---|---|---|
-| 1 | `tests/1-registered-checkout.spec.ts` | Sign in as Jennifer, add 3 products, go through checkout, verify the new order appears in **My Account → Orders** |
-| 2 | `tests/2-anonymous-checkout.spec.ts` | Add 2 products without signing in, complete a guest checkout, verify the confirmation page |
-| 3 | `tests/3-subscription-checkout.spec.ts` | Sign in, add a Subscribe & Save product, complete checkout, verify the subscription appears in **My Account → Subscriptions** |
+"Update the tests in the test directory to match what's in test.txt, then run those tests"
 
-### Demo account
-
-All signed-in tests use a pre-seeded account:
-
-```
-Email:    jen@example.com
-Password: 123
-```
-
-Test card for checkout: `4111 1111 1111 1111` (any future expiry, any CVV).
-
-### Running the tests
-
-```bash
-cd test
-npm install          # first time only
-npx playwright install chromium   # first time only
-
-# Run against the live site (default)
-npx playwright test
-
-# Run against a local dev server
-BASE_URL=http://localhost:3000 npx playwright test
-
-# Open the interactive HTML report after a run
-npx playwright show-report
-```
-
-The `BASE_URL` environment variable controls the target. It defaults to `https://b2c-starter.netlify.app`.
-
-### Configuration
-
-Key settings in `test/playwright.config.ts`:
-
-| Setting | Value | Reason |
-|---|---|---|
-| `workers` | `1` | Prevents race conditions — Tests 1 & 3 share Jennifer's CT cart |
-| `timeout` | `180 000 ms` | Allows for Netlify cold-start latency on serverless functions |
-| `retries` | `1` | One automatic retry for transient network or timing issues |
-| `headless` | `true` | Runs without a visible browser window |
+The tests use browser automation (Playwright)
 
 ---
 
