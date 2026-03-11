@@ -42,6 +42,7 @@ export default function SubscriptionsPage() {
   const [subscriptions, setSubscriptions] = useState<RecurringOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSubscriptions();
@@ -59,6 +60,7 @@ export default function SubscriptionsPage() {
 
   async function handleAction(id: string, action: 'pause' | 'resume' | 'cancel') {
     setActionLoading(id + action);
+    setActionError(null);
     try {
       const res = await fetch(`/api/account/subscriptions/${id}`, {
         method: 'PUT',
@@ -67,7 +69,12 @@ export default function SubscriptionsPage() {
       });
       if (res.ok) {
         await fetchSubscriptions();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setActionError(d.error || `Failed to ${action} subscription`);
       }
+    } catch {
+      setActionError(`Failed to ${action} subscription`);
     } finally {
       setActionLoading(null);
     }
@@ -87,6 +94,12 @@ export default function SubscriptionsPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold text-charcoal mb-6">Subscriptions</h1>
+
+      {actionError && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-sm">
+          {actionError}
+        </div>
+      )}
 
       {subscriptions.length === 0 ? (
         <div className="bg-white border border-border rounded-sm p-12 text-center">
