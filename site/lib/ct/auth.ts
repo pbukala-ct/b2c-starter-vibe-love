@@ -69,6 +69,10 @@ export async function updateCustomer(
   return ct('POST', `/customers/${customerId}`, { version, actions });
 }
 
+export async function getRecurringOrderById(recurringOrderId: string) {
+  return ct('GET', `/recurring-orders/${recurringOrderId}`);
+}
+
 export async function updateRecurringOrder(
   recurringOrderId: string,
   version: number,

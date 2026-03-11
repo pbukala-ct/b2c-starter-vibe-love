@@ -19,13 +19,16 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { firstName, lastName, version } = body;
+  const { firstName, lastName } = body;
+
+  // Fetch the current version to satisfy CT's optimistic concurrency check
+  const current = await getCustomerById(session.customerId);
 
   const actions = [];
   if (firstName) actions.push({ action: 'setFirstName', firstName });
   if (lastName) actions.push({ action: 'setLastName', lastName });
 
-  const customer = await updateCustomer(session.customerId, version, actions);
+  const customer = await updateCustomer(session.customerId, current.version, actions);
 
   const newSession = {
     ...session,

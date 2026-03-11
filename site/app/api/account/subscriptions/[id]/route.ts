@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
-import { updateRecurringOrder } from '@/lib/ct/auth';
+import { getRecurringOrderById, updateRecurringOrder } from '@/lib/ct/auth';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await req.json();
-  const { action, version } = body;
+  const { action } = body;
 
   const session = await getSession();
   if (!session.customerId) {
@@ -23,6 +23,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
 
-  const result = await updateRecurringOrder(id, version, [ctAction]);
+  // Fetch current version to satisfy CT's optimistic concurrency check
+  const current = await getRecurringOrderById(id);
+  const result = await updateRecurringOrder(id, current.version, [ctAction]);
   return NextResponse.json({ subscription: result });
 }
