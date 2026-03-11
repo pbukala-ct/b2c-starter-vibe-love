@@ -104,8 +104,9 @@ export default function SubscriptionsPage() {
             const isActive = sub.recurringOrderState === 'Active';
             const isPaused = sub.recurringOrderState === 'Paused';
             const isCancelled = sub.recurringOrderState === 'Cancelled';
-            const total = sub.lineItems.reduce((sum, i) => sum + i.totalPrice.centAmount, 0);
-            const currency = sub.lineItems[0]?.totalPrice.currencyCode || 'USD';
+            const lineItems: typeof sub.lineItems = sub.lineItems ?? [];
+            const total = lineItems.reduce((sum, i) => sum + i.totalPrice.centAmount, 0);
+            const currency = lineItems[0]?.totalPrice.currencyCode || 'USD';
 
             return (
               <div key={sub.id} className="bg-white border border-border rounded-sm p-5">
@@ -127,7 +128,7 @@ export default function SubscriptionsPage() {
                 </div>
 
                 <div className="space-y-1 mb-4">
-                  {sub.lineItems.map(item => (
+                  {lineItems.map(item => (
                     <div key={item.id} className="flex justify-between text-sm">
                       <span className="text-charcoal-light">
                         {item.name['en-US'] || Object.values(item.name)[0]} × {item.quantity}

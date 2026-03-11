@@ -21,6 +21,12 @@ export async function POST(req: NextRequest) {
   if (cartId) {
     try {
       cart = await getCart(cartId);
+      // Discard carts that are no longer active (e.g. already ordered / merged).
+      // Attempting to addLineItem on an Ordered cart throws a CT error.
+      if (cart.cartState && cart.cartState !== 'Active') {
+        cart = undefined;
+        cartId = undefined;
+      }
     } catch {
       cartId = undefined;
     }

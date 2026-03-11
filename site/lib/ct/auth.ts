@@ -57,7 +57,7 @@ export async function getCustomerOrders(customerId: string, limit = 20, offset =
 export async function getCustomerRecurringOrders(customerId: string) {
   return ct(
     'GET',
-    `/recurring-orders?where=${encodeURIComponent(`customer(id = "${customerId}")`)}&limit=50`
+    `/recurring-orders?where=${encodeURIComponent(`customer(id = "${customerId}")`)}&limit=50&expand=originOrder`
   );
 }
 

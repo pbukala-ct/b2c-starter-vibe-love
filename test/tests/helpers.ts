@@ -112,7 +112,7 @@ export async function addProductToCart(page: Page, index = 0): Promise<string> {
 
   // Click "Add to Cart" and wait for the network round-trip to complete.
   // Promise.all ensures waitForResponse is registered *before* the click fires.
-  await Promise.all([
+  const [response] = await Promise.all([
     page.waitForResponse(
       (resp) => resp.url().includes('/api/cart/items') && resp.request().method() === 'POST',
       { timeout: 60_000 },
@@ -120,9 +120,27 @@ export async function addProductToCart(page: Page, index = 0): Promise<string> {
     page.getByRole('button', { name: /add to cart/i }).click(),
   ]);
 
-  // A short pause lets Chrome finish processing the Set-Cookie response header
-  // so the session cookie (with the cartId) is persisted before we navigate away.
-  await page.waitForTimeout(500);
+  // Log the response status and cart ID for diagnostics.
+  const status = response.status();
+  if (status === 200) {
+    try {
+      const body = await response.json();
+      const cartId = body.cart?.id;
+      const itemCount = body.cart?.lineItems?.length ?? '?';
+      console.log(`  → POST /api/cart/items ${status} | cartId=${cartId} | lineItems=${itemCount}`);
+    } catch {
+      console.log(`  → POST /api/cart/items ${status} (could not parse body)`);
+    }
+  } else {
+    const bodyText = await response.text().catch(() => '(no body)');
+    console.log(`  → POST /api/cart/items ${status} — ${bodyText.slice(0, 200)}`);
+  }
+
+  // Give the browser extra time to fully process the Set-Cookie response header
+  // and store it in the cookie jar before the next page.goto() fires.
+  // 2 s is generous enough for Netlify cold starts and avoids the race condition
+  // where Chromium processes Set-Cookie asynchronously after the fetch resolves.
+  await page.waitForTimeout(2_000);
 
   return productName;
 }
