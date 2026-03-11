@@ -1,6 +1,9 @@
 # Vibe Home
 
-> **FORK THIS REPO FIRST!** Do not clone directly — click the **Fork** button at the top-right of this page to create your own copy, then clone your fork. This ensures you have your own repository to push changes to and connect to your own Netlify site for automatic deployments.
+> [!CAUTION]
+> **🍴 FORK THIS REPO — DO NOT CLONE IT DIRECTLY**
+>
+> You **must** fork this repository before doing anything else. Click the **Fork** button at the top-right of this page to create your own copy, then clone your fork. If you clone the original repo directly, you won't be able to push changes or connect to your own Netlify site for automatic deployments.
 
 A full-featured B2C ecommerce storefront built with **Next.js 14 App Router**, **TypeScript**, **Tailwind CSS v4**, and **commercetools** as the headless commerce backend.
 
@@ -12,9 +15,12 @@ Features include product catalog & search, cart, checkout with Subscribe & Save,
 
 ```
 b2c-starter/
-├── site/          # Next.js storefront
-├── tools/         # Admin scripts for CT setup and data exploration
-├── netlify.toml   # Netlify build configuration
+├── site/               # Next.js storefront (app/, components/, lib/, context/, hooks/)
+├── test/               # Playwright E2E tests
+├── tools/              # Admin scripts for CT setup and data exploration
+├── initial_prompt.txt  # The prompt that was used initially to generate the site
+├── test.txt            # Human-readable test descriptions (drives E2E test generation)
+├── netlify.toml        # Netlify build configuration
 └── .gitignore
 ```
 
@@ -24,7 +30,7 @@ b2c-starter/
 
 - Node.js 18+
 - npm 9+
-- A commercetools project in the US region ([sign up free](https://commercetools.com))
+- A commercetools project
 
 ---
 
