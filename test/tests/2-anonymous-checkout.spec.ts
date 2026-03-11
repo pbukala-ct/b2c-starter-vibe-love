@@ -29,7 +29,9 @@ test.describe('Test 2 — Anonymous user checkout', () => {
     }
 
     // ── 4. Proceed to checkout ────────────────────────────────────────────────
-    await page.getByRole('link', { name: /checkout/i }).first().click();
+    // Scope to <main> so we click the cart page's button, not the MiniCart's
+    // off-screen "Checkout" link that lives in the header DOM.
+    await page.locator('main').getByRole('link', { name: /checkout/i }).click();
     await expect(page).toHaveURL(/\/checkout/);
 
     // Confirm no "Welcome back" / pre-filled account info — this is anonymous

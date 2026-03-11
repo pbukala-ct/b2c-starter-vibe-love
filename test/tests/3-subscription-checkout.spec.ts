@@ -31,18 +31,23 @@ test.describe('Test 3 — Subscription checkout', () => {
     }
 
     // ── 4. Add to cart ────────────────────────────────────────────────────────
-    await page.getByRole('button', { name: /subscribe.*add|add to cart/i }).click();
-    await page.waitForFunction(() => {
-      const badge = document.querySelector('[aria-label*="Cart"]');
-      return badge && !/0 items/.test(badge.textContent || '');
-    }, { timeout: 10_000 });
+    // Wait for the POST /api/cart/items response to confirm the item was saved.
+    await Promise.all([
+      page.waitForResponse(
+        (resp) => resp.url().includes('/api/cart/items') && resp.request().method() === 'POST',
+        { timeout: 10_000 },
+      ),
+      page.getByRole('button', { name: /subscribe.*add|add to cart/i }).click(),
+    ]);
 
     // ── 5. Verify subscription label in cart ─────────────────────────────────
     await page.goto('/cart');
     await expect(page.getByText(/monthly|weekly|bi-weekly|subscribe/i).first()).toBeVisible();
 
     // ── 6. Proceed to checkout ────────────────────────────────────────────────
-    await page.getByRole('link', { name: /checkout/i }).first().click();
+    // Scope to <main> so we click the cart page's button, not the MiniCart's
+    // off-screen "Checkout" link that lives in the header DOM.
+    await page.locator('main').getByRole('link', { name: /checkout/i }).click();
     await expect(page).toHaveURL(/\/checkout/);
 
     // ── 7. Fill shipping ─────────────────────────────────────────────────────

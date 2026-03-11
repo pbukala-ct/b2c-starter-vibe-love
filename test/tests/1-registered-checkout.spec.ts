@@ -5,7 +5,7 @@
  * - Verify new order appears under My Account → My Orders
  */
 import { test, expect } from '@playwright/test';
-import { signIn, addProductToCart, fillShipping, fillPayment } from './helpers';
+import { signIn, clearCart, addProductToCart, fillShipping, fillPayment } from './helpers';
 
 test.describe('Test 1 — Registered user checkout', () => {
 
@@ -13,6 +13,10 @@ test.describe('Test 1 — Registered user checkout', () => {
     // ── 1. Sign in ────────────────────────────────────────────────────────────
     await signIn(page);
     await expect(page).toHaveURL(/\/$|\/account/);
+
+    // ── 1b. Clear any leftover cart items from previous test runs ─────────────
+    // Jennifer's cart persists in the CT backend, so we start fresh each time.
+    await clearCart(page);
 
     // ── 2. Add several products ───────────────────────────────────────────────
     const productNames: string[] = [];
@@ -29,7 +33,9 @@ test.describe('Test 1 — Registered user checkout', () => {
     }
 
     // ── 4. Proceed to checkout ────────────────────────────────────────────────
-    await page.getByRole('link', { name: /checkout/i }).first().click();
+    // Scope to <main> so we click the cart page's button, not the MiniCart's
+    // off-screen "Checkout" link that lives in the header DOM.
+    await page.locator('main').getByRole('link', { name: /checkout/i }).click();
     await expect(page).toHaveURL(/\/checkout/);
 
     // ── 5. Fill shipping ─────────────────────────────────────────────────────

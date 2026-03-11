@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
-  timeout: 60_000,
+  timeout: 180_000,   // 3 min — allows for Netlify serverless cold starts
   retries: 1,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
