@@ -1,0 +1,53 @@
+Build an ecommerce website, using commercetools as the backend.
+API Client is in .env
+
+Put the website in the site directory
+use the tools directory for any configuration scripts or scripts to access data for testing
+
+Site will use the product catalog that exists in the ct project identified by the .env file.
+
+create appropriate branding for a b2c site that sells the products in this catalog
+
+There should be no dummy or mock data in the site, all data is "live", coming from commercetools.
+
+If you need to create additional data, do so by writing scripts in the tools directory
+
+The site should support typical B2C commerce user experiences, with some additional capabilities, listed below
+
+Required Features:
+- support both logged-in user and guest checkout
+- search (use commercetools Product Search):
+  - search should be used both for search bar and category view (to allow for filtering on categories)
+  - provide a representative set of filters based on the attributes in the product catalog.  Common attributes are size, color, etc.
+- make sure the full category hierarchy is expressed in the mega menu 
+
+- subscription support (commercetools term: recurring orders)
+  - create several recurrence policies in project settings
+  - modify one of the products in the catalog to have prices with recurrence policies
+  - provide UI on the PDP that, if a product has recurring prices, to show a 'Subscribe & Save' option 
+  - prices should be lower for higher-frequency recurrences
+  - make sure when adding this item to cart, that the cart properly captures this recurrence data (no custom fields)
+  - cart should show that this item is a subscription item (both mini-cart and full cart view)
+
+- cart/checkout features:
+  - for logged-in users, make sure cart's customerId is set to user's id
+  - when adding to cart, have the mini-cart fly out for a few seconds
+  - support split shipments using commercetools' ootb support for multiple shipments (create cart with shippingMode: Multiple)
+    - hint: use addItemShippingAddress, and setLineItemShippingDetails
+  - allow splitting a single line item's quantities across multiple shipping addresses
+  - put an auto-fill button on the payment (credit card) form to fill in a dummy credit card:  4242 4242 4242 4242 and other fields
+
+- my account features (for logged-in users)
+  - profile / account settings
+  - my orders
+  - my subscriptions (shows recurring orders for this user)
+    - give user option to pause / cancel a subscription
+  - my addresses
+  - my payments
+  - upon logout, clear cart from session.
+
+- international features
+  - have a country drop-down in the header which lists all the countries configured in the commercetools project 
+    - use that country's flag
+  - if there is more than one language in a country configured in the project, then also list language options
+  - set the site's currency based on the country selected (all euro-zone countries use EUR, etc.)

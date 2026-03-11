@@ -10,6 +10,7 @@ interface RecurringOrder {
   recurringOrderState: string;
   schedule: { type: string; value: number; intervalUnit: string };
   nextOrderDate?: string;
+  skipConfiguration?: { totalToSkip: number; skipped: number; lastSkippedAt?: string };
   lineItems: {
     id: string;
     name: Record<string, string>;
@@ -30,12 +31,22 @@ const STATE_COLORS: Record<string, string> = {
   Cancelled: 'bg-red-50 text-red-700 border-red-200',
 };
 
+const SCHEDULES = [
+  { label: 'Monthly',   schedule: { type: 'standard', value: 1, intervalUnit: 'months' } },
+  { label: 'Bi-weekly', schedule: { type: 'standard', value: 2, intervalUnit: 'weeks' } },
+  { label: 'Weekly',    schedule: { type: 'standard', value: 1, intervalUnit: 'weeks' } },
+];
+
 function scheduleLabel(schedule: { type: string; value: number; intervalUnit: string }) {
   const unit = schedule.intervalUnit?.toLowerCase();
   if (unit === 'weeks' && schedule.value === 1) return 'Weekly';
   if (unit === 'weeks' && schedule.value === 2) return 'Bi-weekly';
   if (unit === 'months' && schedule.value === 1) return 'Monthly';
   return `Every ${schedule.value} ${unit}`;
+}
+
+function isCurrentSchedule(sub: RecurringOrder, s: typeof SCHEDULES[0]) {
+  return sub.schedule.value === s.schedule.value && sub.schedule.intervalUnit === s.schedule.intervalUnit;
 }
 
 export default function SubscriptionsPage() {
@@ -58,14 +69,14 @@ export default function SubscriptionsPage() {
     }
   }
 
-  async function handleAction(id: string, action: 'pause' | 'resume' | 'cancel') {
+  async function handleAction(id: string, action: string, payload?: Record<string, unknown>) {
     setActionLoading(id + action);
     setActionError(null);
     try {
       const res = await fetch(`/api/account/subscriptions/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, ...payload }),
       });
       if (res.ok) {
         await fetchSubscriptions();
@@ -121,6 +132,9 @@ export default function SubscriptionsPage() {
             const total = lineItems.reduce((sum, i) => sum + i.totalPrice.centAmount, 0);
             const currency = lineItems[0]?.totalPrice.currencyCode || 'USD';
 
+            const skipCfg = sub.skipConfiguration;
+            const pendingSkips = skipCfg ? skipCfg.totalToSkip - skipCfg.skipped : 0;
+
             return (
               <div key={sub.id} className="bg-white border border-border rounded-sm p-5">
                 <div className="flex items-start justify-between mb-3">
@@ -130,6 +144,11 @@ export default function SubscriptionsPage() {
                         {STATE_LABELS[sub.recurringOrderState] || sub.recurringOrderState}
                       </span>
                       <span className="text-xs text-charcoal-light">{scheduleLabel(sub.schedule)}</span>
+                      {pendingSkips > 0 && (
+                        <span className="text-xs bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-0.5 rounded-full">
+                          Skipping {pendingSkips} order{pendingSkips > 1 ? 's' : ''}
+                        </span>
+                      )}
                     </div>
                     {sub.nextOrderDate && !isCancelled && (
                       <p className="text-xs text-charcoal-light">
@@ -152,36 +171,75 @@ export default function SubscriptionsPage() {
                 </div>
 
                 {!isCancelled && (
-                  <div className="flex gap-2 pt-3 border-t border-border">
-                    {isActive && (
+                  <div className="pt-3 border-t border-border space-y-3">
+                    {/* Action buttons */}
+                    <div className="flex flex-wrap gap-2">
+                      {isActive && (
+                        <button
+                          onClick={() => handleAction(sub.id, 'pause')}
+                          disabled={actionLoading === sub.id + 'pause'}
+                          className="text-xs border border-border text-charcoal-light hover:text-charcoal hover:border-charcoal px-3 py-1.5 rounded-sm transition-colors disabled:opacity-50"
+                        >
+                          {actionLoading === sub.id + 'pause' ? 'Pausing…' : 'Pause'}
+                        </button>
+                      )}
+                      {isPaused && (
+                        <button
+                          onClick={() => handleAction(sub.id, 'resume')}
+                          disabled={actionLoading === sub.id + 'resume'}
+                          className="text-xs border border-sage text-sage hover:bg-sage/10 px-3 py-1.5 rounded-sm transition-colors disabled:opacity-50"
+                        >
+                          {actionLoading === sub.id + 'resume' ? 'Resuming…' : 'Resume'}
+                        </button>
+                      )}
+                      {isActive && (
+                        <button
+                          onClick={() => {
+                            const currentPending = skipCfg ? skipCfg.totalToSkip - skipCfg.skipped : 0;
+                            const newTotal = (skipCfg?.totalToSkip ?? 0) + 1;
+                            handleAction(sub.id, 'skip', { totalToSkip: currentPending > 0 ? newTotal : 1 });
+                          }}
+                          disabled={actionLoading === sub.id + 'skip'}
+                          className="text-xs border border-border text-charcoal-light hover:text-charcoal hover:border-charcoal px-3 py-1.5 rounded-sm transition-colors disabled:opacity-50"
+                        >
+                          {actionLoading === sub.id + 'skip' ? 'Skipping…' : 'Skip next order'}
+                        </button>
+                      )}
                       <button
-                        onClick={() => handleAction(sub.id, 'pause')}
-                        disabled={actionLoading === sub.id + 'pause'}
-                        className="text-xs border border-border text-charcoal-light hover:text-charcoal hover:border-charcoal px-3 py-1.5 rounded-sm transition-colors disabled:opacity-50"
+                        onClick={() => {
+                          if (confirm('Are you sure you want to cancel this subscription?')) {
+                            handleAction(sub.id, 'cancel');
+                          }
+                        }}
+                        disabled={actionLoading === sub.id + 'cancel'}
+                        className="text-xs text-red-500 hover:text-red-700 px-3 py-1.5 rounded-sm transition-colors disabled:opacity-50"
                       >
-                        {actionLoading === sub.id + 'pause' ? 'Pausing…' : 'Pause'}
+                        {actionLoading === sub.id + 'cancel' ? 'Cancelling…' : 'Cancel subscription'}
                       </button>
-                    )}
-                    {isPaused && (
-                      <button
-                        onClick={() => handleAction(sub.id, 'resume')}
-                        disabled={actionLoading === sub.id + 'resume'}
-                        className="text-xs border border-sage text-sage hover:bg-sage/10 px-3 py-1.5 rounded-sm transition-colors disabled:opacity-50"
-                      >
-                        {actionLoading === sub.id + 'resume' ? 'Resuming…' : 'Resume'}
-                      </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        if (confirm('Are you sure you want to cancel this subscription?')) {
-                          handleAction(sub.id, 'cancel');
-                        }
-                      }}
-                      disabled={actionLoading === sub.id + 'cancel'}
-                      className="text-xs text-red-500 hover:text-red-700 px-3 py-1.5 rounded-sm transition-colors disabled:opacity-50"
-                    >
-                      {actionLoading === sub.id + 'cancel' ? 'Cancelling…' : 'Cancel subscription'}
-                    </button>
+                    </div>
+
+                    {/* Schedule pills */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-charcoal-light">Change schedule:</span>
+                      {SCHEDULES.map(s => {
+                        const isCurrent = isCurrentSchedule(sub, s);
+                        const loadKey = sub.id + 'setSchedule' + s.label;
+                        return (
+                          <button
+                            key={s.label}
+                            onClick={() => !isCurrent && handleAction(sub.id, 'setSchedule', { schedule: s.schedule })}
+                            disabled={isCurrent || actionLoading === loadKey}
+                            className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                              isCurrent
+                                ? 'bg-charcoal text-white border-charcoal cursor-default'
+                                : 'bg-white text-charcoal-light border-border hover:border-charcoal hover:text-charcoal'
+                            } disabled:opacity-60`}
+                          >
+                            {actionLoading === loadKey ? '…' : s.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>

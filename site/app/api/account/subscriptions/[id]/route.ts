@@ -12,19 +12,30 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  let ctAction;
+  let ctAction: Record<string, unknown>;
   if (action === 'pause') {
     ctAction = { action: 'setRecurringOrderState', recurringOrderState: 'Paused' };
   } else if (action === 'resume') {
     ctAction = { action: 'setRecurringOrderState', recurringOrderState: 'Active' };
   } else if (action === 'cancel') {
     ctAction = { action: 'setRecurringOrderState', recurringOrderState: 'Cancelled' };
+  } else if (action === 'skip') {
+    const totalToSkip = (body.totalToSkip as number) || 1;
+    ctAction = { action: 'setOrderSkipConfiguration', skipConfigurationInputDraft: { Counter: { totalToSkip } } };
+  } else if (action === 'setSchedule') {
+    const { schedule } = body;
+    ctAction = { action: 'setSchedule', schedule };
   } else {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
 
-  // Fetch current version to satisfy CT's optimistic concurrency check
-  const current = await getRecurringOrderById(id);
-  const result = await updateRecurringOrder(id, current.version, [ctAction]);
-  return NextResponse.json({ subscription: result });
+  try {
+    // Fetch current version to satisfy CT's optimistic concurrency check
+    const current = await getRecurringOrderById(id);
+    const result = await updateRecurringOrder(id, current.version, [ctAction]);
+    return NextResponse.json({ subscription: result });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Failed to update subscription';
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
