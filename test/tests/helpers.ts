@@ -104,11 +104,30 @@ export async function addProductToCart(page: Page, index = 0): Promise<string> {
 
   const productName = await page.locator('h1').first().innerText();
 
+  // Pre-flight: ask the server what cart it currently sees for this browser session.
+  // page.evaluate uses the browser's real cookie jar (including httpOnly cookies).
+  const preFlightCart = await page.evaluate(async () => {
+    const res = await fetch('/api/cart');
+    const data = await res.json() as { cart: { id: string; cartState: string; lineItems: { length?: number } | null } | null };
+    return { id: data.cart?.id, state: data.cart?.cartState, items: data.cart?.lineItems?.length };
+  }).catch((e: Error) => ({ error: String(e) }));
+  console.log(`  → Pre-flight GET /api/cart: ${JSON.stringify(preFlightCart)}`);
+
   // If the product has a Subscribe & Save widget, make sure "One-time" is selected
   const oneTime = page.getByRole('radio', { name: /one-time/i });
   if (await oneTime.isVisible({ timeout: 3_000 }).catch(() => false)) {
     await oneTime.click();
   }
+
+  // Intercept the outgoing POST request to inspect what cookies are sent.
+  const requestSpy = (request: import('@playwright/test').Request) => {
+    if (request.url().includes('/api/cart/items') && request.method() === 'POST') {
+      const cookie = request.headers()['cookie'] || '(none)';
+      const hasSession = cookie.includes('vibe-session');
+      console.log(`  → POST request cookie: ${hasSession ? 'vibe-session=<present>' : 'NO vibe-session'} | full: ${cookie.slice(0, 120)}`);
+    }
+  };
+  page.on('request', requestSpy);
 
   // Click "Add to Cart" and wait for the network round-trip to complete.
   // Promise.all ensures waitForResponse is registered *before* the click fires.
@@ -120,14 +139,22 @@ export async function addProductToCart(page: Page, index = 0): Promise<string> {
     page.getByRole('button', { name: /add to cart/i }).click(),
   ]);
 
-  // Log the response status and cart ID for diagnostics.
+  page.off('request', requestSpy);
+
+  // Log the response status, cart ID, and server-side debug info.
   const status = response.status();
   if (status === 200) {
     try {
       const body = await response.json();
       const cartId = body.cart?.id;
       const itemCount = body.cart?.lineItems?.length ?? '?';
-      console.log(`  → POST /api/cart/items ${status} | cartId=${cartId} | lineItems=${itemCount}`);
+      const dbg = body.debug ?? {};
+      console.log(
+        `  → POST /api/cart/items ${status} | cartId=${cartId} | lineItems=${itemCount}` +
+        ` | srv_received=${dbg.receivedCartId} | srv_fetchResult=${dbg.cartFetchResult}` +
+        ` | srv_used=${dbg.usedCartId}` +
+        (dbg.cartCreatedReason ? ` | created_reason=${dbg.cartCreatedReason}` : '')
+      );
     } catch {
       console.log(`  → POST /api/cart/items ${status} (could not parse body)`);
     }
@@ -138,9 +165,16 @@ export async function addProductToCart(page: Page, index = 0): Promise<string> {
 
   // Give the browser extra time to fully process the Set-Cookie response header
   // and store it in the cookie jar before the next page.goto() fires.
-  // 2 s is generous enough for Netlify cold starts and avoids the race condition
-  // where Chromium processes Set-Cookie asynchronously after the fetch resolves.
   await page.waitForTimeout(2_000);
+
+  // Diagnostic: check whether the vibe-session cookie was actually stored.
+  const allCookies = await page.context().cookies();
+  const sessionCookie = allCookies.find(c => c.name === 'vibe-session');
+  if (sessionCookie) {
+    console.log(`  → vibe-session cookie present (httpOnly=${sessionCookie.httpOnly}, secure=${sessionCookie.secure}, sameSite=${sessionCookie.sameSite})`);
+  } else {
+    console.log('  → WARNING: vibe-session cookie NOT FOUND in browser context!');
+  }
 
   return productName;
 }
