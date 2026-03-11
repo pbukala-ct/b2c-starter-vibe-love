@@ -55,8 +55,9 @@ export default function AccountProfilePage() {
         <form onSubmit={handleSubmit} className="space-y-5 max-w-md">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">First name</label>
+              <label htmlFor="profile-first-name" className="block text-sm font-medium text-charcoal mb-1.5">First name</label>
               <input
+                id="profile-first-name"
                 type="text"
                 value={form.firstName}
                 onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
@@ -65,8 +66,9 @@ export default function AccountProfilePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Last name</label>
+              <label htmlFor="profile-last-name" className="block text-sm font-medium text-charcoal mb-1.5">Last name</label>
               <input
+                id="profile-last-name"
                 type="text"
                 value={form.lastName}
                 onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
@@ -77,8 +79,9 @@ export default function AccountProfilePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-1.5">Email address</label>
+            <label htmlFor="profile-email" className="block text-sm font-medium text-charcoal mb-1.5">Email address</label>
             <input
+              id="profile-email"
               type="email"
               value={form.email}
               onChange={e => setForm(f => ({ ...f, email: e.target.value }))}

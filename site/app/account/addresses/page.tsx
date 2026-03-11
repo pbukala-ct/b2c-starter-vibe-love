@@ -95,8 +95,9 @@ function AddressForm({
 
   const field = (key: keyof Address, label: string, required = false, type = 'text', placeholder?: string) => (
     <div>
-      <label className="block text-xs font-medium text-charcoal mb-1">{label}</label>
+      <label htmlFor={`addr-${key}`} className="block text-xs font-medium text-charcoal mb-1">{label}</label>
       <input
+        id={`addr-${key}`}
         type={type}
         required={required}
         placeholder={placeholder}

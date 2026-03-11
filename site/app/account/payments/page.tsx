@@ -135,22 +135,22 @@ export default function PaymentsPage() {
           <h2 className="font-semibold text-charcoal mb-4">Add Payment Method</h2>
           <form onSubmit={handleAdd} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-charcoal mb-1">Cardholder Name</label>
-              <input type="text" required placeholder="Full name on card"
+              <label htmlFor="pay-cardholder" className="block text-xs font-medium text-charcoal mb-1">Cardholder Name</label>
+              <input id="pay-cardholder" type="text" required placeholder="Full name on card"
                 value={form.cardholderName}
                 onChange={e => setForm(f => ({ ...f, cardholderName: e.target.value }))}
                 className="w-full border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-charcoal" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-charcoal mb-1">Card Number</label>
-              <input type="text" required placeholder="4242 4242 4242 4242"
+              <label htmlFor="pay-card-number" className="block text-xs font-medium text-charcoal mb-1">Card Number</label>
+              <input id="pay-card-number" type="text" required placeholder="4242 4242 4242 4242"
                 value={form.cardNumber}
                 onChange={e => setForm(f => ({ ...f, cardNumber: formatCardNumber(e.target.value) }))}
                 className="w-full border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-charcoal font-mono" />
             </div>
             <div className="w-32">
-              <label className="block text-xs font-medium text-charcoal mb-1">Expiry (MM/YY)</label>
-              <input type="text" required placeholder="12/28" maxLength={5}
+              <label htmlFor="pay-expiry" className="block text-xs font-medium text-charcoal mb-1">Expiry (MM/YY)</label>
+              <input id="pay-expiry" type="text" required placeholder="12/28" maxLength={5}
                 value={form.expiry}
                 onChange={e => {
                   let v = e.target.value.replace(/\D/g, '').slice(0, 4);
