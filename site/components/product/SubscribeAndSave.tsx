@@ -21,7 +21,7 @@ interface SubscribeAndSaveProps {
   regularPrice: Price;
   recurringPrices: Price[];
   recurrencePolicies: RecurrencePolicy[];
-  onAddToCart?: (cart: unknown, mode: 'one-time' | 'subscription') => void;
+  onAddToCart?: (cart: unknown, mode: 'one-time' | 'subscribe') => void;
 }
 
 export default function SubscribeAndSave({

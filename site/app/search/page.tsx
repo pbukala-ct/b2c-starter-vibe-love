@@ -48,13 +48,13 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const availableColors = [...new Set(products.flatMap(p =>
     [...(p.masterVariant?.attributes || []), ...(p.variants?.flatMap((v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []) || [])]
       .filter((a: { name: string }) => a.name === 'search-color')
-      .map((a: { value: { key?: string } | string }) => typeof a.value === 'object' && a.value !== null ? (a.value as { key?: string }).key || '' : String(a.value))
+      .map((a: { name: string; value: unknown }) => typeof a.value === 'object' && a.value !== null ? (a.value as { key?: string }).key || '' : String(a.value))
       .filter(Boolean)
   ))];
   const availableFinishes = [...new Set(products.flatMap(p =>
     [...(p.masterVariant?.attributes || []), ...(p.variants?.flatMap((v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []) || [])]
       .filter((a: { name: string }) => a.name === 'search-finish')
-      .map((a: { value: { key?: string } | string }) => typeof a.value === 'object' && a.value !== null ? (a.value as { key?: string }).key || '' : String(a.value))
+      .map((a: { name: string; value: unknown }) => typeof a.value === 'object' && a.value !== null ? (a.value as { key?: string }).key || '' : String(a.value))
       .filter(Boolean)
   ))];
 

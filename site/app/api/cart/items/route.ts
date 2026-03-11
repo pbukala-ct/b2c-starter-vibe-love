@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     cartId = cart.id;
   }
 
-  const updatedCart = await addLineItem(cartId, cart.version, productId, variantId, quantity, recurrencePolicyId);
+  const updatedCart = await addLineItem(cartId!, cart.version, productId, variantId, quantity, recurrencePolicyId);
 
   const newSession = { ...session, cartId: updatedCart.id };
   const token = await createSessionToken(newSession);
