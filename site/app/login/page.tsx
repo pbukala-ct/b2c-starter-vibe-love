@@ -112,9 +112,13 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-4 text-center">
-            <p className="text-xs text-charcoal-light">
-              Demo: <span className="font-mono">jen@example.com</span> / <span className="font-mono">123</span>
-            </p>
+            <button
+              type="button"
+              onClick={() => { setEmail('jen@example.com'); setPassword('123'); }}
+              className="text-xs text-terra hover:underline font-medium"
+            >
+              Use test credentials
+            </button>
           </div>
         </div>
       </div>
