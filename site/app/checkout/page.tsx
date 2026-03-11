@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
-import { formatMoney, getLocalizedString } from '@/lib/utils';
+import { formatMoney, getLocalizedString, useCombinedStreetField, formatStreetAddress, parseStreetAddress } from '@/lib/utils';
 import Image from 'next/image';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -18,6 +18,8 @@ interface Address {
   lastName: string;
   streetName: string;
   streetNumber: string;
+  streetAddress: string;       // combined field for US-style input
+  additionalAddressInfo?: string;
   city: string;
   postalCode: string;
   state?: string;
@@ -31,6 +33,7 @@ interface SavedAddress {
   lastName: string;
   streetName: string;
   streetNumber?: string;
+  additionalAddressInfo?: string;
   city: string;
   state?: string;
   postalCode: string;
@@ -60,6 +63,8 @@ export default function CheckoutPage() {
     lastName: user?.lastName || '',
     streetName: '',
     streetNumber: '',
+    streetAddress: '',
+    additionalAddressInfo: '',
     city: '',
     postalCode: '',
     state: '',
@@ -91,6 +96,8 @@ export default function CheckoutPage() {
     lastName: user?.lastName || '',
     streetName: '',
     streetNumber: '',
+    streetAddress: '',
+    additionalAddressInfo: '',
     city: '',
     postalCode: '',
     state: '',
@@ -162,6 +169,8 @@ export default function CheckoutPage() {
         lastName: saved.lastName,
         streetName: saved.streetName,
         streetNumber: saved.streetNumber || '',
+        streetAddress: formatStreetAddress(saved.streetNumber, saved.streetName),
+        additionalAddressInfo: saved.additionalAddressInfo || '',
         city: saved.city,
         state: saved.state || '',
         postalCode: saved.postalCode,
@@ -180,6 +189,8 @@ export default function CheckoutPage() {
         lastName: '',
         streetName: '',
         streetNumber: '',
+        streetAddress: '',
+        additionalAddressInfo: '',
         city: '',
         postalCode: '',
         state: '',
@@ -215,12 +226,33 @@ export default function CheckoutPage() {
     );
   };
 
+  /** Convert a form Address to the CT API shape (separate streetNumber/streetName) */
+  const toApiAddress = (addr: Address) => {
+    const isCombined = useCombinedStreetField(addr.country);
+    const street = isCombined
+      ? parseStreetAddress(addr.streetAddress)
+      : { streetNumber: addr.streetNumber, streetName: addr.streetName };
+    return {
+      key: addr.key,
+      firstName: addr.firstName,
+      lastName: addr.lastName,
+      streetName: street.streetName,
+      streetNumber: street.streetNumber,
+      additionalAddressInfo: addr.additionalAddressInfo || undefined,
+      city: addr.city,
+      postalCode: addr.postalCode,
+      state: addr.state || undefined,
+      country: addr.country,
+      email: addr.email || undefined,
+    };
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     setError('');
 
     try {
-      const allAddresses = [primaryAddr, ...additionalAddresses];
+      const allAddresses = [primaryAddr, ...additionalAddresses].map(toApiAddress);
 
       // Build line item shipping details
       const lineItemShippingDetails = useSplitShipment
@@ -235,12 +267,14 @@ export default function CheckoutPage() {
             targets: [{ addressKey: 'addr-primary', quantity: item.quantity }],
           })) || [];
 
+      const billingSource = billingSameAsShipping ? primaryAddr : billingAddr;
+
       const resp = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           shippingAddresses: allAddresses,
-          billingAddress: billingSameAsShipping ? primaryAddr : billingAddr,
+          billingAddress: toApiAddress(billingSource),
           lineItemShipping: lineItemShippingDetails,
           shippingMethodId: selectedShippingMethodId,
           paymentInfo: payment,
@@ -305,7 +339,7 @@ export default function CheckoutPage() {
                   <option value="">— Enter a new address —</option>
                   {savedAddresses.map(a => (
                     <option key={a.id} value={a.id}>
-                      {a.firstName} {a.lastName} — {a.streetNumber ? `${a.streetNumber} ` : ''}{a.streetName}, {a.city}
+                      {a.firstName} {a.lastName} — {formatStreetAddress(a.streetNumber, a.streetName)}, {a.city}
                     </option>
                   ))}
                 </select>
@@ -314,8 +348,18 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-2 gap-4">
               <Input label="First Name" value={primaryAddr.firstName} onChange={(e) => handleAddressChange('firstName', e.target.value)} required />
               <Input label="Last Name" value={primaryAddr.lastName} onChange={(e) => handleAddressChange('lastName', e.target.value)} required />
-              <Input label="Street Name" value={primaryAddr.streetName} onChange={(e) => handleAddressChange('streetName', e.target.value)} className="col-span-2" required />
-              <Input label="Street Number" value={primaryAddr.streetNumber} onChange={(e) => handleAddressChange('streetNumber', e.target.value)} required />
+              {useCombinedStreetField(primaryAddr.country) ? (
+                <>
+                  <Input label="Street Address" value={primaryAddr.streetAddress} onChange={(e) => handleAddressChange('streetAddress', e.target.value)} className="col-span-2" required placeholder="123 Main Street" />
+                  <Input label="Additional Address Info" value={primaryAddr.additionalAddressInfo || ''} onChange={(e) => handleAddressChange('additionalAddressInfo', e.target.value)} className="col-span-2" placeholder="Apt, suite, unit, etc. (optional)" />
+                </>
+              ) : (
+                <>
+                  <Input label="Street Name" value={primaryAddr.streetName} onChange={(e) => handleAddressChange('streetName', e.target.value)} className="col-span-2" required />
+                  <Input label="Street Number" value={primaryAddr.streetNumber} onChange={(e) => handleAddressChange('streetNumber', e.target.value)} required />
+                  <Input label="Additional Address Info" value={primaryAddr.additionalAddressInfo || ''} onChange={(e) => handleAddressChange('additionalAddressInfo', e.target.value)} placeholder="Optional" />
+                </>
+              )}
               <Input label="City" value={primaryAddr.city} onChange={(e) => handleAddressChange('city', e.target.value)} required />
               <Input label="ZIP / Postal Code" value={primaryAddr.postalCode} onChange={(e) => handleAddressChange('postalCode', e.target.value)} required />
               <Input label="State / Region" value={primaryAddr.state || ''} onChange={(e) => handleAddressChange('state', e.target.value)} />
@@ -359,8 +403,18 @@ export default function CheckoutPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <Input label="First Name" value={addr.firstName} onChange={(e) => updateSplitAddress(index, 'firstName', e.target.value)} />
                       <Input label="Last Name" value={addr.lastName} onChange={(e) => updateSplitAddress(index, 'lastName', e.target.value)} />
-                      <Input label="Street Name" value={addr.streetName} onChange={(e) => updateSplitAddress(index, 'streetName', e.target.value)} className="col-span-2" />
-                      <Input label="Street Number" value={addr.streetNumber} onChange={(e) => updateSplitAddress(index, 'streetNumber', e.target.value)} />
+                      {useCombinedStreetField(addr.country) ? (
+                        <>
+                          <Input label="Street Address" value={addr.streetAddress} onChange={(e) => updateSplitAddress(index, 'streetAddress', e.target.value)} className="col-span-2" placeholder="123 Main Street" />
+                          <Input label="Additional Address Info" value={addr.additionalAddressInfo || ''} onChange={(e) => updateSplitAddress(index, 'additionalAddressInfo', e.target.value)} className="col-span-2" placeholder="Apt, suite, unit, etc. (optional)" />
+                        </>
+                      ) : (
+                        <>
+                          <Input label="Street Name" value={addr.streetName} onChange={(e) => updateSplitAddress(index, 'streetName', e.target.value)} className="col-span-2" />
+                          <Input label="Street Number" value={addr.streetNumber} onChange={(e) => updateSplitAddress(index, 'streetNumber', e.target.value)} />
+                          <Input label="Additional Address Info" value={addr.additionalAddressInfo || ''} onChange={(e) => updateSplitAddress(index, 'additionalAddressInfo', e.target.value)} placeholder="Optional" />
+                        </>
+                      )}
                       <Input label="City" value={addr.city} onChange={(e) => updateSplitAddress(index, 'city', e.target.value)} />
                       <Input label="ZIP Code" value={addr.postalCode} onChange={(e) => updateSplitAddress(index, 'postalCode', e.target.value)} />
                     </div>
@@ -431,8 +485,18 @@ export default function CheckoutPage() {
               <div className="grid grid-cols-2 gap-4">
                 <Input label="First Name" value={billingAddr.firstName} onChange={(e) => setBillingAddr(p => ({ ...p, firstName: e.target.value }))} required />
                 <Input label="Last Name" value={billingAddr.lastName} onChange={(e) => setBillingAddr(p => ({ ...p, lastName: e.target.value }))} required />
-                <Input label="Street Name" value={billingAddr.streetName} onChange={(e) => setBillingAddr(p => ({ ...p, streetName: e.target.value }))} className="col-span-2" required />
-                <Input label="Street Number" value={billingAddr.streetNumber} onChange={(e) => setBillingAddr(p => ({ ...p, streetNumber: e.target.value }))} required />
+                {useCombinedStreetField(billingAddr.country) ? (
+                  <>
+                    <Input label="Street Address" value={billingAddr.streetAddress} onChange={(e) => setBillingAddr(p => ({ ...p, streetAddress: e.target.value }))} className="col-span-2" required placeholder="123 Main Street" />
+                    <Input label="Additional Address Info" value={billingAddr.additionalAddressInfo || ''} onChange={(e) => setBillingAddr(p => ({ ...p, additionalAddressInfo: e.target.value }))} className="col-span-2" placeholder="Apt, suite, unit, etc. (optional)" />
+                  </>
+                ) : (
+                  <>
+                    <Input label="Street Name" value={billingAddr.streetName} onChange={(e) => setBillingAddr(p => ({ ...p, streetName: e.target.value }))} className="col-span-2" required />
+                    <Input label="Street Number" value={billingAddr.streetNumber} onChange={(e) => setBillingAddr(p => ({ ...p, streetNumber: e.target.value }))} required />
+                    <Input label="Additional Address Info" value={billingAddr.additionalAddressInfo || ''} onChange={(e) => setBillingAddr(p => ({ ...p, additionalAddressInfo: e.target.value }))} placeholder="Optional" />
+                  </>
+                )}
                 <Input label="City" value={billingAddr.city} onChange={(e) => setBillingAddr(p => ({ ...p, city: e.target.value }))} required />
                 <Input label="ZIP / Postal Code" value={billingAddr.postalCode} onChange={(e) => setBillingAddr(p => ({ ...p, postalCode: e.target.value }))} required />
                 <Input label="State / Region" value={billingAddr.state || ''} onChange={(e) => setBillingAddr(p => ({ ...p, state: e.target.value }))} />
@@ -506,7 +570,7 @@ export default function CheckoutPage() {
             className="w-full"
             onClick={handleSubmit}
             isLoading={submitting}
-            disabled={!primaryAddr.firstName || !primaryAddr.streetName || !primaryAddr.city || !payment.cardNumber}
+            disabled={!primaryAddr.firstName || !(useCombinedStreetField(primaryAddr.country) ? primaryAddr.streetAddress : primaryAddr.streetName) || !primaryAddr.city || !payment.cardNumber}
           >
             Place Order • {formatMoney(cart.totalPrice.centAmount, cart.totalPrice.currencyCode)}
           </Button>

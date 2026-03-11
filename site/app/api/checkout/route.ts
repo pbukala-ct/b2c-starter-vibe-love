@@ -11,6 +11,8 @@ import {
   addPaymentToCart,
   createOrderFromCart,
   getShippingMethods,
+  addItemShippingAddress,
+  setLineItemShippingDetails,
 } from '@/lib/ct/cart';
 import { createRecurringOrder } from '@/lib/ct/cart';
 import { COUNTRY_CONFIG } from '@/lib/utils';
@@ -21,6 +23,7 @@ export async function POST(req: NextRequest) {
     shippingAddresses,
     billingAddress,
     shippingMethodId,
+    lineItemShipping,
   } = body;
 
   const session = await getSession();
@@ -58,10 +61,40 @@ export async function POST(req: NextRequest) {
     }
 
     const primaryAddress = shippingAddresses?.[0] || billingAddress;
+    const isSplitShipment = shippingAddresses && shippingAddresses.length > 1;
 
-    // Set shipping address
+    // Set primary shipping address (used for tax/shipping calculation)
     cart = await setShippingAddress(cart.id, version, primaryAddress);
     version = cart.version;
+
+    // For split shipments: add all addresses to itemShippingAddresses
+    // and assign line items to their respective addresses
+    if (isSplitShipment) {
+      for (const addr of shippingAddresses) {
+        try {
+          cart = await addItemShippingAddress(cart.id, version, addr);
+          version = cart.version;
+        } catch (e) {
+          console.error('addItemShippingAddress error:', e);
+        }
+      }
+
+      // Set per-line-item shipping assignments
+      if (lineItemShipping && Array.isArray(lineItemShipping)) {
+        for (const lis of lineItemShipping) {
+          if (lis.targets && lis.targets.length > 0) {
+            try {
+              cart = await setLineItemShippingDetails(
+                cart.id, version, lis.lineItemId, lis.targets
+              );
+              version = cart.version;
+            } catch (e) {
+              console.error('setLineItemShippingDetails error:', e);
+            }
+          }
+        }
+      }
+    }
 
     // Set shipping method
     const shippingMethodsResult = await getShippingMethods();

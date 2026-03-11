@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLocale } from '@/context/LocaleContext';
+import { useCombinedStreetField, formatStreetAddress, parseStreetAddress } from '@/lib/utils';
 
 interface Address {
   id?: string;
@@ -8,6 +10,8 @@ interface Address {
   lastName: string;
   streetName: string;
   streetNumber?: string;
+  streetAddress?: string;            // combined field for US-style input
+  additionalAddressInfo?: string;
   city: string;
   state?: string;
   postalCode: string;
@@ -17,6 +21,7 @@ interface Address {
 
 const emptyAddress: Address = {
   firstName: '', lastName: '', streetName: '', streetNumber: '',
+  streetAddress: '', additionalAddressInfo: '',
   city: '', state: '', postalCode: '', country: 'US', phone: '',
 };
 
@@ -26,27 +31,61 @@ interface AddressData {
   defaultBillingAddressId?: string;
 }
 
+type DefaultType = '' | 'shipping' | 'billing' | 'both';
+
 function AddressForm({
   initial,
   title,
   onSave,
   onCancel,
+  defaultCountry,
+  currentDefaultShippingId,
+  currentDefaultBillingId,
 }: {
   initial: Address;
   title: string;
-  onSave: (addr: Address) => Promise<void>;
+  onSave: (addr: Address, setDefault?: DefaultType) => Promise<void>;
   onCancel: () => void;
+  defaultCountry: string;
+  currentDefaultShippingId?: string;
+  currentDefaultBillingId?: string;
 }) {
-  const [form, setForm] = useState<Address>(initial);
+  // Pre-populate streetAddress from separate fields when loading existing addresses
+  const initWithStreetAddr: Address = {
+    ...initial,
+    streetAddress: initial.streetAddress || formatStreetAddress(initial.streetNumber, initial.streetName),
+    country: initial.country || defaultCountry,
+  };
+  const [form, setForm] = useState<Address>(initWithStreetAddr);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+
+  // Figure out the initial default setting for this address
+  const isCurrentShipping = initial.id && initial.id === currentDefaultShippingId;
+  const isCurrentBilling = initial.id && initial.id === currentDefaultBillingId;
+  const initialDefault: DefaultType =
+    isCurrentShipping && isCurrentBilling ? 'both' :
+    isCurrentShipping ? 'shipping' :
+    isCurrentBilling ? 'billing' : '';
+  const [setDefault, setSetDefault] = useState<DefaultType>(initialDefault);
+
+  const isCombined = useCombinedStreetField(form.country);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setIsSaving(true);
     try {
-      await onSave(form);
+      // Convert combined street address to separate fields for CT API
+      const addrToSave = { ...form };
+      if (isCombined && addrToSave.streetAddress) {
+        const parsed = parseStreetAddress(addrToSave.streetAddress);
+        addrToSave.streetName = parsed.streetName;
+        addrToSave.streetNumber = parsed.streetNumber;
+      }
+      // Remove UI-only fields before sending
+      delete addrToSave.streetAddress;
+      await onSave(addrToSave, setDefault || undefined);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save address');
     } finally {
@@ -54,12 +93,13 @@ function AddressForm({
     }
   }
 
-  const field = (key: keyof Address, label: string, required = false, type = 'text') => (
+  const field = (key: keyof Address, label: string, required = false, type = 'text', placeholder?: string) => (
     <div>
       <label className="block text-xs font-medium text-charcoal mb-1">{label}</label>
       <input
         type={type}
         required={required}
+        placeholder={placeholder}
         value={form[key] as string || ''}
         onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
         className="w-full border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-charcoal"
@@ -71,14 +111,22 @@ function AddressForm({
     <div className="bg-white border border-border rounded-sm p-6 mb-6">
       <h2 className="font-semibold text-charcoal mb-4">{title}</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Nickname at the top */}
+        {field('additionalAddressInfo', 'Nickname (optional)', false, 'text', 'e.g. Home, Office, Mom\'s house')}
         <div className="grid grid-cols-2 gap-4">
           {field('firstName', 'First name', true)}
           {field('lastName', 'Last name', true)}
         </div>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="col-span-2">{field('streetName', 'Street', true)}</div>
-          <div>{field('streetNumber', 'Number')}</div>
-        </div>
+        {isCombined ? (
+          <div className="space-y-4">
+            {field('streetAddress', 'Street Address', true, 'text', '123 Main Street')}
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-4">
+            <div className="col-span-2">{field('streetName', 'Street', true)}</div>
+            <div>{field('streetNumber', 'Number')}</div>
+          </div>
+        )}
         <div className="grid grid-cols-3 gap-4">
           <div>{field('city', 'City', true)}</div>
           <div>{field('state', 'State')}</div>
@@ -99,6 +147,35 @@ function AddressForm({
           </div>
           <div>{field('phone', 'Phone', false, 'tel')}</div>
         </div>
+
+        {/* Default address selector */}
+        <div>
+          <label className="block text-xs font-medium text-charcoal mb-2">Set as default</label>
+          <div className="flex flex-wrap gap-3">
+            {(['', 'shipping', 'billing', 'both'] as DefaultType[]).map((option) => {
+              const labels: Record<DefaultType, string> = {
+                '': 'None',
+                shipping: 'Default Shipping',
+                billing: 'Default Billing',
+                both: 'Default Shipping & Billing',
+              };
+              return (
+                <label key={option} className="flex items-center gap-1.5 text-sm text-charcoal cursor-pointer">
+                  <input
+                    type="radio"
+                    name="defaultType"
+                    value={option}
+                    checked={setDefault === option}
+                    onChange={() => setSetDefault(option)}
+                    className="accent-charcoal"
+                  />
+                  {labels[option]}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
         {error && <p className="text-red-600 text-sm">{error}</p>}
         <div className="flex gap-3">
           <button
@@ -122,6 +199,7 @@ function AddressForm({
 }
 
 export default function AddressesPage() {
+  const { country } = useLocale();
   const [data, setData] = useState<AddressData>({ addresses: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -141,11 +219,11 @@ export default function AddressesPage() {
     }
   }
 
-  async function handleAdd(address: Address) {
+  async function handleAdd(address: Address, defaultType?: DefaultType) {
     const res = await fetch('/api/account/addresses', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address }),
+      body: JSON.stringify({ address, defaultType }),
     });
     if (!res.ok) {
       const d = await res.json();
@@ -156,11 +234,11 @@ export default function AddressesPage() {
     setShowAddForm(false);
   }
 
-  async function handleEdit(address: Address) {
+  async function handleEdit(address: Address, defaultType?: DefaultType) {
     const res = await fetch('/api/account/addresses', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ addressId: address.id, address }),
+      body: JSON.stringify({ addressId: address.id, address, defaultType }),
     });
     if (!res.ok) {
       const d = await res.json();
@@ -236,6 +314,9 @@ export default function AddressesPage() {
           title="New Address"
           onSave={handleAdd}
           onCancel={() => setShowAddForm(false)}
+          defaultCountry={country}
+          currentDefaultShippingId={data.defaultShippingAddressId}
+          currentDefaultBillingId={data.defaultBillingAddressId}
         />
       )}
 
@@ -255,8 +336,11 @@ export default function AddressesPage() {
                   <AddressForm
                     initial={addr}
                     title="Edit Address"
-                    onSave={(updated) => handleEdit({ ...updated, id: addr.id })}
+                    onSave={(updated, defaultType) => handleEdit({ ...updated, id: addr.id }, defaultType)}
                     onCancel={() => setEditingId(null)}
+                    defaultCountry={country}
+                    currentDefaultShippingId={data.defaultShippingAddressId}
+                    currentDefaultBillingId={data.defaultBillingAddressId}
                   />
                 </div>
               );
@@ -280,9 +364,12 @@ export default function AddressesPage() {
                   </div>
                 )}
 
+                {addr.additionalAddressInfo && (
+                  <p className="text-xs font-medium text-charcoal-light uppercase tracking-wider mb-2">{addr.additionalAddressInfo}</p>
+                )}
                 <address className="text-sm text-charcoal not-italic space-y-0.5">
                   <p className="font-medium">{addr.firstName} {addr.lastName}</p>
-                  <p className="text-charcoal-light">{addr.streetNumber ? `${addr.streetNumber} ` : ''}{addr.streetName}</p>
+                  <p className="text-charcoal-light">{formatStreetAddress(addr.streetNumber, addr.streetName)}</p>
                   <p className="text-charcoal-light">{addr.city}{addr.state ? `, ${addr.state}` : ''} {addr.postalCode}</p>
                   <p className="text-charcoal-light">{addr.country}</p>
                   {addr.phone && <p className="text-charcoal-light">{addr.phone}</p>}

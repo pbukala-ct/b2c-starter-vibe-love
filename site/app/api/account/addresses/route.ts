@@ -23,10 +23,26 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const customer = await getAuthedCustomer();
   if (!customer) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-  const { address } = await req.json();
-  const updated = await updateCustomer(customer.id, customer.version, [
+  const { address, defaultType } = await req.json();
+  let updated = await updateCustomer(customer.id, customer.version, [
     { action: 'addAddress', address },
   ]);
+
+  // Set as default if requested — the new address is the last in the array
+  if (defaultType && updated.addresses.length > 0) {
+    const newAddr = updated.addresses[updated.addresses.length - 1];
+    const defaultActions: Array<{ action: string; [key: string]: unknown }> = [];
+    if (defaultType === 'shipping' || defaultType === 'both') {
+      defaultActions.push({ action: 'setDefaultShippingAddress', addressId: newAddr.id });
+    }
+    if (defaultType === 'billing' || defaultType === 'both') {
+      defaultActions.push({ action: 'setDefaultBillingAddress', addressId: newAddr.id });
+    }
+    if (defaultActions.length) {
+      updated = await updateCustomer(updated.id, updated.version, defaultActions);
+    }
+  }
+
   return NextResponse.json({
     addresses: updated.addresses,
     defaultShippingAddressId: updated.defaultShippingAddressId,
@@ -37,10 +53,25 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const customer = await getAuthedCustomer();
   if (!customer) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-  const { addressId, address } = await req.json();
-  const updated = await updateCustomer(customer.id, customer.version, [
+  const { addressId, address, defaultType } = await req.json();
+  let updated = await updateCustomer(customer.id, customer.version, [
     { action: 'changeAddress', addressId, address },
   ]);
+
+  // Set as default if requested
+  if (defaultType) {
+    const defaultActions: Array<{ action: string; [key: string]: unknown }> = [];
+    if (defaultType === 'shipping' || defaultType === 'both') {
+      defaultActions.push({ action: 'setDefaultShippingAddress', addressId });
+    }
+    if (defaultType === 'billing' || defaultType === 'both') {
+      defaultActions.push({ action: 'setDefaultBillingAddress', addressId });
+    }
+    if (defaultActions.length) {
+      updated = await updateCustomer(updated.id, updated.version, defaultActions);
+    }
+  }
+
   return NextResponse.json({
     addresses: updated.addresses,
     defaultShippingAddressId: updated.defaultShippingAddressId,

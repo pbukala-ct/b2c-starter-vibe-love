@@ -5,15 +5,24 @@ export const REGISTERED_USER = {
   password: '123',
 };
 
-// CT address format — checkout uses separate streetName / streetNumber fields
+// US checkout uses a single "Street Address" field (e.g. "123 Main St")
 export const SHIPPING = {
   firstName: 'Jennifer',
   lastName: 'Robinson',
-  streetName: 'Test Street',
-  streetNumber: '123',
+  streetAddress: '123 Test Street',
   city: 'New York',
   state: 'NY',
   zip: '10001',
+};
+
+// Second address for split-shipment test
+export const SHIPPING_2 = {
+  firstName: 'Jennifer',
+  lastName: 'Robinson',
+  streetAddress: '456 Oak Avenue',
+  city: 'Los Angeles',
+  state: 'CA',
+  zip: '90001',
 };
 
 export const CARD = {
@@ -142,8 +151,7 @@ export async function addProductToCart(page: Page, index = 0): Promise<string> {
 export async function fillShipping(page: Page, addr = SHIPPING) {
   await page.getByLabel(/first name/i).first().fill(addr.firstName);
   await page.getByLabel(/last name/i).first().fill(addr.lastName);
-  await page.getByLabel(/street name/i).first().fill(addr.streetName);
-  await page.getByLabel(/street number/i).first().fill(addr.streetNumber);
+  await page.getByLabel(/street address/i).first().fill(addr.streetAddress);
   await page.getByLabel(/city/i).first().fill(addr.city);
   await page.getByLabel(/state.*region|state|province/i).first().fill(addr.state);
   await page.getByLabel(/zip|postal/i).first().fill(addr.zip);

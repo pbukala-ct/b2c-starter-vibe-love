@@ -24,6 +24,42 @@ export function slugify(str: string): string {
   return str.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 }
 
+// ---------- Address helpers ----------
+
+/**
+ * Returns true for countries that use a single "Street Address" field (US convention).
+ * European countries keep separate "Street Name" and "Street Number" inputs.
+ */
+export function useCombinedStreetField(country: string): boolean {
+  return country === 'US';
+}
+
+/**
+ * Combine separate CT streetNumber + streetName into a single display string.
+ * Works for all locales (US shows "123 Main St", EU shows "123 Main St" too).
+ */
+export function formatStreetAddress(streetNumber?: string, streetName?: string): string {
+  const num = streetNumber?.trim() || '';
+  const name = streetName?.trim() || '';
+  if (num && name) return `${num} ${name}`;
+  return name || num;
+}
+
+/**
+ * Parse a combined US-style street address into CT's separate streetNumber + streetName.
+ * Extracts a leading number/letter token (e.g. "123", "12A", "4500") as streetNumber.
+ * If there's no leading number, streetNumber is empty and the whole string becomes streetName.
+ */
+export function parseStreetAddress(streetAddress: string): { streetNumber: string; streetName: string } {
+  const trimmed = streetAddress.trim();
+  const match = trimmed.match(/^(\d+[A-Za-z]?)\s+(.+)$/);
+  if (match) {
+    return { streetNumber: match[1], streetName: match[2] };
+  }
+  // No leading number — entire string is the street name
+  return { streetNumber: '', streetName: trimmed };
+}
+
 // Country to currency mapping (for all euro zone countries etc.)
 export function getCurrencyForCountry(country: string): string {
   const eurCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'FI', 'IE', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT'];
