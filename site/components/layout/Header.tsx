@@ -92,10 +92,12 @@ export default function Header({ categories }: HeaderProps) {
               </Link>
 
               {isLoggedIn && (
-                <div className="absolute right-0 top-full mt-1 bg-white border border-border shadow-lg rounded-sm w-40 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
-                  <Link href="/account" className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">My Account</Link>
-                  <Link href="/account/orders" className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">My Orders</Link>
+                <div className="absolute right-0 top-full mt-1 bg-white border border-border shadow-lg rounded-sm w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
+                  <Link href="/account" className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Profile</Link>
+                  <Link href="/account/orders" className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Orders</Link>
                   <Link href="/account/subscriptions" className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Subscriptions</Link>
+                  <Link href="/account/addresses" className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Addresses</Link>
+                  <Link href="/account/payments" className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Payment Methods</Link>
                   <div className="border-t border-border" />
                   <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-charcoal-light hover:bg-cream hover:text-charcoal">
                     Sign Out
