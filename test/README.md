@@ -1,4 +1,4 @@
-# Vibe Home — End-to-End Tests
+# B2C Starter — End-to-End Tests
 
 Playwright browser tests covering the three core user journeys.
 

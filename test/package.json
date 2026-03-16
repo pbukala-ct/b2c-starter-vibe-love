@@ -1,7 +1,7 @@
 {
-  "name": "vibe-home-tests",
+  "name": "b2c-starter-tests",
   "version": "1.0.0",
-  "description": "End-to-end browser tests for Vibe Home storefront",
+  "description": "End-to-end browser tests for B2C Starter storefront",
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",
