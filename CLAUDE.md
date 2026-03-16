@@ -40,10 +40,15 @@ The login endpoint is `POST /login` (NOT `/customers/login`).
 Carts are created with `shippingMode: 'Single'`. Use `setShippingAddress` + `setShippingMethod` at checkout.
 
 ## Environment Files
-- `site/.env` — Storefront credentials (Frontend B2C scope + manage_payments, manage_recurring_orders, manage_custom_objects). Also needs `SESSION_SECRET`.
-- `tools/.env` — Admin credentials (`manage_project` scope). Never use for the storefront.
 
-Both are gitignored.
+**CRITICAL: `site/.env` and `tools/.env` are completely separate API clients with different permission scopes. NEVER copy, share, or reuse credentials between them.**
+
+- `site/.env` — **Storefront** API client (limited scope: Frontend B2C + manage_payments, manage_recurring_orders, manage_custom_objects). Also needs `SESSION_SECRET`.
+- `tools/.env` — **Admin** API client (`manage_project` scope — can modify or delete anything in the CT project). Used ONLY by scripts in `tools/`.
+
+If `site/.env` is missing, tell the user to create a new **Frontend B2C** API client in Merchant Center. **NEVER copy `tools/.env` to `site/.env`** — this would give the public-facing storefront full admin access to the commercetools project.
+
+Both files are gitignored. Never commit them.
 
 ## Adding or Changing Features
 
