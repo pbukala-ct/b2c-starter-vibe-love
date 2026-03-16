@@ -50,6 +50,8 @@ You need two API clients in your CT Merchant Center (**Settings > Developer > AP
 - Use the **Admin client** template
 - Download the .env file to `tools/.env`
 
+> **Warning:** `.env` files contain secrets and are gitignored. **Never commit them.** If you accidentally commit a `.env` file, rotate your API client credentials immediately in Merchant Center.
+
 ### 3. Install and Run
 
 ```bash

@@ -1,9 +1,13 @@
 # ─── Environment files — NEVER commit these ──────────────────────────────────
+# Matches .env in any directory (site/.env, tools/.env, etc.)
 .env
 .env.local
 .env.*.local
 .env.production
 .env.test
+# Belt-and-suspenders: explicit paths in case of git add --force
+site/.env
+tools/.env
 
 # ─── Dependencies ─────────────────────────────────────────────────────────────
 **/node_modules/
