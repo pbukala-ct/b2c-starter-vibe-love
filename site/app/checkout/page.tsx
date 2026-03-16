@@ -466,6 +466,60 @@ export default function CheckoutPage() {
             )}
           </div>
 
+          {/* Shipping Method */}
+          {shippingMethods.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold text-charcoal mb-4">Shipping Method</h2>
+              <div className="space-y-2">
+                {shippingMethods.map((method) => {
+                  const isFree = method.freeAbove && cart.totalPrice.centAmount >= method.freeAbove.centAmount;
+                  return (
+                    <label
+                      key={method.id}
+                      className={`flex items-center justify-between border rounded-sm p-4 cursor-pointer transition-colors ${
+                        selectedShippingMethodId === method.id
+                          ? 'border-charcoal bg-cream'
+                          : 'border-border hover:border-charcoal/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="shippingMethod"
+                          value={method.id}
+                          checked={selectedShippingMethodId === method.id}
+                          onChange={() => setSelectedShippingMethodId(method.id)}
+                          className="accent-charcoal"
+                        />
+                        <div>
+                          <span className="text-sm font-medium text-charcoal">{method.name}</span>
+                          {method.description && (
+                            <p className="text-xs text-charcoal-light mt-0.5">{method.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      <span className={`text-sm font-medium ${isFree ? 'text-sage' : 'text-charcoal'}`}>
+                        {!method.price ? 'TBD' : isFree ? 'Free' : formatMoney(method.price.centAmount, method.price.currencyCode)}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              {(() => {
+                const sm = shippingMethods.find(m => m.id === selectedShippingMethodId);
+                if (sm?.freeAbove && cart.totalPrice.centAmount < sm.freeAbove.centAmount) {
+                  const remaining = sm.freeAbove.centAmount - cart.totalPrice.centAmount;
+                  return (
+                    <p className="text-xs text-charcoal-light mt-2">
+                      Add {formatMoney(remaining, cart.totalPrice.currencyCode)} more for free shipping
+                    </p>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+          )}
+
           {/* Billing Address */}
           <div>
             <h2 className="text-lg font-semibold text-charcoal mb-4">Billing Address</h2>
