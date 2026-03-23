@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getProductBySlug } from '@/lib/ct/search';
 import { getCategoryById } from '@/lib/ct/categories';
-import { formatMoney, getLocalizedString, COUNTRY_CONFIG } from '@/lib/utils';
+import { formatMoney, getLocalizedString } from '@/lib/utils';
+import { getLocale } from '@/lib/locale';
 import SubscribeAndSave from '@/components/product/SubscribeAndSave';
 import AddToCartButton from '@/components/product/AddToCartButton';
 import type { Price } from '@/lib/ct/search';
@@ -15,16 +15,15 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug, 'en-US', 'USD', 'US');
+  const { locale, currency, country } = await getLocale();
+  const product = await getProductBySlug(slug, locale, currency, country);
   if (!product) return { title: 'Product Not Found' };
-  return { title: getLocalizedString(product.name, 'en-US') };
+  return { title: getLocalizedString(product.name, locale) };
 }
 
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
-  const cookieStore = await cookies();
-  const country = cookieStore.get('vibe-country')?.value || 'US';
-  const { currency, locale } = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
+  const { country, currency, locale } = await getLocale();
   const product = await getProductBySlug(slug, locale, currency, country);
   if (!product) notFound();
 
@@ -47,7 +46,7 @@ export default async function ProductPage({ params }: PageProps) {
   let categoryName = '', categorySlug = '';
   if (product.categories?.[0]) {
     const cat = await getCategoryById(product.categories[0].id);
-    if (cat) { categoryName = getLocalizedString(cat.name, 'en-US'); categorySlug = cat.slug['en-US'] || Object.values(cat.slug)[0]; }
+    if (cat) { categoryName = getLocalizedString(cat.name, locale); categorySlug = getLocalizedString(cat.slug) }
   }
 
   return (

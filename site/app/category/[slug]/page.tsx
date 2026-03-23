@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
 import { getCategoryBySlug, getCategoryTree } from '@/lib/ct/categories';
 import { searchProducts } from '@/lib/ct/search';
 import ProductGrid from '@/components/product/ProductGrid';
 import ProductFilters from '@/components/product/ProductFilters';
-import { getLocalizedString, COUNTRY_CONFIG } from '@/lib/utils';
+import { getLocalizedString } from '@/lib/utils';
+import { getLocale } from '@/lib/locale';
 import { Suspense } from 'react';
 import Link from 'next/link';
 
@@ -23,16 +23,14 @@ export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const category = await getCategoryBySlug(slug);
   if (!category) return { title: 'Category Not Found' };
-  const name = getLocalizedString(category.name, 'en-US');
+  const name = getLocalizedString(category.name);
   return { title: name };
 }
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const sp = await searchParams;
-  const cookieStore = await cookies();
-  const country = cookieStore.get('vibe-country')?.value || 'US';
-  const { currency, locale } = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
+  const { country, currency, locale } = await getLocale();
 
   const [category, categoryTree] = await Promise.all([
     getCategoryBySlug(slug),

@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { formatMoney } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 import { Price } from '@/lib/ct/search';
 
 interface RecurrencePolicy {
@@ -30,13 +30,14 @@ export function RecurringPriceSelector({
   disabled = false,
 }: RecurringPriceSelectorProps) {
   const t = useTranslations('pdp');
+  const { formatMoney, getLocalizedString } = useFormatters();
 
   const getPolicyName = (price: Price): string => {
     const id = price.recurrencePolicy?.id;
     if (!id) return '';
     const policy = policies.find((p) => p.id === id);
     if (!policy) return id;
-    return policy.name['en-US'] || policy.name[Object.keys(policy.name)[0]] || id;
+    return getLocalizedString(policy.name) || id;
   };
 
   return (

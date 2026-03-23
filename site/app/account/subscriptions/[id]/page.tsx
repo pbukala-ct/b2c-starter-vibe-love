@@ -4,8 +4,7 @@ import { use, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSubscription } from '@/hooks/useSubscriptions';
-import { formatMoney, getLocalizedString } from '@/lib/utils';
-import { useLocale } from '@/context/LocaleContext';
+import { useFormatters } from '@/hooks/useFormatters';
 
 const STATE_COLORS: Record<string, string> = {
   Active: 'bg-sage/10 text-sage border-sage/20',
@@ -30,7 +29,7 @@ function scheduleLabel(schedule: { type: string; value: number; intervalUnit: st
 export default function SubscriptionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: sub, mutate, isLoading } = useSubscription(id);
-  const { locale, currency } = useLocale();
+  const { formatMoney, getLocalizedString, formatDate } = useFormatters();
   const router = useRouter();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -84,7 +83,7 @@ export default function SubscriptionDetailPage({ params }: { params: Promise<{ i
     (sum, item) => sum + (item.totalPrice?.centAmount || 0),
     0
   ) ?? 0;
-  const currencyCode = sub.lineItems?.[0]?.totalPrice?.currencyCode || currency;
+  const currencyCode = sub.lineItems?.[0]?.totalPrice?.currencyCode || undefined;
 
   return (
     <div>
@@ -128,7 +127,7 @@ export default function SubscriptionDetailPage({ params }: { params: Promise<{ i
         {nextDate && state !== 'Cancelled' && (
           <div>
             <p className="text-xs text-charcoal-light mb-1">Next order</p>
-            <p className="text-sm text-charcoal">{new Date(nextDate).toLocaleDateString()}</p>
+            <p className="text-sm text-charcoal">{formatDate(nextDate)}</p>
           </div>
         )}
 
@@ -146,9 +145,9 @@ export default function SubscriptionDetailPage({ params }: { params: Promise<{ i
             <div className="space-y-2">
               {sub.lineItems.map((item) => (
                 <div key={item.id} className="flex items-center justify-between text-sm">
-                  <span className="text-charcoal">{getLocalizedString(item.name, locale)} × {item.quantity}</span>
+                  <span className="text-charcoal">{getLocalizedString(item.name)} × {item.quantity}</span>
                   <span className="text-charcoal font-medium">
-                    {formatMoney(item.totalPrice?.centAmount ?? 0, item.totalPrice?.currencyCode || currency)}
+                    {formatMoney(item.totalPrice?.centAmount ?? 0, item.totalPrice?.currencyCode)}
                   </span>
                 </div>
               ))}

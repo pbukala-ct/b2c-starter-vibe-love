@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { formatMoney } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface RecurringOrder {
   id: string;
@@ -50,6 +50,7 @@ function isCurrentSchedule(sub: RecurringOrder, s: typeof SCHEDULES[0]) {
 }
 
 export default function SubscriptionsPage() {
+  const { formatMoney, getLocalizedString, formatDate } = useFormatters();
   const [subscriptions, setSubscriptions] = useState<RecurringOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -152,7 +153,7 @@ export default function SubscriptionsPage() {
                     </div>
                     {sub.nextOrderDate && !isCancelled && (
                       <p className="text-xs text-charcoal-light">
-                        Next order: {new Date(sub.nextOrderDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        Next order: {formatDate(sub.nextOrderDate)}
                       </p>
                     )}
                   </div>
@@ -168,7 +169,7 @@ export default function SubscriptionsPage() {
                   {lineItems.map(item => (
                     <div key={item.id} className="flex justify-between text-sm">
                       <span className="text-charcoal-light">
-                        {item.name['en-US'] || Object.values(item.name)[0]} × {item.quantity}
+                        {getLocalizedString(item.name)} × {item.quantity}
                       </span>
                       <span className="text-charcoal">{formatMoney(item.totalPrice.centAmount, item.totalPrice.currencyCode)}</span>
                     </div>

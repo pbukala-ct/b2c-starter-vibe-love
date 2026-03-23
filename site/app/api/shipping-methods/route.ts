@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getShippingMethods } from '@/lib/ct/cart';
+import { getLocalizedString } from '@/lib/utils';
 
 export async function GET(req: NextRequest) {
   const country = req.nextUrl.searchParams.get('country') || 'US';
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
       return {
         id: sm.id,
         name: sm.name,
-        description: sm.localizedDescription?.['en-US'] || sm.localizedDescription?.['en-GB'],
+        description: getLocalizedString(sm.localizedDescription),
         price: matchingRate?.price || null,
         freeAbove: matchingRate?.freeAbove || null,
       };

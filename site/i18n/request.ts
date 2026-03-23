@@ -1,24 +1,21 @@
 import { getRequestConfig } from 'next-intl/server';
-import { cookies } from 'next/headers';
-import { defaultLocale } from './config';
-
-// Map vibe-country cookie values to i18n locale
-function countryToLocale(country: string | undefined): string {
-  if (country === 'DE') return 'de';
-  return 'en';
-}
+import { getLocale } from '@/lib/locale';
+import { COUNTRY_CONFIG } from '@/lib/utils';
 
 export default getRequestConfig(async () => {
-  const cookieStore = await cookies();
-  const country = cookieStore.get('vibe-country')?.value;
-  const locale = countryToLocale(country) || defaultLocale;
+  const { locale: fullLocale } = await getLocale();
+  // Derive the short locale key used for message files ('en' or 'de')
+  const lang = fullLocale.split('-')[0];
+  const availableLangs = Object.values(COUNTRY_CONFIG)
+    .map((c) => c.locale.split('-')[0]);
+  const messageLocale = availableLangs.includes(lang) ? lang : 'en';
 
   let messages: Record<string, unknown>;
   try {
-    messages = (await import(`../messages/${locale}.json`)).default;
+    messages = (await import(`../messages/${messageLocale}.json`)).default;
   } catch {
-    messages = (await import(`../messages/${defaultLocale}.json`)).default;
+    messages = (await import('../messages/en.json')).default;
   }
 
-  return { locale, messages, timeZone: 'UTC' };
+  return { locale: fullLocale, messages, timeZone: 'UTC' };
 });

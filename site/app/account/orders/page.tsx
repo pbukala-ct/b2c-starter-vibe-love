@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { formatMoney } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface Order {
   id: string;
@@ -28,6 +28,7 @@ const STATE_COLORS: Record<string, string> = {
 };
 
 export default function OrdersPage() {
+  const { formatMoney, getLocalizedString, formatDate } = useFormatters();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -78,7 +79,7 @@ export default function OrdersPage() {
                     </span>
                   </div>
                   <p className="text-xs text-charcoal-light">
-                    {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    {formatDate(order.createdAt)}
                   </p>
                 </div>
                 <div className="text-right">
@@ -93,7 +94,7 @@ export default function OrdersPage() {
               <div className="text-xs text-charcoal-light">
                 {order.lineItems.slice(0, 3).map(item => (
                   <span key={item.id}>
-                    {item.name['en-US'] || Object.values(item.name)[0]} × {item.quantity}
+                    {getLocalizedString(item.name)} × {item.quantity}
                     {order.lineItems.indexOf(item) < Math.min(order.lineItems.length, 3) - 1 ? ', ' : ''}
                   </span>
                 ))}

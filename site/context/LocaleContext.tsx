@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { COUNTRY_CONFIG } from '@/lib/utils';
+import { COUNTRY_CONFIG, DEFAULT_LOCALE } from '@/lib/utils';
 
 interface LocaleContextType {
   country: string;
@@ -11,14 +11,14 @@ interface LocaleContextType {
 }
 
 const LocaleContext = createContext<LocaleContextType>({
-  country: 'US',
-  currency: 'USD',
-  locale: 'en-US',
+  country: DEFAULT_LOCALE.country,
+  currency: DEFAULT_LOCALE.currency,
+  locale: DEFAULT_LOCALE.locale,
   setCountry: () => {},
 });
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [country, setCountryState] = useState('US');
+  const [country, setCountryState] = useState<string>(DEFAULT_LOCALE.country);
 
   useEffect(() => {
     const saved = document.cookie
@@ -35,7 +35,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     document.cookie = `vibe-country=${newCountry}; path=/; max-age=${30 * 24 * 3600}; samesite=lax`;
   };
 
-  const config = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
+  const config = COUNTRY_CONFIG[country] || COUNTRY_CONFIG[DEFAULT_LOCALE.country];
 
   return (
     <LocaleContext.Provider
@@ -48,4 +48,9 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
 export function useLocale() {
   return useContext(LocaleContext);
+}
+
+/** Returns the full COUNTRY_CONFIG lookup table for use in client components. */
+export function useCountryConfig() {
+  return COUNTRY_CONFIG;
 }

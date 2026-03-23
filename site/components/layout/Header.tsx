@@ -11,8 +11,7 @@ import MiniCart from './MiniCart';
 import CountrySelector from './CountrySelector';
 import SearchBar from './SearchBar';
 import { Category } from '@/lib/ct/categories';
-import { useLocale } from '@/context/LocaleContext';
-import { getLocalizedString } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface HeaderProps {
   categories: Category[];
@@ -21,7 +20,7 @@ interface HeaderProps {
 export default function Header({ categories }: HeaderProps) {
   const { data: user } = useAccount();
   const isLoggedIn = !!user;
-  const { locale } = useLocale();
+  const { getLocalizedString } = useFormatters();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -125,8 +124,8 @@ export default function Header({ categories }: HeaderProps) {
           {/* Mobile nav */}
           <nav className="px-4 pb-4">
             {topLevel.map((cat) => {
-              const name = getLocalizedString(cat.name, locale);
-              const slug = cat.slug['en-US'] || Object.values(cat.slug)[0];
+              const name = getLocalizedString(cat.name);
+              const slug = getLocalizedString(cat.slug);
               return (
                 <div key={cat.id}>
                   <Link
@@ -137,8 +136,8 @@ export default function Header({ categories }: HeaderProps) {
                     {name}
                   </Link>
                   {cat.children?.map((child) => {
-                    const childName = getLocalizedString(child.name, locale);
-                    const childSlug = child.slug['en-US'] || Object.values(child.slug)[0];
+                    const childName = getLocalizedString(child.name);
+                    const childSlug = getLocalizedString(child.slug);
                     return (
                       <Link
                         key={child.id}

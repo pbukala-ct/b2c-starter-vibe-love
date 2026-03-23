@@ -1,8 +1,7 @@
-import { cookies } from 'next/headers';
 import { searchProducts } from '@/lib/ct/search';
 import ProductGrid from '@/components/product/ProductGrid';
 import ProductFilters from '@/components/product/ProductFilters';
-import { COUNTRY_CONFIG } from '@/lib/utils';
+import { getLocale } from '@/lib/locale';
 import { Suspense } from 'react';
 import Link from 'next/link';
 
@@ -21,9 +20,7 @@ export const metadata = { title: 'Search' };
 
 export default async function SearchPage({ searchParams }: PageProps) {
   const sp = await searchParams;
-  const cookieStore = await cookies();
-  const country = cookieStore.get('vibe-country')?.value || 'US';
-  const { currency, locale } = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
+  const { country, currency, locale } = await getLocale();
   const offset = parseInt(sp.offset || '0');
   const limit = 24;
 

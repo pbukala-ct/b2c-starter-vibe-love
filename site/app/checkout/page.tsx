@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useCartSWR } from '@/hooks/useCartSWR';
 import { useAccount } from '@/hooks/useAccount';
 import { useLocale } from '@/context/LocaleContext';
-import { formatMoney, getLocalizedString, useCombinedStreetField, formatStreetAddress, parseStreetAddress } from '@/lib/utils';
+import { useCombinedStreetField, formatStreetAddress, parseStreetAddress, DEFAULT_LOCALE, COUNTRY_CONFIG } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 import Image from 'next/image';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -54,6 +55,7 @@ export default function CheckoutPage() {
   const { data: user } = useAccount();
   const isLoggedIn = !!user;
   const { currency, country, locale } = useLocale();
+  const { formatMoney, getLocalizedString } = useFormatters();
   const [step, setStep] = useState<Step>('shipping');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -70,7 +72,7 @@ export default function CheckoutPage() {
     city: '',
     postalCode: '',
     state: '',
-    country: country || 'US',
+    country: country ?? DEFAULT_LOCALE.country,
     email: user?.email || '',
   });
 
@@ -103,7 +105,7 @@ export default function CheckoutPage() {
     city: '',
     postalCode: '',
     state: '',
-    country: country || 'US',
+    country: country ?? DEFAULT_LOCALE.country,
   });
 
   // Payment
@@ -139,7 +141,7 @@ export default function CheckoutPage() {
       setItemShipping(
         cart.lineItems.map((item) => ({
           lineItemId: item.id,
-          productName: getLocalizedString(item.name, locale),
+          productName: getLocalizedString(item.name),
           quantity: item.quantity,
           addresses: [{ addressKey: 'addr-primary', qty: item.quantity }],
         }))
@@ -196,7 +198,7 @@ export default function CheckoutPage() {
         city: '',
         postalCode: '',
         state: '',
-        country: country || 'US',
+        country: country ?? DEFAULT_LOCALE.country,
       },
     ]);
   };
@@ -366,9 +368,9 @@ export default function CheckoutPage() {
                   onChange={(e) => handleAddressChange('country', e.target.value)}
                   className="w-full border border-border px-3 py-2.5 text-sm rounded-sm bg-white focus:outline-none focus:border-charcoal"
                 >
-                  <option value="US">United States</option>
-                  <option value="GB">United Kingdom</option>
-                  <option value="DE">Germany</option>
+                  {Object.entries(COUNTRY_CONFIG).map(([code, config]) => (
+                    <option key={code} value={code}>{config.name}</option>
+                  ))}
                 </select>
               </div>
               <Input label="Email" type="email" value={primaryAddr.email || ''} onChange={(e) => handleAddressChange('email', e.target.value)} className="col-span-2" />
@@ -557,9 +559,9 @@ export default function CheckoutPage() {
                     onChange={(e) => setBillingAddr(p => ({ ...p, country: e.target.value }))}
                     className="w-full border border-border px-3 py-2.5 text-sm rounded-sm bg-white focus:outline-none focus:border-charcoal"
                   >
-                    <option value="US">United States</option>
-                    <option value="GB">United Kingdom</option>
-                    <option value="DE">Germany</option>
+                    {Object.entries(COUNTRY_CONFIG).map(([code, config]) => (
+                      <option key={code} value={code}>{config.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -632,7 +634,7 @@ export default function CheckoutPage() {
             <h2 className="font-semibold text-charcoal mb-4">Order Summary</h2>
             <div className="space-y-3 mb-4">
               {cart.lineItems.map((item) => {
-                const name = getLocalizedString(item.name, locale);
+                const name = getLocalizedString(item.name);
                 const img = item.variant?.images?.[0]?.url;
                 return (
                   <div key={item.id} className="flex gap-3">

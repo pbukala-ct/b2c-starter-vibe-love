@@ -5,12 +5,13 @@ import Image from 'next/image';
 import { useCart, Cart } from '@/context/CartContext';
 import { useCartSWR } from '@/hooks/useCartSWR';
 import { useLocale } from '@/context/LocaleContext';
-import { formatMoney, getLocalizedString } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 import { useState } from 'react';
 import { useRecurrencePolicies } from '@/hooks/useRecurrencePolicies';
 import { Drawer } from '@/components/ui/Drawer';
 
 function MiniCartFooter({ cart, country, onClose }: { cart: Cart; country: string; onClose: () => void }) {
+  const { formatMoney } = useFormatters();
   const taxAmount = cart.taxedPrice
     ? cart.taxedPrice.totalGross.centAmount - cart.taxedPrice.totalNet.centAmount
     : country === 'US' ? Math.round(cart.totalPrice.centAmount * 0.1) : 0;
@@ -52,7 +53,8 @@ function MiniCartFooter({ cart, country, onClose }: { cart: Cart; country: strin
 export default function MiniCart() {
   const { showMiniCart, setShowMiniCart } = useCart();
   const { data: cart, mutate } = useCartSWR();
-  const { locale, currency, country } = useLocale();
+  const { country } = useLocale();
+  const { formatMoney, getLocalizedString } = useFormatters();
   const policyMap = useRecurrencePolicies();
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
@@ -89,9 +91,9 @@ export default function MiniCart() {
     ) : (
       <div className="space-y-4">
         {cart.lineItems.map((item) => {
-          const name = getLocalizedString(item.name, locale);
+          const name = getLocalizedString(item.name);
           const image = item.variant?.images?.[0]?.url;
-          const price = formatMoney(item.price?.value?.centAmount || 0, item.price?.value?.currencyCode || currency);
+          const price = formatMoney(item.price?.value?.centAmount || 0, item.price?.value?.currencyCode);
           const isSubscription = !!item.recurrenceInfo?.recurrencePolicy;
           const policyId = item.recurrenceInfo?.recurrencePolicy?.id;
           const intervalLabel = policyId ? (policyMap.get(policyId) || 'Subscribe & Save') : 'Subscribe & Save';
@@ -105,7 +107,7 @@ export default function MiniCart() {
               )}
               <div className="flex-1 min-w-0">
                 <Link
-                  href={`/products/${item.productSlug?.['en-US'] || item.productKey || item.productId}`}
+                  href={`/products/${getLocalizedString(item.productSlug) || item.productKey || item.productId}`}
                   onClick={() => setShowMiniCart(false)}
                   className="text-sm font-medium text-charcoal hover:text-terra line-clamp-2"
                 >

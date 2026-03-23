@@ -3,14 +3,15 @@
 import Link from 'next/link';
 import { useCartSWR } from '@/hooks/useCartSWR';
 import { useLocale } from '@/context/LocaleContext';
-import { formatMoney } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 import CartItem from '@/components/cart/CartItem';
 import { DiscountCodeForm } from '@/components/cart/DiscountCodeForm';
 import { useEffect } from 'react';
 
 export default function CartPage() {
   const { data: cart, mutate, isLoading } = useCartSWR();
-  const { currency, country } = useLocale();
+  const { country } = useLocale();
+  const { formatMoney } = useFormatters();
 
   useEffect(() => {
     mutate();

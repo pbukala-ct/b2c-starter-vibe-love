@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { formatMoney, getLocalizedString, formatStreetAddress } from '@/lib/utils';
+import { formatStreetAddress } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface LineItem {
   id: string;
@@ -70,6 +71,7 @@ interface Order {
 }
 
 export default function OrderDetailPage() {
+  const { formatMoney, getLocalizedString, formatDate } = useFormatters();
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -144,7 +146,7 @@ export default function OrderDetailPage() {
 
       <div className="flex items-center gap-3 mb-6">
         <p className="text-sm text-charcoal-light">
-          {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          {formatDate(order.createdAt)}
         </p>
         <span className="text-xs bg-sage/10 text-sage border border-sage/20 px-2 py-0.5 rounded-full">
           {order.orderState}
@@ -178,7 +180,7 @@ export default function OrderDetailPage() {
                     {items.map(({ item, qty }) => (
                       <div key={item.id} className="flex justify-between text-sm">
                         <div>
-                          <span className="text-charcoal">{getLocalizedString(item.name, 'en-US')}</span>
+                          <span className="text-charcoal">{getLocalizedString(item.name)}</span>
                           <span className="text-charcoal-light ml-2">× {qty}</span>
                           {item.recurrenceInfo?.recurrencePolicy && (
                             <span className="ml-2 text-sage text-xs border border-sage/30 px-1.5 py-0.5 rounded-full">♻ Subscription</span>
@@ -232,7 +234,7 @@ export default function OrderDetailPage() {
               {order.lineItems.map(item => (
                 <div key={item.id} className="flex justify-between text-sm">
                   <div>
-                    <span className="text-charcoal">{getLocalizedString(item.name, 'en-US')}</span>
+                    <span className="text-charcoal">{getLocalizedString(item.name)}</span>
                     <span className="text-charcoal-light ml-2">× {item.quantity}</span>
                     {item.recurrenceInfo?.recurrencePolicy && (
                       <span className="ml-2 text-sage text-xs border border-sage/30 px-1.5 py-0.5 rounded-full">♻ Subscription</span>
