@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useFormatters } from '@/hooks/useFormatters';
+import { useRecurrencePoliciesList } from '@/hooks/useRecurrencePolicies';
 
 interface RecurringOrder {
   id: string;
@@ -31,26 +32,9 @@ const STATE_COLORS: Record<string, string> = {
   Cancelled: 'bg-red-50 text-red-700 border-red-200',
 };
 
-const SCHEDULES = [
-  { label: 'Monthly',   schedule: { type: 'standard', value: 1, intervalUnit: 'months' } },
-  { label: 'Bi-weekly', schedule: { type: 'standard', value: 2, intervalUnit: 'weeks' } },
-  { label: 'Weekly',    schedule: { type: 'standard', value: 1, intervalUnit: 'weeks' } },
-];
-
-function scheduleLabel(schedule: { type: string; value: number; intervalUnit: string }) {
-  const unit = schedule.intervalUnit?.toLowerCase();
-  if (unit === 'weeks' && schedule.value === 1) return 'Weekly';
-  if (unit === 'weeks' && schedule.value === 2) return 'Bi-weekly';
-  if (unit === 'months' && schedule.value === 1) return 'Monthly';
-  return `Every ${schedule.value} ${unit}`;
-}
-
-function isCurrentSchedule(sub: RecurringOrder, s: typeof SCHEDULES[0]) {
-  return sub.schedule.value === s.schedule.value && sub.schedule.intervalUnit === s.schedule.intervalUnit;
-}
-
 export default function SubscriptionsPage() {
   const { formatMoney, getLocalizedString, formatDate } = useFormatters();
+  const policies = useRecurrencePoliciesList();
   const [subscriptions, setSubscriptions] = useState<RecurringOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -144,7 +128,7 @@ export default function SubscriptionsPage() {
                       <span className={`text-xs border px-2 py-0.5 rounded-full ${STATE_COLORS[sub.recurringOrderState] || 'bg-cream text-charcoal-light border-border'}`}>
                         {STATE_LABELS[sub.recurringOrderState] || sub.recurringOrderState}
                       </span>
-                      <span className="text-xs text-charcoal-light">{scheduleLabel(sub.schedule)}</span>
+                      <span className="text-xs text-charcoal-light">{getLocalizedString(policies.find((p) => p.id === sub.id)?.name)}</span>
                       {pendingSkips > 0 && (
                         <span className="text-xs bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-0.5 rounded-full">
                           Skipping {pendingSkips} order{pendingSkips > 1 ? 's' : ''}
@@ -227,13 +211,13 @@ export default function SubscriptionsPage() {
                     {/* Schedule pills */}
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-charcoal-light">Change schedule:</span>
-                      {SCHEDULES.map(s => {
-                        const isCurrent = isCurrentSchedule(sub, s);
-                        const loadKey = sub.id + 'setSchedule' + s.label;
+                      {policies.map((p) => {
+                        const isCurrent = sub.schedule.value === p.schedule.value && sub.schedule.intervalUnit === p.schedule.intervalUnit;
+                        const loadKey = sub.id + 'setSchedule' + p.id;
                         return (
                           <button
-                            key={s.label}
-                            onClick={() => !isCurrent && handleAction(sub.id, 'setSchedule', { schedule: s.schedule })}
+                            key={p.id}
+                            onClick={() => !isCurrent && handleAction(sub.id, 'setSchedule', { schedule: p.schedule })}
                             disabled={isCurrent || actionLoading === loadKey}
                             className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                               isCurrent
@@ -241,7 +225,7 @@ export default function SubscriptionsPage() {
                                 : 'bg-white text-charcoal-light border-border hover:border-charcoal hover:text-charcoal'
                             } disabled:opacity-60`}
                           >
-                            {actionLoading === loadKey ? '…' : s.label}
+                            {actionLoading === loadKey ? '…' : getLocalizedString(p.name)}
                           </button>
                         );
                       })}

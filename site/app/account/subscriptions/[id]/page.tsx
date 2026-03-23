@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSubscription } from '@/hooks/useSubscriptions';
 import { useFormatters } from '@/hooks/useFormatters';
+import { useRecurrencePoliciesList } from '@/hooks/useRecurrencePolicies';
 
 const STATE_COLORS: Record<string, string> = {
   Active: 'bg-sage/10 text-sage border-sage/20',
@@ -12,19 +13,6 @@ const STATE_COLORS: Record<string, string> = {
   Cancelled: 'bg-red-50 text-red-700 border-red-200',
 };
 
-const SCHEDULES = [
-  { label: 'Monthly',   schedule: { type: 'standard', value: 1, intervalUnit: 'months' } },
-  { label: 'Bi-weekly', schedule: { type: 'standard', value: 2, intervalUnit: 'weeks' } },
-  { label: 'Weekly',    schedule: { type: 'standard', value: 1, intervalUnit: 'weeks' } },
-];
-
-function scheduleLabel(schedule: { type: string; value: number; intervalUnit: string }) {
-  const unit = schedule.intervalUnit?.toLowerCase();
-  if (unit === 'weeks' && schedule.value === 1) return 'Weekly';
-  if (unit === 'weeks' && schedule.value === 2) return 'Bi-weekly';
-  if (unit === 'months' && schedule.value === 1) return 'Monthly';
-  return `Every ${schedule.value} ${unit}`;
-}
 
 export default function SubscriptionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -34,6 +22,7 @@ export default function SubscriptionDetailPage({ params }: { params: Promise<{ i
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const policies = useRecurrencePoliciesList();
 
   async function doAction(action: string, extra: Record<string, unknown> = {}) {
     setActionError(null);
@@ -119,7 +108,7 @@ export default function SubscriptionDetailPage({ params }: { params: Promise<{ i
         {sub.schedule && (
           <div>
             <p className="text-xs text-charcoal-light mb-1">Delivery frequency</p>
-            <p className="text-sm font-medium text-charcoal">{scheduleLabel(sub.schedule)}</p>
+            <p className="text-sm font-medium text-charcoal">{getLocalizedString(policies.find((p) => p.id === sub.id)?.name)}</p>
           </div>
         )}
 
@@ -164,14 +153,14 @@ export default function SubscriptionDetailPage({ params }: { params: Promise<{ i
           <div>
             <p className="text-xs text-charcoal-light mb-2">Change frequency</p>
             <div className="flex flex-wrap gap-2">
-              {SCHEDULES.map((s) => {
+              {policies.map((p) => {
                 const isCurrent = sub.schedule &&
-                  sub.schedule.value === s.schedule.value &&
-                  sub.schedule.intervalUnit === s.schedule.intervalUnit;
+                  sub.schedule.value === p.schedule.value &&
+                  sub.schedule.intervalUnit === p.schedule.intervalUnit;
                 return (
                   <button
-                    key={s.label}
-                    onClick={() => doAction('setSchedule', { schedule: s.schedule })}
+                    key={p.id}
+                    onClick={() => doAction('setSchedule', { schedule: p.schedule })}
                     disabled={!!actionLoading || isCurrent}
                     className={`px-3 py-1.5 text-xs rounded-sm border transition-colors ${
                       isCurrent
@@ -179,7 +168,7 @@ export default function SubscriptionDetailPage({ params }: { params: Promise<{ i
                         : 'border-border text-charcoal-light hover:border-charcoal hover:text-charcoal disabled:opacity-50'
                     }`}
                   >
-                    {s.label}
+                    {getLocalizedString(p.name)}
                   </button>
                 );
               })}

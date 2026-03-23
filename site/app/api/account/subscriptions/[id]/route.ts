@@ -29,7 +29,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  let ctAction: Record<string, unknown>;
+  let ctAction: { action: string; [key: string]: unknown };
   if (action === 'pause') {
     ctAction = { action: 'setRecurringOrderState', recurringOrderState: 'Paused' };
   } else if (action === 'resume') {
