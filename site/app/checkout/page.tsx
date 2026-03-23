@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCart } from '@/context/CartContext';
-import { useAuth } from '@/context/AuthContext';
+import { useCartSWR } from '@/hooks/useCartSWR';
+import { useAccount } from '@/hooks/useAccount';
 import { useLocale } from '@/context/LocaleContext';
 import { formatMoney, getLocalizedString, useCombinedStreetField, formatStreetAddress, parseStreetAddress } from '@/lib/utils';
 import Image from 'next/image';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import { MiniLoginForm } from '@/components/checkout/MiniLoginForm';
 
 type Step = 'shipping' | 'split' | 'payment' | 'review';
 
@@ -49,8 +50,9 @@ interface ItemShipping {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, setCart, refreshCart } = useCart();
-  const { user, isLoggedIn } = useAuth();
+  const { data: cart, mutate: mutateCart } = useCartSWR();
+  const { data: user } = useAccount();
+  const isLoggedIn = !!user;
   const { currency, country, locale } = useLocale();
   const [step, setStep] = useState<Step>('shipping');
   const [submitting, setSubmitting] = useState(false);
@@ -113,7 +115,7 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    refreshCart();
+    mutateCart();
     fetch(`/api/shipping-methods?country=${country}&currency=${currency}`)
       .then(r => r.json())
       .then(data => {
@@ -287,7 +289,7 @@ export default function CheckoutPage() {
       }
 
       const data = await resp.json();
-      setCart(null);
+      mutateCart(null, { revalidate: false });
       router.push(`/checkout/confirmation/${data.orderId}`);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Checkout failed');
@@ -315,13 +317,7 @@ export default function CheckoutPage() {
         {/* Form */}
         <div className="lg:col-span-3 space-y-8">
           {/* Guest/Login notice */}
-          {!isLoggedIn && (
-            <div className="bg-cream border border-border rounded-sm p-4 text-sm">
-              <span className="text-charcoal-light">Have an account? </span>
-              <a href="/login?redirect=/checkout" className="text-terra hover:underline">Sign in</a>
-              <span className="text-charcoal-light"> for faster checkout</span>
-            </div>
-          )}
+          {!isLoggedIn && <MiniLoginForm />}
 
           {/* Shipping Address */}
           <div>

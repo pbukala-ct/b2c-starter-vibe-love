@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAccount } from '@/hooks/useAccount';
+import { mutate } from 'swr';
+import { KEY_ACCOUNT } from '@/lib/cache-keys';
 import { useRouter } from 'next/navigation';
 import MegaMenu from './MegaMenu';
 import MiniCart from './MiniCart';
@@ -17,15 +19,16 @@ interface HeaderProps {
 }
 
 export default function Header({ categories }: HeaderProps) {
-  const { user, isLoggedIn } = useAuth();
+  const { data: user } = useAccount();
+  const isLoggedIn = !!user;
   const { locale } = useLocale();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
+    mutate(KEY_ACCOUNT, null, { revalidate: false });
     router.push('/');
-    router.refresh();
   };
 
   const topLevel = categories.filter((c) => !c.parent);

@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { getRecurringOrderById, updateRecurringOrder } from '@/lib/ct/auth';
 
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const session = await getSession();
+  if (!session.customerId) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+  try {
+    const sub = await getRecurringOrderById(id);
+    // Normalise lineItems from origin order if needed
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const normalised = { ...sub, lineItems: sub.lineItems?.length ? sub.lineItems : (sub as any).originOrder?.obj?.lineItems ?? [], nextOrderDate: sub.nextOrderDate ?? sub.nextOrderAt };
+    return NextResponse.json({ subscription: normalised });
+  } catch {
+    return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
+  }
+}
+
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await req.json();
@@ -30,9 +47,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   try {
-    // Fetch current version to satisfy CT's optimistic concurrency check
     const current = await getRecurringOrderById(id);
-    const result = await updateRecurringOrder(id, current.version, [ctAction]);
+    const result = await updateRecurringOrder(id, current.version, [ctAction as { action: string; [key: string]: unknown }]);
     return NextResponse.json({ subscription: result });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Failed to update subscription';

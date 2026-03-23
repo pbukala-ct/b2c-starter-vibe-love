@@ -156,7 +156,12 @@ export default function SubscriptionsPage() {
                       </p>
                     )}
                   </div>
-                  <p className="font-semibold text-charcoal text-sm">{formatMoney(total, currency)}</p>
+                  <div className="flex flex-col items-end gap-1">
+                    <p className="font-semibold text-charcoal text-sm">{formatMoney(total, currency)}</p>
+                    <Link href={`/account/subscriptions/${sub.id}`} className="text-xs text-terra hover:underline">
+                      View details →
+                    </Link>
+                  </div>
                 </div>
 
                 <div className="space-y-1 mb-4">

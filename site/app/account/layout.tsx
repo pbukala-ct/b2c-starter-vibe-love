@@ -3,7 +3,9 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useAccount } from '@/hooks/useAccount';
+import { mutate } from 'swr';
+import { KEY_ACCOUNT } from '@/lib/cache-keys';
 
 const navItems = [
   { href: '/account', label: 'Profile', exact: true },
@@ -11,26 +13,27 @@ const navItems = [
   { href: '/account/subscriptions', label: 'Subscriptions' },
   { href: '/account/addresses', label: 'Addresses' },
   { href: '/account/payments', label: 'Payment Methods' },
+  { href: '/account/security', label: 'Security' },
 ];
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, setUser } = useAuth();
+  const { data: user, isLoading } = useAccount();
 
   useEffect(() => {
-    if (user === null) {
+    if (!isLoading && !user) {
       router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
-  }, [user, router, pathname]);
+  }, [user, isLoading, router, pathname]);
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
-    setUser(null);
+    mutate(KEY_ACCOUNT, null, { revalidate: false });
     router.push('/');
   }
 
-  if (!user) return null;
+  if (isLoading || !user) return null;
 
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
