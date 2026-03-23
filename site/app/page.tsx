@@ -1,14 +1,17 @@
+'use server';
 import Link from 'next/link';
 import Image from 'next/image';
 import { searchProducts } from '@/lib/ct/search';
 import { getCategoryTree } from '@/lib/ct/categories';
 import ProductCard from '@/components/product/ProductCard';
 import { getLocalizedString } from '@/lib/utils';
+import { getLocale } from '@/lib/locale';
 
 export default async function HomePage() {
+  const { locale, currency, country } = await getLocale();
   const [newArrivals, featuredResult, categories] = await Promise.all([
-    searchProducts({ limit: 4, sort: 'createdAt', currency: 'USD', country: 'US', locale: 'en-US' }),
-    searchProducts({ limit: 8, currency: 'USD', country: 'US', locale: 'en-US' }),
+    searchProducts({ limit: 4, sort: 'createdAt', currency, country, locale }),
+    searchProducts({ limit: 8, currency, country, locale }),
     getCategoryTree(),
   ]);
 
@@ -60,8 +63,8 @@ export default async function HomePage() {
         <h2 className="text-2xl font-semibold text-charcoal mb-8">Shop by Category</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {topCategories.map((cat) => {
-            const name = getLocalizedString(cat.name, 'en-US');
-            const slug = cat.slug['en-US'] || Object.values(cat.slug)[0];
+            const name = getLocalizedString(cat.name, locale);
+            const slug = getLocalizedString(cat.slug);
             const catImages: Record<string, string> = {
               furniture: 'https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Art_Deco_Coffee_Table-1.1.jpeg',
               'home-decor': 'https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Braided_Rug-1.1.jpeg',

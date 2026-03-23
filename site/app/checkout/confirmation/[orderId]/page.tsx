@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getOrderById } from '@/lib/ct/auth';
 import { getSession } from '@/lib/session';
 import { formatMoney, getLocalizedString } from '@/lib/utils';
+import { getLocale } from '@/lib/locale';
 
 interface PageProps {
   params: Promise<{ orderId: string }>;
@@ -12,6 +13,7 @@ export const metadata = { title: 'Order Confirmed' };
 export default async function ConfirmationPage({ params }: PageProps) {
   const { orderId } = await params;
   const session = await getSession();
+  const { locale } = await getLocale();
 
   let order = null;
   try {
@@ -43,7 +45,7 @@ export default async function ConfirmationPage({ params }: PageProps) {
             {order.lineItems.map((item: { id: string; name: Record<string, string>; quantity: number; totalPrice: { centAmount: number; currencyCode: string }; recurrenceInfo?: { recurrencePolicy: { id: string } } }) => (
               <div key={item.id} className="flex justify-between text-sm">
                 <div>
-                  <span className="text-charcoal">{getLocalizedString(item.name, 'en-US')}</span>
+                  <span className="text-charcoal">{getLocalizedString(item.name, locale)}</span>
                   <span className="text-charcoal-light ml-2">× {item.quantity}</span>
                   {item.recurrenceInfo?.recurrencePolicy && (
                     <span className="ml-2 text-sage text-xs">♻ Subscription</span>

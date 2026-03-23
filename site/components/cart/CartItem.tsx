@@ -3,8 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { CartLineItem } from '@/context/CartContext';
-import { formatMoney, getLocalizedString } from '@/lib/utils';
-import { useLocale } from '@/context/LocaleContext';
+import { useFormatters } from '@/hooks/useFormatters';
 import { useState } from 'react';
 import { useRecurrencePolicies } from '@/hooks/useRecurrencePolicies';
 
@@ -15,19 +14,19 @@ interface CartItemProps {
 }
 
 export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
-  const { locale } = useLocale();
+  const { formatMoney, getLocalizedString } = useFormatters();
   const policyMap = useRecurrencePolicies();
   const [qty, setQty] = useState(item.quantity);
   const [updating, setUpdating] = useState(false);
 
-  const name = getLocalizedString(item.name, locale);
+  const name = getLocalizedString(item.name);
   const image = item.variant?.images?.[0]?.url;
-  const unitPrice = formatMoney(item.price?.value?.centAmount || 0, item.price?.value?.currencyCode || 'USD');
-  const total = formatMoney(item.totalPrice?.centAmount || 0, item.totalPrice?.currencyCode || 'USD');
+  const unitPrice = formatMoney(item.price?.value?.centAmount || 0, item.price?.value?.currencyCode);
+  const total = formatMoney(item.totalPrice?.centAmount || 0, item.totalPrice?.currencyCode);
   const isSubscription = !!item.recurrenceInfo?.recurrencePolicy;
   const policyId = item.recurrenceInfo?.recurrencePolicy?.id;
   const intervalLabel = policyId ? (policyMap.get(policyId) || 'Subscribe & Save') : 'Subscribe & Save';
-  const slug = item.productSlug?.['en-US'] || item.productKey || item.productId;
+  const slug = getLocalizedString(item.productSlug) || item.productKey || item.productId;
 
   const handleQtyChange = async (newQty: number) => {
     if (newQty < 1) return;

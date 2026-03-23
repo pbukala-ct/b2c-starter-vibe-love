@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession, createSessionToken, setSessionCookie } from '@/lib/session';
 import { getCart, createCart, addLineItem } from '@/lib/ct/cart';
-import { COUNTRY_CONFIG } from '@/lib/utils';
+import { getLocale } from '@/lib/locale';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -12,8 +12,7 @@ export async function POST(req: NextRequest) {
   }
 
   const session = await getSession();
-  const country = req.cookies.get('vibe-country')?.value || 'US';
-  const config = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
+  const { country, currency } = await getLocale();
 
   let cart;
   let cartId = session.cartId;
@@ -37,8 +36,8 @@ export async function POST(req: NextRequest) {
   const cartCurrency = cart?.currency || cart?.totalPrice?.currencyCode;
 
   // Create new cart if none exists, currency missing/mismatched, or country changed
-  if (!cartId || !cart || !cartCurrency || cartCurrency !== config.currency) {
-    cart = await createCart(config.currency, country, session.customerId);
+  if (!cartId || !cart || !cartCurrency || cartCurrency !== currency) {
+    cart = await createCart(currency, country, session.customerId);
     cartId = cart.id;
   }
 

@@ -2,30 +2,32 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAccount } from '@/hooks/useAccount';
+import { mutate } from 'swr';
+import { KEY_ACCOUNT } from '@/lib/cache-keys';
 import { useRouter } from 'next/navigation';
 import MegaMenu from './MegaMenu';
 import MiniCart from './MiniCart';
 import CountrySelector from './CountrySelector';
 import SearchBar from './SearchBar';
 import { Category } from '@/lib/ct/categories';
-import { useLocale } from '@/context/LocaleContext';
-import { getLocalizedString } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface HeaderProps {
   categories: Category[];
 }
 
 export default function Header({ categories }: HeaderProps) {
-  const { user, isLoggedIn } = useAuth();
-  const { locale } = useLocale();
+  const { data: user } = useAccount();
+  const isLoggedIn = !!user;
+  const { getLocalizedString } = useFormatters();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
+    mutate(KEY_ACCOUNT, null, { revalidate: false });
     router.push('/');
-    router.refresh();
   };
 
   const topLevel = categories.filter((c) => !c.parent);
@@ -122,8 +124,8 @@ export default function Header({ categories }: HeaderProps) {
           {/* Mobile nav */}
           <nav className="px-4 pb-4">
             {topLevel.map((cat) => {
-              const name = getLocalizedString(cat.name, locale);
-              const slug = cat.slug['en-US'] || Object.values(cat.slug)[0];
+              const name = getLocalizedString(cat.name);
+              const slug = getLocalizedString(cat.slug);
               return (
                 <div key={cat.id}>
                   <Link
@@ -134,8 +136,8 @@ export default function Header({ categories }: HeaderProps) {
                     {name}
                   </Link>
                   {cat.children?.map((child) => {
-                    const childName = getLocalizedString(child.name, locale);
-                    const childSlug = child.slug['en-US'] || Object.values(child.slug)[0];
+                    const childName = getLocalizedString(child.name);
+                    const childSlug = getLocalizedString(child.slug);
                     return (
                       <Link
                         key={child.id}

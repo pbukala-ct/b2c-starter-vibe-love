@@ -1,23 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { formatMoney } from '@/lib/utils';
-
-interface RecurringOrder {
-  id: string;
-  key?: string;
-  recurringOrderState: string;
-  schedule: { type: string; value: number; intervalUnit: string };
-  nextOrderDate?: string;
-  skipConfiguration?: { totalToSkip: number; skipped: number; lastSkippedAt?: string };
-  lineItems: {
-    id: string;
-    name: Record<string, string>;
-    quantity: number;
-    totalPrice: { centAmount: number; currencyCode: string };
-  }[];
-}
+import { useFormatters } from '@/hooks/useFormatters';
+import { useRecurrencePoliciesList } from '@/hooks/useRecurrencePolicies';
+import { useSubscriptions, useSubscriptionAction } from '@/hooks/useSubscriptions';
 
 const STATE_LABELS: Record<string, string> = {
   Active: 'Active',
@@ -31,61 +18,21 @@ const STATE_COLORS: Record<string, string> = {
   Cancelled: 'bg-red-50 text-red-700 border-red-200',
 };
 
-const SCHEDULES = [
-  { label: 'Monthly',   schedule: { type: 'standard', value: 1, intervalUnit: 'months' } },
-  { label: 'Bi-weekly', schedule: { type: 'standard', value: 2, intervalUnit: 'weeks' } },
-  { label: 'Weekly',    schedule: { type: 'standard', value: 1, intervalUnit: 'weeks' } },
-];
-
-function scheduleLabel(schedule: { type: string; value: number; intervalUnit: string }) {
-  const unit = schedule.intervalUnit?.toLowerCase();
-  if (unit === 'weeks' && schedule.value === 1) return 'Weekly';
-  if (unit === 'weeks' && schedule.value === 2) return 'Bi-weekly';
-  if (unit === 'months' && schedule.value === 1) return 'Monthly';
-  return `Every ${schedule.value} ${unit}`;
-}
-
-function isCurrentSchedule(sub: RecurringOrder, s: typeof SCHEDULES[0]) {
-  return sub.schedule.value === s.schedule.value && sub.schedule.intervalUnit === s.schedule.intervalUnit;
-}
-
 export default function SubscriptionsPage() {
-  const [subscriptions, setSubscriptions] = useState<RecurringOrder[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { formatMoney, getLocalizedString, formatDate } = useFormatters();
+  const policies = useRecurrencePoliciesList();
+  const { data: subscriptions = [], isLoading } = useSubscriptions();
+  const { action: subscriptionAction } = useSubscriptionAction();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchSubscriptions();
-  }, []);
-
-  async function fetchSubscriptions() {
-    try {
-      const res = await fetch('/api/account/subscriptions');
-      const data = await res.json();
-      setSubscriptions(data.results || []);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function handleAction(id: string, action: string, payload?: Record<string, unknown>) {
-    setActionLoading(id + action);
+  async function handleAction(id: string, actionType: string, payload?: Record<string, unknown>) {
+    setActionLoading(id + actionType);
     setActionError(null);
     try {
-      const res = await fetch(`/api/account/subscriptions/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, ...payload }),
-      });
-      if (res.ok) {
-        await fetchSubscriptions();
-      } else {
-        const d = await res.json().catch(() => ({}));
-        setActionError(d.error || `Failed to ${action} subscription`);
-      }
-    } catch {
-      setActionError(`Failed to ${action} subscription`);
+      await subscriptionAction(id, actionType, payload);
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : `Failed to ${actionType} subscription`);
     } finally {
       setActionLoading(null);
     }
@@ -128,7 +75,7 @@ export default function SubscriptionsPage() {
             const isActive = sub.recurringOrderState === 'Active';
             const isPaused = sub.recurringOrderState === 'Paused';
             const isCancelled = sub.recurringOrderState === 'Cancelled';
-            const lineItems: typeof sub.lineItems = sub.lineItems ?? [];
+            const lineItems = sub.lineItems ?? [];
             const total = lineItems.reduce((sum, i) => sum + i.totalPrice.centAmount, 0);
             const currency = lineItems[0]?.totalPrice.currencyCode || 'USD';
 
@@ -143,7 +90,7 @@ export default function SubscriptionsPage() {
                       <span className={`text-xs border px-2 py-0.5 rounded-full ${STATE_COLORS[sub.recurringOrderState] || 'bg-cream text-charcoal-light border-border'}`}>
                         {STATE_LABELS[sub.recurringOrderState] || sub.recurringOrderState}
                       </span>
-                      <span className="text-xs text-charcoal-light">{scheduleLabel(sub.schedule)}</span>
+                      <span className="text-xs text-charcoal-light">{getLocalizedString(policies.find((p) => p.id === sub.id)?.name)}</span>
                       {pendingSkips > 0 && (
                         <span className="text-xs bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-0.5 rounded-full">
                           Skipping {pendingSkips} order{pendingSkips > 1 ? 's' : ''}
@@ -152,18 +99,23 @@ export default function SubscriptionsPage() {
                     </div>
                     {sub.nextOrderDate && !isCancelled && (
                       <p className="text-xs text-charcoal-light">
-                        Next order: {new Date(sub.nextOrderDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        Next order: {formatDate(sub.nextOrderDate)}
                       </p>
                     )}
                   </div>
-                  <p className="font-semibold text-charcoal text-sm">{formatMoney(total, currency)}</p>
+                  <div className="flex flex-col items-end gap-1">
+                    <p className="font-semibold text-charcoal text-sm">{formatMoney(total, currency)}</p>
+                    <Link href={`/account/subscriptions/${sub.id}`} className="text-xs text-terra hover:underline">
+                      View details →
+                    </Link>
+                  </div>
                 </div>
 
                 <div className="space-y-1 mb-4">
                   {lineItems.map(item => (
                     <div key={item.id} className="flex justify-between text-sm">
                       <span className="text-charcoal-light">
-                        {item.name['en-US'] || Object.values(item.name)[0]} × {item.quantity}
+                        {getLocalizedString(item.name)} × {item.quantity}
                       </span>
                       <span className="text-charcoal">{formatMoney(item.totalPrice.centAmount, item.totalPrice.currencyCode)}</span>
                     </div>
@@ -221,13 +173,13 @@ export default function SubscriptionsPage() {
                     {/* Schedule pills */}
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-charcoal-light">Change schedule:</span>
-                      {SCHEDULES.map(s => {
-                        const isCurrent = isCurrentSchedule(sub, s);
-                        const loadKey = sub.id + 'setSchedule' + s.label;
+                      {policies.map((p) => {
+                        const isCurrent = sub.schedule?.value === p.schedule.value && sub.schedule?.intervalUnit === p.schedule.intervalUnit;
+                        const loadKey = sub.id + 'setSchedule' + p.id;
                         return (
                           <button
-                            key={s.label}
-                            onClick={() => !isCurrent && handleAction(sub.id, 'setSchedule', { schedule: s.schedule })}
+                            key={p.id}
+                            onClick={() => !isCurrent && handleAction(sub.id, 'setSchedule', { recurrencePolicyId: p.id })}
                             disabled={isCurrent || actionLoading === loadKey}
                             className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                               isCurrent
@@ -235,7 +187,7 @@ export default function SubscriptionsPage() {
                                 : 'bg-white text-charcoal-light border-border hover:border-charcoal hover:text-charcoal'
                             } disabled:opacity-60`}
                           >
-                            {actionLoading === loadKey ? '…' : s.label}
+                            {actionLoading === loadKey ? '…' : getLocalizedString(p.name)}
                           </button>
                         );
                       })}

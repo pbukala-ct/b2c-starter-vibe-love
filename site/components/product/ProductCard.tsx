@@ -3,8 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ProductProjection } from '@/lib/ct/search';
-import { formatMoney, getLocalizedString } from '@/lib/utils';
-import { useLocale } from '@/context/LocaleContext';
+import { useFormatters } from '@/hooks/useFormatters';
 import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
 
@@ -13,12 +12,12 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { locale, currency } = useLocale();
+  const { formatMoney, getLocalizedString } = useFormatters();
   const { addToCartAndShow } = useCart();
   const [adding, setAdding] = useState(false);
 
-  const name = getLocalizedString(product.name, locale);
-  const slug = product.slug?.['en-US'] || product.slug?.['en-GB'] || product.key || product.id;
+  const name = getLocalizedString(product.name);
+  const slug = getLocalizedString(product.slug) || product.key || product.id;
   const image = product.masterVariant?.images?.[0]?.url;
   const price = product.masterVariant?.price;
   const hasSubscription = product.masterVariant?.recurrencePrices?.some(

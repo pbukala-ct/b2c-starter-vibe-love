@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useAccount } from '@/hooks/useAccount';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/account';
-  const { user, setUser } = useAuth();
+  const { data: user, mutate: mutateAccount } = useAccount();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +35,7 @@ export default function LoginPage() {
         setError(data.error || 'Invalid email or password');
       } else {
         const c = data.customer || data;
-        setUser({ id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName });
+        mutateAccount({ id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName }, { revalidate: false });
         router.push(redirect);
       }
     } catch {
@@ -92,6 +92,12 @@ export default function LoginPage() {
                 {error}
               </div>
             )}
+
+            <div className="flex justify-end">
+              <Link href="/forgot-password" className="text-xs text-charcoal-light hover:text-terra transition-colors">
+                Forgot password?
+              </Link>
+            </div>
 
             <button
               type="submit"

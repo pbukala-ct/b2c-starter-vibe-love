@@ -1,88 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { use } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { formatMoney, getLocalizedString, formatStreetAddress } from '@/lib/utils';
+import { formatStreetAddress } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
+import { useOrder } from '@/hooks/useOrders';
+import type { Order } from '@/hooks/useOrders';
 
-interface LineItem {
-  id: string;
-  name: Record<string, string>;
-  quantity: number;
-  totalPrice: { centAmount: number; currencyCode: string };
-  recurrenceInfo?: { recurrencePolicy: { id: string } };
-  shippingDetails?: {
-    targets: Array<{ addressKey: string; quantity: number }>;
-    valid: boolean;
-  };
-}
-
-interface Order {
-  id: string;
-  orderNumber: string;
-  createdAt: string;
-  orderState: string;
-  totalPrice: { centAmount: number; currencyCode: string };
-  taxedPrice?: {
-    totalNet: { centAmount: number; currencyCode: string };
-    totalGross: { centAmount: number; currencyCode: string };
-    taxPortions?: Array<{ name: string; amount: { centAmount: number; currencyCode: string }; rate: number }>;
-  };
-  shippingInfo?: {
-    shippingMethodName: string;
-    price: { centAmount: number; currencyCode: string };
-  };
-  lineItems: LineItem[];
-  shippingAddress?: {
-    firstName: string;
-    lastName: string;
-    streetName: string;
-    streetNumber?: string;
-    additionalAddressInfo?: string;
-    city: string;
-    state?: string;
-    postalCode: string;
-    country: string;
-  };
-  billingAddress?: {
-    firstName: string;
-    lastName: string;
-    streetName: string;
-    streetNumber?: string;
-    additionalAddressInfo?: string;
-    city: string;
-    state?: string;
-    postalCode: string;
-    country: string;
-  };
-  itemShippingAddresses?: Array<{
-    key?: string;
-    firstName: string;
-    lastName: string;
-    streetName: string;
-    streetNumber?: string;
-    additionalAddressInfo?: string;
-    city: string;
-    state?: string;
-    postalCode: string;
-    country: string;
-  }>;
-}
-
-export default function OrderDetailPage() {
-  const { orderId } = useParams<{ orderId: string }>();
-  const [order, setOrder] = useState<Order | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`/api/account/orders/${orderId}`)
-      .then(r => r.json())
-      .then(data => {
-        setOrder(data);
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
-  }, [orderId]);
+export default function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
+  const { orderId } = use(params);
+  const { formatMoney, getLocalizedString, formatDate } = useFormatters();
+  const { data: order, isLoading } = useOrder(orderId);
 
   if (isLoading) {
     return (
@@ -116,7 +44,7 @@ export default function OrderDetailPage() {
   // Group line items by their shipping addressKey (for split orders)
   const shipmentGroups: Map<
     string,
-    Array<{ item: LineItem; qty: number }>
+    Array<{ item: Order['lineItems'][number]; qty: number }>
   > = new Map();
 
   if (isSplitShipment) {
@@ -144,7 +72,7 @@ export default function OrderDetailPage() {
 
       <div className="flex items-center gap-3 mb-6">
         <p className="text-sm text-charcoal-light">
-          {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          {formatDate(order.createdAt)}
         </p>
         <span className="text-xs bg-sage/10 text-sage border border-sage/20 px-2 py-0.5 rounded-full">
           {order.orderState}
@@ -178,7 +106,7 @@ export default function OrderDetailPage() {
                     {items.map(({ item, qty }) => (
                       <div key={item.id} className="flex justify-between text-sm">
                         <div>
-                          <span className="text-charcoal">{getLocalizedString(item.name, 'en-US')}</span>
+                          <span className="text-charcoal">{getLocalizedString(item.name)}</span>
                           <span className="text-charcoal-light ml-2">× {qty}</span>
                           {item.recurrenceInfo?.recurrencePolicy && (
                             <span className="ml-2 text-sage text-xs border border-sage/30 px-1.5 py-0.5 rounded-full">♻ Subscription</span>
@@ -232,7 +160,7 @@ export default function OrderDetailPage() {
               {order.lineItems.map(item => (
                 <div key={item.id} className="flex justify-between text-sm">
                   <div>
-                    <span className="text-charcoal">{getLocalizedString(item.name, 'en-US')}</span>
+                    <span className="text-charcoal">{getLocalizedString(item.name)}</span>
                     <span className="text-charcoal-light ml-2">× {item.quantity}</span>
                     {item.recurrenceInfo?.recurrencePolicy && (
                       <span className="ml-2 text-sage text-xs border border-sage/30 px-1.5 py-0.5 rounded-full">♻ Subscription</span>

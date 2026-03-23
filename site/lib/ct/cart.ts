@@ -190,6 +190,20 @@ export async function createOrderFromCart(cartId: string, cartVersion: number) {
   return ct('POST', '/orders', { cart: { typeId: 'cart', id: cartId }, version: cartVersion });
 }
 
+export async function applyDiscountCode(cartId: string, cartVersion: number, code: string) {
+  return ct('POST', `/carts/${cartId}`, {
+    version: cartVersion,
+    actions: [{ action: 'addDiscountCode', code }],
+  });
+}
+
+export async function removeDiscountCode(cartId: string, cartVersion: number, discountCodeId: string) {
+  return ct('POST', `/carts/${cartId}`, {
+    version: cartVersion,
+    actions: [{ action: 'removeDiscountCode', discountCode: { typeId: 'discount-code', id: discountCodeId } }],
+  });
+}
+
 export async function createRecurringOrder(
   orderId: string,
   cartId: string,

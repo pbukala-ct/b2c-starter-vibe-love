@@ -1,13 +1,16 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { LocaleProvider } from '@/context/LocaleContext';
 import { CartProvider } from '@/context/CartContext';
-import { AuthProvider } from '@/context/AuthContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { getCategoryTree } from '@/lib/ct/categories';
 import { getSession } from '@/lib/session';
 import { getCart } from '@/lib/ct/cart';
+import { LocaleProvider } from '@/context/LocaleContext';
+import { SWRConfig } from 'swr';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import { KEY_CART, KEY_ACCOUNT } from '@/lib/cache-keys';
 
 export const metadata: Metadata = {
   title: { template: '%s | Vibe Home', default: 'Vibe Home – Curated for Modern Living' },
@@ -15,17 +18,16 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [categories, session] = await Promise.all([
+  const [categories, session, messages] = await Promise.all([
     getCategoryTree(),
     getSession(),
+    getMessages(),
   ]);
 
   let initialCart = null;
   if (session.cartId) {
     try {
       const cart = await getCart(session.cartId);
-      // Only expose Active carts to the client. Ordered/Merged carts should
-      // not appear in the UI — GET /api/cart will clear the stale cartId.
       if (cart.cartState === 'Active') {
         initialCart = cart;
       }
@@ -54,15 +56,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body>
-        <LocaleProvider>
-          <AuthProvider initialUser={initialUser}>
-            <CartProvider initialCart={initialCart}>
-              <Header categories={categories} />
-              <main className="min-h-screen">{children}</main>
-              <Footer />
-            </CartProvider>
-          </AuthProvider>
-        </LocaleProvider>
+        <NextIntlClientProvider messages={messages}>
+          <SWRConfig value={{ fallback: { [KEY_CART]: initialCart, [KEY_ACCOUNT]: initialUser } }}>
+            <LocaleProvider>
+              <CartProvider>
+                <Header categories={categories} />
+                <main className="min-h-screen">{children}</main>
+                <Footer />
+              </CartProvider>
+            </LocaleProvider>
+          </SWRConfig>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

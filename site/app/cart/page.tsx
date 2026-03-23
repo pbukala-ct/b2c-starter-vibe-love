@@ -1,39 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useCart } from '@/context/CartContext';
+import { useCartSWR } from '@/hooks/useCartSWR';
+import { useCartMutations } from '@/hooks/useCartSWR';
 import { useLocale } from '@/context/LocaleContext';
-import { formatMoney, getLocalizedString } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 import CartItem from '@/components/cart/CartItem';
-import { useState, useEffect } from 'react';
+import { DiscountCodeForm } from '@/components/cart/DiscountCodeForm';
 
 export default function CartPage() {
-  const { cart, setCart, isLoading, refreshCart } = useCart();
-  const { locale, currency, country } = useLocale();
-
-  useEffect(() => {
-    refreshCart();
-  }, []);
-
-  const handleUpdate = async (itemId: string, quantity: number) => {
-    const resp = await fetch(`/api/cart/items/${itemId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity }),
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      setCart(data.cart);
-    }
-  };
-
-  const handleRemove = async (itemId: string) => {
-    const resp = await fetch(`/api/cart/items/${itemId}`, { method: 'DELETE' });
-    if (resp.ok) {
-      const data = await resp.json();
-      setCart(data.cart);
-    }
-  };
+  const { data: cart, isLoading } = useCartSWR();
+  const { updateLineItem, removeLineItem, applyDiscount, removeDiscount } = useCartMutations();
+  const { country } = useLocale();
+  const { formatMoney } = useFormatters();
 
   if (isLoading) {
     return (
@@ -76,8 +55,8 @@ export default function CartPage() {
             <CartItem
               key={item.id}
               item={item}
-              onUpdate={handleUpdate}
-              onRemove={handleRemove}
+              onUpdate={updateLineItem}
+              onRemove={removeLineItem}
             />
           ))}
         </div>
@@ -102,6 +81,16 @@ export default function CartPage() {
                 <span className="text-charcoal-light">Shipping</span>
                 <span className="text-sage text-xs font-medium">Calculated at checkout</span>
               </div>
+            </div>
+
+            {/* Discount code */}
+            <div className="border-t border-border pt-4 mb-4">
+              <p className="text-xs font-medium text-charcoal mb-2">Discount Code</p>
+              <DiscountCodeForm
+                appliedDiscounts={(cart as unknown as { discountCodes?: Array<{ discountCodeId: string; code?: string }> }).discountCodes}
+                onApply={applyDiscount}
+                onRemove={removeDiscount}
+              />
             </div>
 
             <div className="border-t border-border pt-4 flex justify-between font-semibold text-charcoal mb-5">

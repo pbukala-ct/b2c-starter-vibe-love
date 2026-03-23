@@ -1,11 +1,10 @@
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getProductBySlug } from '@/lib/ct/search';
 import { getCategoryById } from '@/lib/ct/categories';
-import { getRecurrencePolicies } from '@/lib/ct/auth';
-import { formatMoney, getLocalizedString, COUNTRY_CONFIG } from '@/lib/utils';
+import { formatMoney, getLocalizedString } from '@/lib/utils';
+import { getLocale } from '@/lib/locale';
 import SubscribeAndSave from '@/components/product/SubscribeAndSave';
 import AddToCartButton from '@/components/product/AddToCartButton';
 import type { Price } from '@/lib/ct/search';
@@ -16,20 +15,16 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug, 'en-US', 'USD', 'US');
+  const { locale, currency, country } = await getLocale();
+  const product = await getProductBySlug(slug, locale, currency, country);
   if (!product) return { title: 'Product Not Found' };
-  return { title: getLocalizedString(product.name, 'en-US') };
+  return { title: getLocalizedString(product.name, locale) };
 }
 
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
-  const cookieStore = await cookies();
-  const country = cookieStore.get('vibe-country')?.value || 'US';
-  const { currency, locale } = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
-  const [product, policiesResult] = await Promise.all([
-    getProductBySlug(slug, locale, currency, country),
-    getRecurrencePolicies(),
-  ]);
+  const { country, currency, locale } = await getLocale();
+  const product = await getProductBySlug(slug, locale, currency, country);
   if (!product) notFound();
 
   const name = getLocalizedString(product.name, locale);
@@ -42,17 +37,16 @@ export default async function ProductPage({ params }: PageProps) {
     (p: Price) => !p.recurrencePolicy && p.value.currencyCode === currency
   ) || product.masterVariant?.price;
   const recurringPrices = product.masterVariant?.prices?.filter((p: Price) => !!p.recurrencePolicy) || [];
-  const recurrencePolicies = policiesResult.results || [];
+  
 
   const specText = (() => { const v = getAttr('productspec') || getAttr('product-spec'); return v ? getLocalizedString(v as Record<string,string>, locale) : ''; })();
   const colorText = (() => { const v = getAttr('color-label'); return v ? getLocalizedString(v as Record<string,string>, locale) : ''; })();
   const sizeText = (() => { const v = getAttr('size'); return v ? getLocalizedString(v as Record<string,string>, locale) : ''; })();
-  const isSubscriptionEligible = getAttr('subscription-eligible') === true;
 
   let categoryName = '', categorySlug = '';
   if (product.categories?.[0]) {
     const cat = await getCategoryById(product.categories[0].id);
-    if (cat) { categoryName = getLocalizedString(cat.name, 'en-US'); categorySlug = cat.slug['en-US'] || Object.values(cat.slug)[0]; }
+    if (cat) { categoryName = getLocalizedString(cat.name, locale); categorySlug = getLocalizedString(cat.slug) }
   }
 
   return (
@@ -100,13 +94,12 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
 
           {regularPrice && (
-            isSubscriptionEligible && recurringPrices.length > 0 && recurrencePolicies.length > 0 ? (
+            recurringPrices.length > 0 ? (
               <SubscribeAndSave
                 productId={product.id}
                 variantId={product.masterVariant.id}
                 regularPrice={regularPrice}
                 recurringPrices={recurringPrices}
-                recurrencePolicies={recurrencePolicies}
               />
             ) : (
               <AddToCartButton productId={product.id} variantId={product.masterVariant.id} />

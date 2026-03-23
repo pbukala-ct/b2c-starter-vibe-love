@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useAccount } from '@/hooks/useAccount';
 
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/account';
-  const { user, setUser } = useAuth();
+  const { data: user, mutate: mutateAccount } = useAccount();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -46,7 +46,7 @@ export default function RegisterPage() {
         setError(data.error || 'Registration failed');
       } else {
         const c = data.customer || data;
-        setUser({ id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName });
+        mutateAccount({ id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName }, { revalidate: false });
         router.push(redirect);
       }
     } catch {

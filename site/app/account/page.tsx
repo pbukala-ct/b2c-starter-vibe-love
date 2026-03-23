@@ -1,17 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
-
-interface Profile {
-  firstName: string;
-  lastName: string;
-  email: string;
-}
+import { useAccount } from '@/hooks/useAccount';
 
 export default function AccountProfilePage() {
-  const { user, setUser } = useAuth();
-  const [form, setForm] = useState<Profile>({ firstName: '', lastName: '', email: '' });
+  const { data: user, mutate } = useAccount();
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '' });
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -31,13 +25,14 @@ export default function AccountProfilePage() {
       const res = await fetch('/api/account/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ firstName: form.firstName, lastName: form.lastName }),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'Failed to update profile');
       } else {
-        setUser({ ...user!, firstName: data.firstName, lastName: data.lastName, email: data.email });
+        const c = data.customer;
+        mutate({ ...user!, firstName: c.firstName, lastName: c.lastName }, { revalidate: false });
         setMessage('Profile updated successfully');
       }
     } catch {
@@ -84,9 +79,8 @@ export default function AccountProfilePage() {
               id="profile-email"
               type="email"
               value={form.email}
-              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              required
-              className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+              disabled
+              className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal-light bg-cream focus:outline-none transition-colors"
             />
           </div>
 

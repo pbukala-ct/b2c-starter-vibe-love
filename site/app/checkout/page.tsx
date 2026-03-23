@@ -2,13 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCart } from '@/context/CartContext';
-import { useAuth } from '@/context/AuthContext';
+import { useCartSWR } from '@/hooks/useCartSWR';
+import { useAccount } from '@/hooks/useAccount';
 import { useLocale } from '@/context/LocaleContext';
-import { formatMoney, getLocalizedString, useCombinedStreetField, formatStreetAddress, parseStreetAddress } from '@/lib/utils';
+import { useCombinedStreetField, formatStreetAddress, parseStreetAddress, DEFAULT_LOCALE, COUNTRY_CONFIG } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
+import { useShippingMethods } from '@/hooks/useShippingMethods';
+import { useAddresses } from '@/hooks/useAddresses';
 import Image from 'next/image';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import { MiniLoginForm } from '@/components/checkout/MiniLoginForm';
 
 type Step = 'shipping' | 'split' | 'payment' | 'review';
 
@@ -49,9 +53,13 @@ interface ItemShipping {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, setCart, refreshCart } = useCart();
-  const { user, isLoggedIn } = useAuth();
+  const { data: cart, mutate: mutateCart } = useCartSWR();
+  const { data: user } = useAccount();
+  const isLoggedIn = !!user;
   const { currency, country, locale } = useLocale();
+  const { formatMoney, getLocalizedString } = useFormatters();
+  const { data: shippingMethodsData } = useShippingMethods();
+  const { data: addressesData } = useAddresses();
   const [step, setStep] = useState<Step>('shipping');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -68,24 +76,20 @@ export default function CheckoutPage() {
     city: '',
     postalCode: '',
     state: '',
-    country: country || 'US',
+    country: country ?? DEFAULT_LOCALE.country,
     email: user?.email || '',
   });
 
   const [additionalAddresses, setAdditionalAddresses] = useState<Address[]>([]);
   const [useSplitShipment, setUseSplitShipment] = useState(false);
-  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const savedAddresses = addressesData?.addresses ?? [];
   const [selectedSavedAddressId, setSelectedSavedAddressId] = useState<string>('');
 
   // Per-item shipping assignments
   const [itemShipping, setItemShipping] = useState<ItemShipping[]>([]);
 
   // Shipping methods
-  const [shippingMethods, setShippingMethods] = useState<Array<{
-    id: string; name: string; description?: string;
-    price: { centAmount: number; currencyCode: string } | null;
-    freeAbove: { centAmount: number } | null;
-  }>>([]);
+  const shippingMethods = shippingMethodsData ?? [];
   const [selectedShippingMethodId, setSelectedShippingMethodId] = useState<string>('');
 
   // Billing address
@@ -101,7 +105,7 @@ export default function CheckoutPage() {
     city: '',
     postalCode: '',
     state: '',
-    country: country || 'US',
+    country: country ?? DEFAULT_LOCALE.country,
   });
 
   // Payment
@@ -113,23 +117,10 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    refreshCart();
-    fetch(`/api/shipping-methods?country=${country}&currency=${currency}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.shippingMethods?.length) {
-          setShippingMethods(data.shippingMethods);
-          setSelectedShippingMethodId(data.shippingMethods[0].id);
-        }
-      })
-      .catch(() => {});
-    if (isLoggedIn) {
-      fetch('/api/account/addresses')
-        .then(r => r.json())
-        .then(data => setSavedAddresses(data.addresses || []))
-        .catch(() => {});
+    if (shippingMethodsData?.length && !selectedShippingMethodId) {
+      setSelectedShippingMethodId(shippingMethodsData[0].id);
     }
-  }, []);
+  }, [shippingMethodsData]);
 
   useEffect(() => {
     if (cart) {
@@ -137,7 +128,7 @@ export default function CheckoutPage() {
       setItemShipping(
         cart.lineItems.map((item) => ({
           lineItemId: item.id,
-          productName: getLocalizedString(item.name, locale),
+          productName: getLocalizedString(item.name),
           quantity: item.quantity,
           addresses: [{ addressKey: 'addr-primary', qty: item.quantity }],
         }))
@@ -194,7 +185,7 @@ export default function CheckoutPage() {
         city: '',
         postalCode: '',
         state: '',
-        country: country || 'US',
+        country: country ?? DEFAULT_LOCALE.country,
       },
     ]);
   };
@@ -287,7 +278,7 @@ export default function CheckoutPage() {
       }
 
       const data = await resp.json();
-      setCart(null);
+      mutateCart(null, { revalidate: false });
       router.push(`/checkout/confirmation/${data.orderId}`);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Checkout failed');
@@ -315,13 +306,7 @@ export default function CheckoutPage() {
         {/* Form */}
         <div className="lg:col-span-3 space-y-8">
           {/* Guest/Login notice */}
-          {!isLoggedIn && (
-            <div className="bg-cream border border-border rounded-sm p-4 text-sm">
-              <span className="text-charcoal-light">Have an account? </span>
-              <a href="/login?redirect=/checkout" className="text-terra hover:underline">Sign in</a>
-              <span className="text-charcoal-light"> for faster checkout</span>
-            </div>
-          )}
+          {!isLoggedIn && <MiniLoginForm />}
 
           {/* Shipping Address */}
           <div>
@@ -370,9 +355,9 @@ export default function CheckoutPage() {
                   onChange={(e) => handleAddressChange('country', e.target.value)}
                   className="w-full border border-border px-3 py-2.5 text-sm rounded-sm bg-white focus:outline-none focus:border-charcoal"
                 >
-                  <option value="US">United States</option>
-                  <option value="GB">United Kingdom</option>
-                  <option value="DE">Germany</option>
+                  {Object.entries(COUNTRY_CONFIG).map(([code, config]) => (
+                    <option key={code} value={code}>{config.name}</option>
+                  ))}
                 </select>
               </div>
               <Input label="Email" type="email" value={primaryAddr.email || ''} onChange={(e) => handleAddressChange('email', e.target.value)} className="col-span-2" />
@@ -561,9 +546,9 @@ export default function CheckoutPage() {
                     onChange={(e) => setBillingAddr(p => ({ ...p, country: e.target.value }))}
                     className="w-full border border-border px-3 py-2.5 text-sm rounded-sm bg-white focus:outline-none focus:border-charcoal"
                   >
-                    <option value="US">United States</option>
-                    <option value="GB">United Kingdom</option>
-                    <option value="DE">Germany</option>
+                    {Object.entries(COUNTRY_CONFIG).map(([code, config]) => (
+                      <option key={code} value={code}>{config.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -636,7 +621,7 @@ export default function CheckoutPage() {
             <h2 className="font-semibold text-charcoal mb-4">Order Summary</h2>
             <div className="space-y-3 mb-4">
               {cart.lineItems.map((item) => {
-                const name = getLocalizedString(item.name, locale);
+                const name = getLocalizedString(item.name);
                 const img = item.variant?.images?.[0]?.url;
                 return (
                   <div key={item.id} className="flex gap-3">

@@ -1,17 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { formatMoney } from '@/lib/utils';
-
-interface Order {
-  id: string;
-  orderNumber: string;
-  createdAt: string;
-  totalPrice: { centAmount: number; currencyCode: string };
-  orderState: string;
-  lineItems: { id: string; name: Record<string, string>; quantity: number }[];
-}
+import { useFormatters } from '@/hooks/useFormatters';
+import { useOrders } from '@/hooks/useOrders';
 
 const STATE_LABELS: Record<string, string> = {
   Open: 'Processing',
@@ -28,18 +19,8 @@ const STATE_COLORS: Record<string, string> = {
 };
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/account/orders')
-      .then(r => r.json())
-      .then(data => {
-        setOrders(data.orders || []);
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
-  }, []);
+  const { formatMoney, getLocalizedString, formatDate } = useFormatters();
+  const { data: orders = [], isLoading } = useOrders();
 
   if (isLoading) {
     return (
@@ -78,7 +59,7 @@ export default function OrdersPage() {
                     </span>
                   </div>
                   <p className="text-xs text-charcoal-light">
-                    {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    {formatDate(order.createdAt)}
                   </p>
                 </div>
                 <div className="text-right">
@@ -93,7 +74,7 @@ export default function OrdersPage() {
               <div className="text-xs text-charcoal-light">
                 {order.lineItems.slice(0, 3).map(item => (
                   <span key={item.id}>
-                    {item.name['en-US'] || Object.values(item.name)[0]} × {item.quantity}
+                    {getLocalizedString(item.name)} × {item.quantity}
                     {order.lineItems.indexOf(item) < Math.min(order.lineItems.length, 3) - 1 ? ', ' : ''}
                   </span>
                 ))}
