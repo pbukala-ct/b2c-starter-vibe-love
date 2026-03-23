@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart, Cart } from '@/context/CartContext';
-import { useCartSWR } from '@/hooks/useCartSWR';
+import { useCartSWR, useCartMutations } from '@/hooks/useCartSWR';
 import { useLocale } from '@/context/LocaleContext';
 import { useFormatters } from '@/hooks/useFormatters';
 import { useState } from 'react';
@@ -52,7 +52,8 @@ function MiniCartFooter({ cart, country, onClose }: { cart: Cart; country: strin
 
 export default function MiniCart() {
   const { showMiniCart, setShowMiniCart } = useCart();
-  const { data: cart, mutate } = useCartSWR();
+  const { data: cart } = useCartSWR();
+  const { removeLineItem } = useCartMutations();
   const { country } = useLocale();
   const { formatMoney, getLocalizedString } = useFormatters();
   const policyMap = useRecurrencePolicies();
@@ -63,11 +64,7 @@ export default function MiniCart() {
   const handleRemove = async (lineItemId: string) => {
     setIsUpdating(lineItemId);
     try {
-      const resp = await fetch(`/api/cart/items/${lineItemId}`, { method: 'DELETE' });
-      if (resp.ok) {
-        const data = await resp.json();
-        mutate(data.cart, { revalidate: false });
-      }
+      await removeLineItem(lineItemId);
     } finally {
       setIsUpdating(null);
     }

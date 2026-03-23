@@ -2,63 +2,17 @@
 
 import Link from 'next/link';
 import { useCartSWR } from '@/hooks/useCartSWR';
+import { useCartMutations } from '@/hooks/useCartSWR';
 import { useLocale } from '@/context/LocaleContext';
 import { useFormatters } from '@/hooks/useFormatters';
 import CartItem from '@/components/cart/CartItem';
 import { DiscountCodeForm } from '@/components/cart/DiscountCodeForm';
-import { useEffect } from 'react';
 
 export default function CartPage() {
-  const { data: cart, mutate, isLoading } = useCartSWR();
+  const { data: cart, isLoading } = useCartSWR();
+  const { updateLineItem, removeLineItem, applyDiscount, removeDiscount } = useCartMutations();
   const { country } = useLocale();
   const { formatMoney } = useFormatters();
-
-  useEffect(() => {
-    mutate();
-  }, []);
-
-  const handleUpdate = async (itemId: string, quantity: number) => {
-    const resp = await fetch(`/api/cart/items/${itemId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity }),
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      mutate(data.cart, { revalidate: false });
-    }
-  };
-
-  const handleRemove = async (itemId: string) => {
-    const resp = await fetch(`/api/cart/items/${itemId}`, { method: 'DELETE' });
-    if (resp.ok) {
-      const data = await resp.json();
-      mutate(data.cart, { revalidate: false });
-    }
-  };
-
-  const handleApplyDiscount = async (code: string) => {
-    const resp = await fetch('/api/cart/discount', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
-    });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || 'Invalid discount code');
-    mutate(data.cart, { revalidate: false });
-  };
-
-  const handleRemoveDiscount = async (discountCodeId: string) => {
-    const resp = await fetch('/api/cart/discount', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ discountCodeId }),
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      mutate(data.cart, { revalidate: false });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -101,8 +55,8 @@ export default function CartPage() {
             <CartItem
               key={item.id}
               item={item}
-              onUpdate={handleUpdate}
-              onRemove={handleRemove}
+              onUpdate={updateLineItem}
+              onRemove={removeLineItem}
             />
           ))}
         </div>
@@ -134,8 +88,8 @@ export default function CartPage() {
               <p className="text-xs font-medium text-charcoal mb-2">Discount Code</p>
               <DiscountCodeForm
                 appliedDiscounts={(cart as unknown as { discountCodes?: Array<{ discountCodeId: string; code?: string }> }).discountCodes}
-                onApply={handleApplyDiscount}
-                onRemove={handleRemoveDiscount}
+                onApply={applyDiscount}
+                onRemove={removeDiscount}
               />
             </div>
 

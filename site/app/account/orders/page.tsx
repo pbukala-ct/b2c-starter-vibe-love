@@ -1,17 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useFormatters } from '@/hooks/useFormatters';
-
-interface Order {
-  id: string;
-  orderNumber: string;
-  createdAt: string;
-  totalPrice: { centAmount: number; currencyCode: string };
-  orderState: string;
-  lineItems: { id: string; name: Record<string, string>; quantity: number }[];
-}
+import { useOrders } from '@/hooks/useOrders';
 
 const STATE_LABELS: Record<string, string> = {
   Open: 'Processing',
@@ -29,18 +20,7 @@ const STATE_COLORS: Record<string, string> = {
 
 export default function OrdersPage() {
   const { formatMoney, getLocalizedString, formatDate } = useFormatters();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/account/orders')
-      .then(r => r.json())
-      .then(data => {
-        setOrders(data.orders || []);
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
-  }, []);
+  const { data: orders = [], isLoading } = useOrders();
 
   if (isLoading) {
     return (

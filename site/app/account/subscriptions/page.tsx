@@ -1,24 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useFormatters } from '@/hooks/useFormatters';
 import { useRecurrencePoliciesList } from '@/hooks/useRecurrencePolicies';
-
-interface RecurringOrder {
-  id: string;
-  key?: string;
-  recurringOrderState: string;
-  schedule: { type: string; value: number; intervalUnit: string };
-  nextOrderDate?: string;
-  skipConfiguration?: { totalToSkip: number; skipped: number; lastSkippedAt?: string };
-  lineItems: {
-    id: string;
-    name: Record<string, string>;
-    quantity: number;
-    totalPrice: { centAmount: number; currencyCode: string };
-  }[];
-}
+import { useSubscriptions, useSubscriptionAction } from '@/hooks/useSubscriptions';
 
 const STATE_LABELS: Record<string, string> = {
   Active: 'Active',
@@ -35,42 +21,18 @@ const STATE_COLORS: Record<string, string> = {
 export default function SubscriptionsPage() {
   const { formatMoney, getLocalizedString, formatDate } = useFormatters();
   const policies = useRecurrencePoliciesList();
-  const [subscriptions, setSubscriptions] = useState<RecurringOrder[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: subscriptions = [], isLoading } = useSubscriptions();
+  const { action: subscriptionAction } = useSubscriptionAction();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchSubscriptions();
-  }, []);
-
-  async function fetchSubscriptions() {
-    try {
-      const res = await fetch('/api/account/subscriptions');
-      const data = await res.json();
-      setSubscriptions(data.results || []);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function handleAction(id: string, action: string, payload?: Record<string, unknown>) {
-    setActionLoading(id + action);
+  async function handleAction(id: string, actionType: string, payload?: Record<string, unknown>) {
+    setActionLoading(id + actionType);
     setActionError(null);
     try {
-      const res = await fetch(`/api/account/subscriptions/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, ...payload }),
-      });
-      if (res.ok) {
-        await fetchSubscriptions();
-      } else {
-        const d = await res.json().catch(() => ({}));
-        setActionError(d.error || `Failed to ${action} subscription`);
-      }
-    } catch {
-      setActionError(`Failed to ${action} subscription`);
+      await subscriptionAction(id, actionType, payload);
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : `Failed to ${actionType} subscription`);
     } finally {
       setActionLoading(null);
     }
@@ -113,7 +75,7 @@ export default function SubscriptionsPage() {
             const isActive = sub.recurringOrderState === 'Active';
             const isPaused = sub.recurringOrderState === 'Paused';
             const isCancelled = sub.recurringOrderState === 'Cancelled';
-            const lineItems: typeof sub.lineItems = sub.lineItems ?? [];
+            const lineItems = sub.lineItems ?? [];
             const total = lineItems.reduce((sum, i) => sum + i.totalPrice.centAmount, 0);
             const currency = lineItems[0]?.totalPrice.currencyCode || 'USD';
 
@@ -212,12 +174,12 @@ export default function SubscriptionsPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-charcoal-light">Change schedule:</span>
                       {policies.map((p) => {
-                        const isCurrent = sub.schedule.value === p.schedule.value && sub.schedule.intervalUnit === p.schedule.intervalUnit;
+                        const isCurrent = sub.schedule?.value === p.schedule.value && sub.schedule?.intervalUnit === p.schedule.intervalUnit;
                         const loadKey = sub.id + 'setSchedule' + p.id;
                         return (
                           <button
                             key={p.id}
-                            onClick={() => !isCurrent && handleAction(sub.id, 'setSchedule', { schedule: p.schedule })}
+                            onClick={() => !isCurrent && handleAction(sub.id, 'setSchedule', { recurrencePolicyId: p.id })}
                             disabled={isCurrent || actionLoading === loadKey}
                             className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                               isCurrent

@@ -1,35 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocale } from '@/context/LocaleContext';
 import { useCombinedStreetField, formatStreetAddress, parseStreetAddress } from '@/lib/utils';
-
-interface Address {
-  id?: string;
-  firstName: string;
-  lastName: string;
-  streetName: string;
-  streetNumber?: string;
-  streetAddress?: string;            // combined field for US-style input
-  additionalAddressInfo?: string;
-  city: string;
-  state?: string;
-  postalCode: string;
-  country: string;
-  phone?: string;
-}
+import { useAddresses, useAddressMutations } from '@/hooks/useAddresses';
+import type { Address } from '@/hooks/useAddresses';
 
 const emptyAddress: Address = {
   firstName: '', lastName: '', streetName: '', streetNumber: '',
   streetAddress: '', additionalAddressInfo: '',
   city: '', state: '', postalCode: '', country: 'US', phone: '',
 };
-
-interface AddressData {
-  addresses: Address[];
-  defaultShippingAddressId?: string;
-  defaultBillingAddressId?: string;
-}
 
 type DefaultType = '' | 'shipping' | 'billing' | 'both';
 
@@ -50,7 +31,6 @@ function AddressForm({
   currentDefaultShippingId?: string;
   currentDefaultBillingId?: string;
 }) {
-  // Pre-populate streetAddress from separate fields when loading existing addresses
   const initWithStreetAddr: Address = {
     ...initial,
     streetAddress: initial.streetAddress || formatStreetAddress(initial.streetNumber, initial.streetName),
@@ -60,7 +40,6 @@ function AddressForm({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Figure out the initial default setting for this address
   const isCurrentShipping = initial.id && initial.id === currentDefaultShippingId;
   const isCurrentBilling = initial.id && initial.id === currentDefaultBillingId;
   const initialDefault: DefaultType =
@@ -76,14 +55,12 @@ function AddressForm({
     setError('');
     setIsSaving(true);
     try {
-      // Convert combined street address to separate fields for CT API
       const addrToSave = { ...form };
       if (isCombined && addrToSave.streetAddress) {
         const parsed = parseStreetAddress(addrToSave.streetAddress);
         addrToSave.streetName = parsed.streetName;
         addrToSave.streetNumber = parsed.streetNumber;
       }
-      // Remove UI-only fields before sending
       delete addrToSave.streetAddress;
       await onSave(addrToSave, setDefault || undefined);
     } catch (err: unknown) {
@@ -112,7 +89,6 @@ function AddressForm({
     <div className="bg-white border border-border rounded-sm p-6 mb-6">
       <h2 className="font-semibold text-charcoal mb-4">{title}</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Nickname at the top */}
         {field('additionalAddressInfo', 'Nickname (optional)', false, 'text', 'e.g. Home, Office, Mom\'s house')}
         <div className="grid grid-cols-2 gap-4">
           {field('firstName', 'First name', true)}
@@ -149,7 +125,6 @@ function AddressForm({
           <div>{field('phone', 'Phone', false, 'tel')}</div>
         </div>
 
-        {/* Default address selector — independent toggle pills */}
         <div>
           <label className="block text-xs font-medium text-charcoal mb-2">Set as default</label>
           <div className="flex flex-wrap gap-2">
@@ -208,67 +183,31 @@ function AddressForm({
 
 export default function AddressesPage() {
   const { country } = useLocale();
-  const [data, setData] = useState<AddressData>({ addresses: [] });
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading } = useAddresses();
+  const { addAddress, updateAddress, deleteAddress, setDefaultAddress } = useAddressMutations();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
 
-  useEffect(() => { fetchAddresses(); }, []);
-
-  async function fetchAddresses() {
-    try {
-      const res = await fetch('/api/account/addresses');
-      const d = await res.json();
-      setData(d);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const addresses = data?.addresses || [];
+  const defaultShippingAddressId = data?.defaultShippingAddressId;
+  const defaultBillingAddressId = data?.defaultBillingAddressId;
 
   async function handleAdd(address: Address, defaultType?: DefaultType) {
-    const res = await fetch('/api/account/addresses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address, defaultType }),
-    });
-    if (!res.ok) {
-      const d = await res.json();
-      throw new Error(d.error || 'Failed to add address');
-    }
-    const d = await res.json();
-    setData(d);
+    await addAddress(address, defaultType || undefined);
     setShowAddForm(false);
   }
 
   async function handleEdit(address: Address, defaultType?: DefaultType) {
-    const res = await fetch('/api/account/addresses', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ addressId: address.id, address, defaultType }),
-    });
-    if (!res.ok) {
-      const d = await res.json();
-      throw new Error(d.error || 'Failed to update address');
-    }
-    const d = await res.json();
-    setData(d);
+    await updateAddress(address.id!, address, defaultType || undefined);
     setEditingId(null);
   }
 
   async function handleDelete(addressId: string) {
     setDeletingId(addressId);
     try {
-      const res = await fetch('/api/account/addresses', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ addressId }),
-      });
-      if (res.ok) {
-        const d = await res.json();
-        setData(d);
-      }
+      await deleteAddress(addressId);
     } finally {
       setDeletingId(null);
     }
@@ -277,15 +216,7 @@ export default function AddressesPage() {
   async function handleSetDefault(addressId: string, type: 'shipping' | 'billing' | 'both') {
     setSettingDefaultId(addressId);
     try {
-      const res = await fetch('/api/account/addresses', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ addressId, type }),
-      });
-      if (res.ok) {
-        const d = await res.json();
-        setData(d);
-      }
+      await setDefaultAddress(addressId, type);
     } finally {
       setSettingDefaultId(null);
     }
@@ -323,20 +254,20 @@ export default function AddressesPage() {
           onSave={handleAdd}
           onCancel={() => setShowAddForm(false)}
           defaultCountry={country}
-          currentDefaultShippingId={data.defaultShippingAddressId}
-          currentDefaultBillingId={data.defaultBillingAddressId}
+          currentDefaultShippingId={defaultShippingAddressId}
+          currentDefaultBillingId={defaultBillingAddressId}
         />
       )}
 
-      {data.addresses.length === 0 && !showAddForm ? (
+      {addresses.length === 0 && !showAddForm ? (
         <div className="bg-white border border-border rounded-sm p-12 text-center">
           <p className="text-charcoal-light">No saved addresses yet.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {data.addresses.map((addr) => {
-            const isDefaultShipping = addr.id === data.defaultShippingAddressId;
-            const isDefaultBilling = addr.id === data.defaultBillingAddressId;
+          {addresses.map((addr) => {
+            const isDefaultShipping = addr.id === defaultShippingAddressId;
+            const isDefaultBilling = addr.id === defaultBillingAddressId;
 
             if (editingId === addr.id) {
               return (
@@ -347,8 +278,8 @@ export default function AddressesPage() {
                     onSave={(updated, defaultType) => handleEdit({ ...updated, id: addr.id }, defaultType)}
                     onCancel={() => setEditingId(null)}
                     defaultCountry={country}
-                    currentDefaultShippingId={data.defaultShippingAddressId}
-                    currentDefaultBillingId={data.defaultBillingAddressId}
+                    currentDefaultShippingId={defaultShippingAddressId}
+                    currentDefaultBillingId={defaultBillingAddressId}
                   />
                 </div>
               );
@@ -356,7 +287,6 @@ export default function AddressesPage() {
 
             return (
               <div key={addr.id} className="bg-white border border-border rounded-sm p-5">
-                {/* Default badges */}
                 {(isDefaultShipping || isDefaultBilling) && (
                   <div className="flex gap-1.5 mb-3">
                     {isDefaultShipping && (
@@ -383,7 +313,6 @@ export default function AddressesPage() {
                   {addr.phone && <p className="text-charcoal-light">{addr.phone}</p>}
                 </address>
 
-                {/* Actions */}
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button
                     onClick={() => setEditingId(addr.id!)}

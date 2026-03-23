@@ -1,16 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-
-interface StoredCard {
-  id: string;
-  cardholderName: string;
-  last4: string;
-  brand: string;
-  expiry: string;
-  token: string;
-  isDefault: boolean;
-}
+import { useState } from 'react';
+import { usePayments, usePaymentMutations } from '@/hooks/usePayments';
 
 function detectBrand(number: string): string {
   const n = number.replace(/\s/g, '');
@@ -37,19 +28,12 @@ function BrandBadge({ brand }: { brand: string }) {
 }
 
 export default function PaymentsPage() {
-  const [cards, setCards] = useState<StoredCard[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: cards = [], isLoading } = usePayments();
+  const { addPayment, deletePayment, setDefaultPayment } = usePaymentMutations();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ cardholderName: '', cardNumber: '', expiry: '' });
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/account/payments')
-      .then(r => r.json())
-      .then(d => setCards(d.cards || []))
-      .finally(() => setIsLoading(false));
-  }, []);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -58,43 +42,20 @@ export default function PaymentsPage() {
     if (raw.length < 12) { setFormError('Enter a valid card number'); return; }
     if (!form.expiry.match(/^\d{2}\/\d{2}$/)) { setFormError('Enter expiry as MM/YY'); return; }
     setSaving(true);
-    const res = await fetch('/api/account/payments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    try {
+      await addPayment({
         cardholderName: form.cardholderName,
         last4: raw.slice(-4),
         brand: detectBrand(raw),
         expiry: form.expiry,
-      }),
-    });
-    const d = await res.json();
-    setSaving(false);
-    if (res.ok) {
-      setCards(d.cards);
+      });
       setForm({ cardholderName: '', cardNumber: '', expiry: '' });
       setShowForm(false);
-    } else {
-      setFormError(d.error || 'Failed to save card');
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : 'Failed to save card');
+    } finally {
+      setSaving(false);
     }
-  }
-
-  async function handleDelete(cardId: string) {
-    const res = await fetch('/api/account/payments', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cardId }),
-    });
-    if (res.ok) setCards((await res.json()).cards);
-  }
-
-  async function handleSetDefault(cardId: string) {
-    const res = await fetch('/api/account/payments', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cardId }),
-    });
-    if (res.ok) setCards((await res.json()).cards);
   }
 
   function formatCardNumber(val: string) {
@@ -203,12 +164,12 @@ export default function PaymentsPage() {
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 {!card.isDefault && (
-                  <button onClick={() => handleSetDefault(card.id)}
+                  <button onClick={() => setDefaultPayment(card.id)}
                     className="text-xs text-charcoal-light hover:text-charcoal border border-border px-2.5 py-1 rounded-sm hover:border-charcoal transition-colors">
                     Set Default
                   </button>
                 )}
-                <button onClick={() => handleDelete(card.id)}
+                <button onClick={() => deletePayment(card.id)}
                   className="text-xs text-charcoal-light hover:text-red-500 border border-border px-2.5 py-1 rounded-sm hover:border-red-300 transition-colors">
                   Remove
                 </button>

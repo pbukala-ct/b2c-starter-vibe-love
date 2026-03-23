@@ -1,16 +1,87 @@
 'use client';
 
 import useSWR from 'swr';
-import { KEY_ORDERS } from '@/lib/cache-keys';
+import { KEY_ORDERS, keyOrder } from '@/lib/cache-keys';
 
-async function ordersFetcher(): Promise<{ results: unknown[]; total: number }> {
+export interface Order {
+  id: string;
+  orderNumber: string;
+  createdAt: string;
+  orderState: string;
+  totalPrice: { centAmount: number; currencyCode: string };
+  taxedPrice?: {
+    totalNet: { centAmount: number; currencyCode: string };
+    totalGross: { centAmount: number; currencyCode: string };
+    taxPortions?: Array<{ name: string; amount: { centAmount: number; currencyCode: string }; rate: number }>;
+  };
+  shippingInfo?: {
+    shippingMethodName: string;
+    price: { centAmount: number; currencyCode: string };
+  };
+  lineItems: Array<{
+    id: string;
+    name: Record<string, string>;
+    quantity: number;
+    totalPrice: { centAmount: number; currencyCode: string };
+    recurrenceInfo?: { recurrencePolicy: { id: string } };
+    shippingDetails?: {
+      targets: Array<{ addressKey: string; quantity: number }>;
+      valid: boolean;
+    };
+  }>;
+  shippingAddress?: {
+    firstName: string;
+    lastName: string;
+    streetName: string;
+    streetNumber?: string;
+    additionalAddressInfo?: string;
+    city: string;
+    state?: string;
+    postalCode: string;
+    country: string;
+  };
+  billingAddress?: {
+    firstName: string;
+    lastName: string;
+    streetName: string;
+    streetNumber?: string;
+    additionalAddressInfo?: string;
+    city: string;
+    state?: string;
+    postalCode: string;
+    country: string;
+  };
+  itemShippingAddresses?: Array<{
+    key?: string;
+    firstName: string;
+    lastName: string;
+    streetName: string;
+    streetNumber?: string;
+    additionalAddressInfo?: string;
+    city: string;
+    state?: string;
+    postalCode: string;
+    country: string;
+  }>;
+}
+
+async function ordersFetcher(): Promise<Order[]> {
   const res = await fetch('/api/account/orders');
-  if (!res.ok) return { results: [], total: 0 };
-  return res.json();
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.orders ?? [];
 }
 
 export function useOrders() {
-  return useSWR(KEY_ORDERS, ordersFetcher, {
-    revalidateOnFocus: false,
-  });
+  return useSWR<Order[]>(KEY_ORDERS, ordersFetcher, { revalidateOnFocus: false });
+}
+
+async function orderFetcher(id: string): Promise<Order | null> {
+  const res = await fetch(`/api/account/orders/${id}`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export function useOrder(id: string) {
+  return useSWR<Order | null>(keyOrder(id), () => orderFetcher(id), { revalidateOnFocus: false });
 }

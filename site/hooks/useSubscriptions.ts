@@ -1,6 +1,6 @@
 'use client';
 
-import useSWR from 'swr';
+import useSWR, { useSWRConfig } from 'swr';
 import { KEY_SUBSCRIPTIONS, keySubscription } from '@/lib/cache-keys';
 
 export interface RecurringOrder {
@@ -48,4 +48,24 @@ export function useSubscription(id: string) {
     () => subscriptionFetcher(`/api/account/subscriptions/${id}`),
     { revalidateOnFocus: false }
   );
+}
+
+export function useSubscriptionAction() {
+  const { mutate } = useSWRConfig();
+
+  async function action(id: string, actionType: string, payload?: Record<string, unknown>) {
+    const res = await fetch(`/api/account/subscriptions/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: actionType, ...payload }),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.error || `Failed to ${actionType} subscription`);
+    }
+    mutate(KEY_SUBSCRIPTIONS);
+    mutate(keySubscription(id));
+  }
+
+  return { action };
 }

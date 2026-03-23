@@ -31,17 +31,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   let ctAction: { action: string; [key: string]: unknown };
   if (action === 'pause') {
-    ctAction = { action: 'setRecurringOrderState', recurringOrderState: 'Paused' };
+    ctAction = { action: 'setRecurringOrderState', recurringOrderState: { type: 'paused' } };
   } else if (action === 'resume') {
-    ctAction = { action: 'setRecurringOrderState', recurringOrderState: 'Active' };
+    ctAction = { action: 'setRecurringOrderState', recurringOrderState: { type: 'active' } };
   } else if (action === 'cancel') {
-    ctAction = { action: 'setRecurringOrderState', recurringOrderState: 'Cancelled' };
+    ctAction = { action: 'setRecurringOrderState', recurringOrderState: { type: 'canceled' } };
   } else if (action === 'skip') {
     const totalToSkip = (body.totalToSkip as number) || 1;
     ctAction = { action: 'setOrderSkipConfiguration', skipConfigurationInputDraft: { Counter: { totalToSkip } } };
   } else if (action === 'setSchedule') {
-    const { schedule } = body;
-    ctAction = { action: 'setSchedule', schedule };
+    const { recurrencePolicyId } = body;
+    ctAction = { action: 'setSchedule', recurrencePolicy: { id: recurrencePolicyId } };
   } else {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }

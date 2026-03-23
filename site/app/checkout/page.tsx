@@ -7,6 +7,8 @@ import { useAccount } from '@/hooks/useAccount';
 import { useLocale } from '@/context/LocaleContext';
 import { useCombinedStreetField, formatStreetAddress, parseStreetAddress, DEFAULT_LOCALE, COUNTRY_CONFIG } from '@/lib/utils';
 import { useFormatters } from '@/hooks/useFormatters';
+import { useShippingMethods } from '@/hooks/useShippingMethods';
+import { useAddresses } from '@/hooks/useAddresses';
 import Image from 'next/image';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -56,6 +58,8 @@ export default function CheckoutPage() {
   const isLoggedIn = !!user;
   const { currency, country, locale } = useLocale();
   const { formatMoney, getLocalizedString } = useFormatters();
+  const { data: shippingMethodsData } = useShippingMethods();
+  const { data: addressesData } = useAddresses();
   const [step, setStep] = useState<Step>('shipping');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -78,18 +82,14 @@ export default function CheckoutPage() {
 
   const [additionalAddresses, setAdditionalAddresses] = useState<Address[]>([]);
   const [useSplitShipment, setUseSplitShipment] = useState(false);
-  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const savedAddresses = addressesData?.addresses ?? [];
   const [selectedSavedAddressId, setSelectedSavedAddressId] = useState<string>('');
 
   // Per-item shipping assignments
   const [itemShipping, setItemShipping] = useState<ItemShipping[]>([]);
 
   // Shipping methods
-  const [shippingMethods, setShippingMethods] = useState<Array<{
-    id: string; name: string; description?: string;
-    price: { centAmount: number; currencyCode: string } | null;
-    freeAbove: { centAmount: number } | null;
-  }>>([]);
+  const shippingMethods = shippingMethodsData ?? [];
   const [selectedShippingMethodId, setSelectedShippingMethodId] = useState<string>('');
 
   // Billing address
@@ -117,23 +117,10 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    mutateCart();
-    fetch(`/api/shipping-methods?country=${country}&currency=${currency}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.shippingMethods?.length) {
-          setShippingMethods(data.shippingMethods);
-          setSelectedShippingMethodId(data.shippingMethods[0].id);
-        }
-      })
-      .catch(() => {});
-    if (isLoggedIn) {
-      fetch('/api/account/addresses')
-        .then(r => r.json())
-        .then(data => setSavedAddresses(data.addresses || []))
-        .catch(() => {});
+    if (shippingMethodsData?.length && !selectedShippingMethodId) {
+      setSelectedShippingMethodId(shippingMethodsData[0].id);
     }
-  }, []);
+  }, [shippingMethodsData]);
 
   useEffect(() => {
     if (cart) {

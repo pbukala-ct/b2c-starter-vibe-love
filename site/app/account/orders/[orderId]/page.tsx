@@ -1,90 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { use } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import { formatStreetAddress } from '@/lib/utils';
 import { useFormatters } from '@/hooks/useFormatters';
+import { useOrder } from '@/hooks/useOrders';
+import type { Order } from '@/hooks/useOrders';
 
-interface LineItem {
-  id: string;
-  name: Record<string, string>;
-  quantity: number;
-  totalPrice: { centAmount: number; currencyCode: string };
-  recurrenceInfo?: { recurrencePolicy: { id: string } };
-  shippingDetails?: {
-    targets: Array<{ addressKey: string; quantity: number }>;
-    valid: boolean;
-  };
-}
-
-interface Order {
-  id: string;
-  orderNumber: string;
-  createdAt: string;
-  orderState: string;
-  totalPrice: { centAmount: number; currencyCode: string };
-  taxedPrice?: {
-    totalNet: { centAmount: number; currencyCode: string };
-    totalGross: { centAmount: number; currencyCode: string };
-    taxPortions?: Array<{ name: string; amount: { centAmount: number; currencyCode: string }; rate: number }>;
-  };
-  shippingInfo?: {
-    shippingMethodName: string;
-    price: { centAmount: number; currencyCode: string };
-  };
-  lineItems: LineItem[];
-  shippingAddress?: {
-    firstName: string;
-    lastName: string;
-    streetName: string;
-    streetNumber?: string;
-    additionalAddressInfo?: string;
-    city: string;
-    state?: string;
-    postalCode: string;
-    country: string;
-  };
-  billingAddress?: {
-    firstName: string;
-    lastName: string;
-    streetName: string;
-    streetNumber?: string;
-    additionalAddressInfo?: string;
-    city: string;
-    state?: string;
-    postalCode: string;
-    country: string;
-  };
-  itemShippingAddresses?: Array<{
-    key?: string;
-    firstName: string;
-    lastName: string;
-    streetName: string;
-    streetNumber?: string;
-    additionalAddressInfo?: string;
-    city: string;
-    state?: string;
-    postalCode: string;
-    country: string;
-  }>;
-}
-
-export default function OrderDetailPage() {
+export default function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
+  const { orderId } = use(params);
   const { formatMoney, getLocalizedString, formatDate } = useFormatters();
-  const { orderId } = useParams<{ orderId: string }>();
-  const [order, setOrder] = useState<Order | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`/api/account/orders/${orderId}`)
-      .then(r => r.json())
-      .then(data => {
-        setOrder(data);
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
-  }, [orderId]);
+  const { data: order, isLoading } = useOrder(orderId);
 
   if (isLoading) {
     return (
@@ -118,7 +44,7 @@ export default function OrderDetailPage() {
   // Group line items by their shipping addressKey (for split orders)
   const shipmentGroups: Map<
     string,
-    Array<{ item: LineItem; qty: number }>
+    Array<{ item: Order['lineItems'][number]; qty: number }>
   > = new Map();
 
   if (isSplitShipment) {

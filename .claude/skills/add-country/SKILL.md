@@ -1,3 +1,8 @@
+---
+name: add-country
+description: How to add support for a new locale (country + currency) to this storefront.
+---
+
 # Add a New Country / Currency
 
 How to add support for a new locale (country + currency) to this storefront.

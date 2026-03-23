@@ -3,7 +3,7 @@
 import { use, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useSubscription } from '@/hooks/useSubscriptions';
+import { useSubscription, useSubscriptionAction } from '@/hooks/useSubscriptions';
 import { useFormatters } from '@/hooks/useFormatters';
 import { useRecurrencePoliciesList } from '@/hooks/useRecurrencePolicies';
 
@@ -16,26 +16,20 @@ const STATE_COLORS: Record<string, string> = {
 
 export default function SubscriptionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data: sub, mutate, isLoading } = useSubscription(id);
+  const { data: sub, isLoading } = useSubscription(id);
   const { formatMoney, getLocalizedString, formatDate } = useFormatters();
   const router = useRouter();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const policies = useRecurrencePoliciesList();
+  const { action: subscriptionAction } = useSubscriptionAction();
 
-  async function doAction(action: string, extra: Record<string, unknown> = {}) {
+  async function doAction(actionType: string, extra: Record<string, unknown> = {}) {
     setActionError(null);
-    setActionLoading(action);
+    setActionLoading(actionType);
     try {
-      const res = await fetch(`/api/account/subscriptions/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, ...extra }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Action failed');
-      await mutate();
+      await subscriptionAction(id, actionType, extra);
     } catch (e) {
       setActionError(e instanceof Error ? e.message : 'Action failed');
     } finally {
@@ -160,7 +154,7 @@ export default function SubscriptionDetailPage({ params }: { params: Promise<{ i
                 return (
                   <button
                     key={p.id}
-                    onClick={() => doAction('setSchedule', { schedule: p.schedule })}
+                    onClick={() => doAction('setSchedule', { recurrencePolicyId: p.id })}
                     disabled={!!actionLoading || isCurrent}
                     className={`px-3 py-1.5 text-xs rounded-sm border transition-colors ${
                       isCurrent
