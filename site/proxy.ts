@@ -8,7 +8,7 @@ const COUNTRY_TO_LOCALE: Record<string, string> = {
   DE: 'de-de',
 };
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip static files, api routes, Next.js internals
