@@ -45,7 +45,7 @@ export default function Header({ categories }: HeaderProps) {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="text-charcoal lg:hidden"
-            aria-label={t('menu')}
+            aria-label={tNav('menu')}
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
