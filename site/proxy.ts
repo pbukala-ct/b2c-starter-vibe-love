@@ -21,11 +21,15 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Already has a locale prefix — let it through
-  const hasLocale = LOCALES.some(
+  // Already has a locale prefix — pass through with x-next-intl-locale header
+  const matchedLocale = LOCALES.find(
     (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`)
   );
-  if (hasLocale) return NextResponse.next();
+  if (matchedLocale) {
+    const response = NextResponse.next();
+    response.headers.set('x-next-intl-locale', matchedLocale);
+    return response;
+  }
 
   // Derive locale from vibe-country cookie, fall back to DEFAULT_LOCALE
   const country = request.cookies.get('vibe-country')?.value || 'US';

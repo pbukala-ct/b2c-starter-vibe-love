@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 
 const COLORS = [
   { key: 'black', label: 'Black', hex: '#1A1A1A' },
@@ -57,6 +58,7 @@ export default function ProductFilters({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const t = useTranslations('search');
 
   const updateFilter = useCallback((key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -83,7 +85,7 @@ export default function ProductFilters({
     <div className="space-y-6">
       {/* Sort */}
       <div>
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-charcoal mb-3">Sort By</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-charcoal mb-3">{t('sortBy')}</h3>
         <select
           value={currentSort}
           onChange={(e) => updateFilter('sort', e.target.value)}
@@ -98,10 +100,10 @@ export default function ProductFilters({
       {/* Color filter */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-charcoal">Color</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-charcoal">{t('color')}</h3>
           {currentColor && (
             <button onClick={() => updateFilter('color', null)} className="text-xs text-terra hover:underline">
-              Clear
+              {t('clear')}
             </button>
           )}
         </div>
@@ -130,10 +132,10 @@ export default function ProductFilters({
       {showFinish && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-charcoal">Finish</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-charcoal">{t('finish')}</h3>
             {currentFinish && (
               <button onClick={() => updateFilter('finish', null)} className="text-xs text-terra hover:underline">
-                Clear
+                {t('clear')}
               </button>
             )}
           </div>
@@ -161,7 +163,7 @@ export default function ProductFilters({
           onClick={clearFilters}
           className="text-xs text-terra hover:underline"
         >
-          Clear all filters
+          {t('clearAllFilters')}
         </button>
       )}
     </div>

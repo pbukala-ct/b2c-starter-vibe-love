@@ -92,6 +92,10 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - Locale-aware product and category names
 - Localized money formatting
 - Country preference persisted in cookie
+- Full UI translations via `next-intl` covering all three locales (en-US, en-GB, de-DE)
+- ICU plural format for item counts and skip messages
+- Translation keys organized in JSON message files under `site/messages/` by namespace (common, nav, header, footer, product, cart, checkout, confirmation, account, orders, addresses, payments, subscriptions, auth, search, home)
+- Server components use `getTranslations()`, client components use `useTranslations()` hook
 
 ## Authentication & Sessions
 

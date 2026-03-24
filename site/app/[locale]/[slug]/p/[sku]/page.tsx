@@ -6,6 +6,7 @@ import { getCategoryById } from '@/lib/ct/categories';
 import { getRecurrencePolicies } from '@/lib/ct/auth';
 import { formatMoney, getLocalizedString, toUrlLocale } from '@/lib/utils';
 import { getLocale } from '@/lib/session';
+import { getTranslations } from 'next-intl/server';
 import SubscribeAndSave from '@/components/product/SubscribeAndSave';
 import AddToCartButton from '@/components/product/AddToCartButton';
 import type { Price } from '@/lib/ct/search';
@@ -26,6 +27,8 @@ export default async function ProductPage({ params }: PageProps) {
   const { sku } = await params;
   const { country, currency, locale } = await getLocale();
   const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
+  const t = await getTranslations('product');
+  const tCommon = await getTranslations('common');
   const [product, policiesResult] = await Promise.all([
     getProductBySku(sku, locale, currency, country),
     getRecurrencePolicies(),
@@ -62,7 +65,7 @@ export default async function ProductPage({ params }: PageProps) {
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
       <nav className="flex items-center gap-2 text-xs text-charcoal-light mb-6">
-        <Link href={lp('/')} className="hover:text-terra">Home</Link>
+        <Link href={lp('/')} className="hover:text-terra">{tCommon('home')}</Link>
         {categorySlug && (<><span>/</span><Link href={lp(`/category/${categorySlug}`)} className="hover:text-terra">{categoryName}</Link></>)}
         <span>/</span>
         <span className="text-charcoal line-clamp-1">{name}</span>
@@ -99,8 +102,8 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {colorText && <span className="border border-border px-3 py-1 rounded-full text-xs text-charcoal-light">Color: <span className="text-charcoal">{colorText}</span></span>}
-            {sizeText && <span className="border border-border px-3 py-1 rounded-full text-xs text-charcoal-light">Size: <span className="text-charcoal">{sizeText}</span></span>}
+            {colorText && <span className="border border-border px-3 py-1 rounded-full text-xs text-charcoal-light">{t('color')}: <span className="text-charcoal">{colorText}</span></span>}
+            {sizeText && <span className="border border-border px-3 py-1 rounded-full text-xs text-charcoal-light">{t('size')}: <span className="text-charcoal">{sizeText}</span></span>}
           </div>
 
           {regularPrice && (
@@ -119,20 +122,20 @@ export default async function ProductPage({ params }: PageProps) {
 
           {description && (
             <div>
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-charcoal mb-2">Description</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-charcoal mb-2">{t('description')}</h2>
               <p className="text-sm text-charcoal-light leading-relaxed">{description}</p>
             </div>
           )}
 
           {specText && (
             <div>
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-charcoal mb-2">Specifications</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-charcoal mb-2">{t('specifications')}</h2>
               <pre className="text-sm text-charcoal-light whitespace-pre-wrap font-sans leading-relaxed">{specText}</pre>
             </div>
           )}
 
           <div className="border-t border-border pt-4 space-y-2">
-            {['Free shipping on orders over $500', 'Split shipments available at checkout', 'Ships within 3–7 business days'].map(line => (
+            {[t('freeShipping'), t('splitShipments'), t('shipsWithin')].map(line => (
               <div key={line} className="flex items-center gap-2 text-xs text-charcoal-light">
                 <svg className="w-4 h-4 text-sage flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                 {line}

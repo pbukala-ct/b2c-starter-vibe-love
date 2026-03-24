@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useLocale } from '@/context/LocaleContext';
 import { useCombinedStreetField, formatStreetAddress, parseStreetAddress } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface Address {
   id?: string;
@@ -70,6 +71,7 @@ function AddressForm({
   const [setDefault, setSetDefault] = useState<DefaultType>(initialDefault);
 
   const isCombined = useCombinedStreetField(form.country);
+  const t = useTranslations('addresses');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -113,49 +115,49 @@ function AddressForm({
       <h2 className="font-semibold text-charcoal mb-4">{title}</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Nickname at the top */}
-        {field('additionalAddressInfo', 'Nickname (optional)', false, 'text', 'e.g. Home, Office, Mom\'s house')}
+        {field('additionalAddressInfo', t('nickname'), false, 'text', t('nicknamePlaceholder'))}
         <div className="grid grid-cols-2 gap-4">
-          {field('firstName', 'First name', true)}
-          {field('lastName', 'Last name', true)}
+          {field('firstName', t('firstName'), true)}
+          {field('lastName', t('lastName'), true)}
         </div>
         {isCombined ? (
           <div className="space-y-4">
-            {field('streetAddress', 'Street Address', true, 'text', '123 Main Street')}
+            {field('streetAddress', t('streetAddress'), true, 'text', '123 Main Street')}
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-4">
-            <div className="col-span-2">{field('streetName', 'Street', true)}</div>
-            <div>{field('streetNumber', 'Number')}</div>
+            <div className="col-span-2">{field('streetName', t('street'), true)}</div>
+            <div>{field('streetNumber', t('number'))}</div>
           </div>
         )}
         <div className="grid grid-cols-3 gap-4">
-          <div>{field('city', 'City', true)}</div>
-          <div>{field('state', 'State')}</div>
-          <div>{field('postalCode', 'Postal code', true)}</div>
+          <div>{field('city', t('city'), true)}</div>
+          <div>{field('state', t('state'))}</div>
+          <div>{field('postalCode', t('postalCode'), true)}</div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-charcoal mb-1">Country</label>
+            <label className="block text-xs font-medium text-charcoal mb-1">{t('country')}</label>
             <select
               value={form.country}
               onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
               className="w-full border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-charcoal bg-white"
             >
-              <option value="US">United States</option>
-              <option value="GB">United Kingdom</option>
-              <option value="DE">Germany</option>
+              <option value="US">{t('countryUS')}</option>
+              <option value="GB">{t('countryGB')}</option>
+              <option value="DE">{t('countryDE')}</option>
             </select>
           </div>
-          <div>{field('phone', 'Phone', false, 'tel')}</div>
+          <div>{field('phone', t('phone'), false, 'tel')}</div>
         </div>
 
         {/* Default address selector — independent toggle pills */}
         <div>
-          <label className="block text-xs font-medium text-charcoal mb-2">Set as default</label>
+          <label className="block text-xs font-medium text-charcoal mb-2">{t('setAsDefault')}</label>
           <div className="flex flex-wrap gap-2">
             {([
-              { type: 'shipping' as const, label: 'Default Shipping', activeClass: 'bg-sage/15 text-sage border-sage/50' },
-              { type: 'billing' as const, label: 'Default Billing', activeClass: 'bg-terra/15 text-terra border-terra/50' },
+              { type: 'shipping' as const, label: t('defaultShipping'), activeClass: 'bg-sage/15 text-sage border-sage/50' },
+              { type: 'billing' as const, label: t('defaultBilling'), activeClass: 'bg-terra/15 text-terra border-terra/50' },
             ]).map(({ type, label, activeClass }) => {
               const isOn = setDefault === type || setDefault === 'both';
               return (
@@ -191,14 +193,14 @@ function AddressForm({
             disabled={isSaving}
             className="bg-charcoal text-white px-5 py-2 text-sm font-medium rounded-sm hover:bg-charcoal/80 disabled:opacity-50"
           >
-            {isSaving ? 'Saving…' : 'Save Address'}
+            {isSaving ? t('savingAddress') : t('saveAddress')}
           </button>
           <button
             type="button"
             onClick={onCancel}
             className="border border-border text-charcoal-light px-5 py-2 text-sm rounded-sm hover:text-charcoal"
           >
-            Cancel
+            {t('cancel')}
           </button>
         </div>
       </form>
@@ -208,6 +210,7 @@ function AddressForm({
 
 export default function AddressesPage() {
   const { country } = useLocale();
+  const t = useTranslations('addresses');
   const [data, setData] = useState<AddressData>({ addresses: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -294,7 +297,7 @@ export default function AddressesPage() {
   if (isLoading) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold text-charcoal mb-6">Addresses</h1>
+        <h1 className="text-2xl font-semibold text-charcoal mb-6">{t('title')}</h1>
         <div className="space-y-3">
           {[1, 2].map(i => <div key={i} className="h-28 bg-cream-dark rounded-sm animate-pulse" />)}
         </div>
@@ -305,13 +308,13 @@ export default function AddressesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-charcoal">Addresses</h1>
+        <h1 className="text-2xl font-semibold text-charcoal">{t('title')}</h1>
         {!showAddForm && (
           <button
             onClick={() => setShowAddForm(true)}
             className="text-sm bg-charcoal text-white px-4 py-2 rounded-sm hover:bg-charcoal/80 transition-colors"
           >
-            Add Address
+            {t('addAddress')}
           </button>
         )}
       </div>
@@ -319,7 +322,7 @@ export default function AddressesPage() {
       {showAddForm && (
         <AddressForm
           initial={emptyAddress}
-          title="New Address"
+          title={t('newAddress')}
           onSave={handleAdd}
           onCancel={() => setShowAddForm(false)}
           defaultCountry={country}
@@ -330,7 +333,7 @@ export default function AddressesPage() {
 
       {data.addresses.length === 0 && !showAddForm ? (
         <div className="bg-white border border-border rounded-sm p-12 text-center">
-          <p className="text-charcoal-light">No saved addresses yet.</p>
+          <p className="text-charcoal-light">{t('noAddresses')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -343,7 +346,7 @@ export default function AddressesPage() {
                 <div key={addr.id} className="sm:col-span-2">
                   <AddressForm
                     initial={addr}
-                    title="Edit Address"
+                    title={t('editAddress')}
                     onSave={(updated, defaultType) => handleEdit({ ...updated, id: addr.id }, defaultType)}
                     onCancel={() => setEditingId(null)}
                     defaultCountry={country}
@@ -361,12 +364,12 @@ export default function AddressesPage() {
                   <div className="flex gap-1.5 mb-3">
                     {isDefaultShipping && (
                       <span className="text-xs bg-sage/10 text-sage border border-sage/20 px-2 py-0.5 rounded-full">
-                        Default Shipping
+                        {t('defaultShipping')}
                       </span>
                     )}
                     {isDefaultBilling && (
                       <span className="text-xs bg-terra/10 text-terra border border-terra/20 px-2 py-0.5 rounded-full">
-                        Default Billing
+                        {t('defaultBilling')}
                       </span>
                     )}
                   </div>
@@ -389,14 +392,14 @@ export default function AddressesPage() {
                     onClick={() => setEditingId(addr.id!)}
                     className="text-xs text-charcoal hover:text-terra border border-border px-2.5 py-1 rounded-sm hover:border-terra transition-colors"
                   >
-                    Edit
+                    {t('edit')}
                   </button>
                   <button
                     onClick={() => handleDelete(addr.id!)}
                     disabled={deletingId === addr.id}
                     className="text-xs text-charcoal-light hover:text-red-500 border border-border px-2.5 py-1 rounded-sm hover:border-red-300 transition-colors disabled:opacity-50"
                   >
-                    {deletingId === addr.id ? 'Removing…' : 'Remove'}
+                    {deletingId === addr.id ? t('removing') : t('remove')}
                   </button>
                   {!isDefaultShipping && (
                     <button
@@ -404,7 +407,7 @@ export default function AddressesPage() {
                       disabled={settingDefaultId === addr.id}
                       className="text-xs text-charcoal-light hover:text-sage border border-border px-2.5 py-1 rounded-sm hover:border-sage/50 transition-colors disabled:opacity-50"
                     >
-                      {settingDefaultId === addr.id ? '…' : 'Set Default Shipping'}
+                      {settingDefaultId === addr.id ? '…' : t('setDefaultShipping')}
                     </button>
                   )}
                   {!isDefaultBilling && (
@@ -413,7 +416,7 @@ export default function AddressesPage() {
                       disabled={settingDefaultId === addr.id}
                       className="text-xs text-charcoal-light hover:text-terra border border-border px-2.5 py-1 rounded-sm hover:border-terra/50 transition-colors disabled:opacity-50"
                     >
-                      {settingDefaultId === addr.id ? '…' : 'Set Default Billing'}
+                      {settingDefaultId === addr.id ? '…' : t('setDefaultBilling')}
                     </button>
                   )}
                 </div>

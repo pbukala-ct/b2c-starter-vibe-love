@@ -7,6 +7,7 @@ import { formatMoney, getLocalizedString } from '@/lib/utils';
 import { useLocale } from '@/context/LocaleContext';
 import { useState } from 'react';
 import { useRecurrencePolicies } from '@/hooks/useRecurrencePolicies';
+import { useTranslations } from 'next-intl';
 
 interface CartItemProps {
   item: CartLineItem;
@@ -19,6 +20,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
   const policyMap = useRecurrencePolicies();
   const [qty, setQty] = useState(item.quantity);
   const [updating, setUpdating] = useState(false);
+  const t = useTranslations('cart');
 
   const name = getLocalizedString(item.name, locale);
   const image = item.variant?.images?.[0]?.url;
@@ -92,7 +94,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
           <div className="text-right">
             <p className="text-sm font-medium text-charcoal">{total}</p>
             {qty > 1 && (
-              <p className="text-xs text-charcoal-light">{unitPrice} each</p>
+              <p className="text-xs text-charcoal-light">{unitPrice} {t('each')}</p>
             )}
           </div>
         </div>

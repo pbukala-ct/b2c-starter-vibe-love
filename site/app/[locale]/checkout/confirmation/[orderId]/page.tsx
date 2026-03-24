@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getOrderById } from '@/lib/ct/auth';
 import { getSession, getLocale } from '@/lib/session';
 import { formatMoney, getLocalizedString, toUrlLocale } from '@/lib/utils';
+import { getTranslations } from 'next-intl/server';
 
 interface PageProps {
   params: Promise<{ orderId: string }>;
@@ -11,7 +12,7 @@ export const metadata = { title: 'Order Confirmed' };
 
 export default async function ConfirmationPage({ params }: PageProps) {
   const { orderId } = await params;
-  const [session, localeData] = await Promise.all([getSession(), getLocale()]);
+  const [session, localeData, t] = await Promise.all([getSession(), getLocale(), getTranslations('confirmation')]);
   const lp = (p: string) => `/${toUrlLocale(localeData.country)}${p}`;
 
   let order = null;
@@ -27,19 +28,19 @@ export default async function ConfirmationPage({ params }: PageProps) {
         </svg>
       </div>
 
-      <h1 className="text-3xl font-semibold text-charcoal mb-3">Order Confirmed!</h1>
+      <h1 className="text-3xl font-semibold text-charcoal mb-3">{t('title')}</h1>
       <p className="text-charcoal-light mb-2">
-        Thank you for your purchase. Your order has been placed successfully.
+        {t('thankYou')}
       </p>
       {order?.orderNumber && (
         <p className="text-sm text-charcoal-light mb-8">
-          Order number: <span className="font-medium text-charcoal">#{order.orderNumber}</span>
+          {t('orderNumber', { number: order.orderNumber })}
         </p>
       )}
 
       {order?.lineItems && (
         <div className="bg-cream rounded-sm p-6 mb-8 text-left">
-          <h2 className="font-semibold text-charcoal mb-4">Order Details</h2>
+          <h2 className="font-semibold text-charcoal mb-4">{t('orderDetails')}</h2>
           <div className="space-y-3">
             {order.lineItems.map((item: { id: string; name: Record<string, string>; quantity: number; totalPrice: { centAmount: number; currencyCode: string }; recurrenceInfo?: { recurrencePolicy: { id: string } } }) => (
               <div key={item.id} className="flex justify-between text-sm">
@@ -47,7 +48,7 @@ export default async function ConfirmationPage({ params }: PageProps) {
                   <span className="text-charcoal">{getLocalizedString(item.name, 'en-US')}</span>
                   <span className="text-charcoal-light ml-2">× {item.quantity}</span>
                   {item.recurrenceInfo?.recurrencePolicy && (
-                    <span className="ml-2 text-sage text-xs">♻ Subscription</span>
+                    <span className="ml-2 text-sage text-xs">{t('subscription')}</span>
                   )}
                 </div>
                 <span>{formatMoney(item.totalPrice.centAmount, item.totalPrice.currencyCode)}</span>
@@ -64,21 +65,21 @@ export default async function ConfirmationPage({ params }: PageProps) {
               return (
                 <>
                   <div className="flex justify-between text-charcoal-light">
-                    <span>Subtotal</span><span>{formatMoney(subtotal, currency)}</span>
+                    <span>{t('subtotal')}</span><span>{formatMoney(subtotal, currency)}</span>
                   </div>
                   {shipping > 0 && (
                     <div className="flex justify-between text-charcoal-light">
-                      <span>Shipping{order.shippingInfo?.shippingMethodName ? ` (${order.shippingInfo.shippingMethodName})` : ''}</span>
+                      <span>{order.shippingInfo?.shippingMethodName ? t('shippingWithMethod', { method: order.shippingInfo.shippingMethodName }) : t('shipping')}</span>
                       <span>{formatMoney(shipping, currency)}</span>
                     </div>
                   )}
                   {tax > 0 && (
                     <div className="flex justify-between text-charcoal-light">
-                      <span>Tax</span><span>{formatMoney(tax, currency)}</span>
+                      <span>{t('tax')}</span><span>{formatMoney(tax, currency)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-semibold text-charcoal pt-1 border-t border-border">
-                    <span>Total</span><span>{formatMoney(total, currency)}</span>
+                    <span>{t('total')}</span><span>{formatMoney(total, currency)}</span>
                   </div>
                 </>
               );
@@ -90,13 +91,13 @@ export default async function ConfirmationPage({ params }: PageProps) {
       {order?.lineItems?.some((i: { recurrenceInfo?: { recurrencePolicy?: { id: string } } }) => i.recurrenceInfo?.recurrencePolicy) && (
         <div className="bg-sage/10 border border-sage/20 rounded-sm p-4 mb-8">
           <p className="text-sm text-charcoal">
-            ♻ Your subscription has been set up! You can manage it from{' '}
+            {t('subscriptionSetUp')}{' '}
             {session.customerId ? (
               <Link href={lp('/account/subscriptions')} className="text-terra hover:underline">
-                My Subscriptions
+                {t('mySubscriptions')}
               </Link>
             ) : (
-              <Link href={lp('/login')} className="text-terra hover:underline">your account</Link>
+              <Link href={lp('/login')} className="text-terra hover:underline">{t('yourAccount')}</Link>
             )}.
           </p>
         </div>
@@ -108,14 +109,14 @@ export default async function ConfirmationPage({ params }: PageProps) {
             href={lp('/account/orders')}
             className="bg-charcoal text-white px-6 py-3 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm"
           >
-            View My Orders
+            {t('viewMyOrders')}
           </Link>
         )}
         <Link
           href={lp('/')}
           className="border border-border text-charcoal px-6 py-3 text-sm font-medium hover:bg-cream transition-colors rounded-sm"
         >
-          Continue Shopping
+          {t('continueShopping')}
         </Link>
       </div>
     </div>

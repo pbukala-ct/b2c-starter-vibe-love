@@ -9,6 +9,7 @@ import { formatMoney, getLocalizedString, useCombinedStreetField, formatStreetAd
 import Image from 'next/image';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import { useTranslations } from 'next-intl';
 
 type Step = 'shipping' | 'split' | 'payment' | 'review';
 
@@ -52,6 +53,7 @@ export default function CheckoutPage() {
   const { cart, setCart, refreshCart } = useCart();
   const { user, isLoggedIn } = useAuth();
   const { currency, country, locale, localePath } = useLocale();
+  const t = useTranslations('checkout');
   const [step, setStep] = useState<Step>('shipping');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -299,7 +301,7 @@ export default function CheckoutPage() {
   if (!cart || cart.lineItems.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <p className="text-charcoal-light">Your cart is empty. <a href={localePath('/')} className="text-terra hover:underline">Continue shopping</a></p>
+        <p className="text-charcoal-light">{t('emptyCart')} <a href={localePath('/')} className="text-terra hover:underline">{t('continueShopping')}</a></p>
       </div>
     );
   }
@@ -309,7 +311,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 lg:px-8 py-8">
-      <h1 className="text-2xl font-semibold text-charcoal mb-8">Checkout</h1>
+      <h1 className="text-2xl font-semibold text-charcoal mb-8">{t('title')}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         {/* Form */}
@@ -317,26 +319,26 @@ export default function CheckoutPage() {
           {/* Guest/Login notice */}
           {!isLoggedIn && (
             <div className="bg-cream border border-border rounded-sm p-4 text-sm">
-              <span className="text-charcoal-light">Have an account? </span>
-              <a href={localePath('/login') + '?redirect=' + localePath('/checkout')} className="text-terra hover:underline">Sign in</a>
-              <span className="text-charcoal-light"> for faster checkout</span>
+              <span className="text-charcoal-light">{t('guestNotice')} </span>
+              <a href={localePath('/login') + '?redirect=' + localePath('/checkout')} className="text-terra hover:underline">{t('signIn')}</a>
+              <span className="text-charcoal-light"> {t('signInForFaster')}</span>
             </div>
           )}
 
           {/* Shipping Address */}
           <div>
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Shipping Address</h2>
+            <h2 className="text-lg font-semibold text-charcoal mb-4">{t('shippingAddress')}</h2>
             {savedAddresses.length > 0 && (
               <div className="mb-4">
                 <label className="text-xs font-medium text-charcoal-light uppercase tracking-wider block mb-1.5">
-                  Use a saved address
+                  {t('useSavedAddress')}
                 </label>
                 <select
                   value={selectedSavedAddressId}
                   onChange={e => applySavedAddress(e.target.value)}
                   className="w-full border border-border px-3 py-2.5 text-sm rounded-sm bg-white focus:outline-none focus:border-charcoal"
                 >
-                  <option value="">— Enter a new address —</option>
+                  <option value="">{t('enterNewAddress')}</option>
                   {savedAddresses.map(a => (
                     <option key={a.id} value={a.id}>
                       {a.firstName} {a.lastName} — {formatStreetAddress(a.streetNumber, a.streetName)}, {a.city}
@@ -346,36 +348,36 @@ export default function CheckoutPage() {
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
-              <Input label="First Name" value={primaryAddr.firstName} onChange={(e) => handleAddressChange('firstName', e.target.value)} required />
-              <Input label="Last Name" value={primaryAddr.lastName} onChange={(e) => handleAddressChange('lastName', e.target.value)} required />
+              <Input label={t('firstName')} value={primaryAddr.firstName} onChange={(e) => handleAddressChange('firstName', e.target.value)} required />
+              <Input label={t('lastName')} value={primaryAddr.lastName} onChange={(e) => handleAddressChange('lastName', e.target.value)} required />
               {useCombinedStreetField(primaryAddr.country) ? (
                 <>
-                  <Input label="Street Address" value={primaryAddr.streetAddress} onChange={(e) => handleAddressChange('streetAddress', e.target.value)} className="col-span-2" required placeholder="123 Main Street" />
-                  <Input label="Additional Address Info" value={primaryAddr.additionalAddressInfo || ''} onChange={(e) => handleAddressChange('additionalAddressInfo', e.target.value)} className="col-span-2" placeholder="Apt, suite, unit, etc. (optional)" />
+                  <Input label={t('streetAddress')} value={primaryAddr.streetAddress} onChange={(e) => handleAddressChange('streetAddress', e.target.value)} className="col-span-2" required placeholder={t('streetAddressPlaceholder')} />
+                  <Input label={t('additionalAddressInfo')} value={primaryAddr.additionalAddressInfo || ''} onChange={(e) => handleAddressChange('additionalAddressInfo', e.target.value)} className="col-span-2" placeholder={t('additionalAddressInfoPlaceholder')} />
                 </>
               ) : (
                 <>
-                  <Input label="Street Name" value={primaryAddr.streetName} onChange={(e) => handleAddressChange('streetName', e.target.value)} className="col-span-2" required />
-                  <Input label="Street Number" value={primaryAddr.streetNumber} onChange={(e) => handleAddressChange('streetNumber', e.target.value)} required />
-                  <Input label="Additional Address Info" value={primaryAddr.additionalAddressInfo || ''} onChange={(e) => handleAddressChange('additionalAddressInfo', e.target.value)} placeholder="Optional" />
+                  <Input label={t('streetName')} value={primaryAddr.streetName} onChange={(e) => handleAddressChange('streetName', e.target.value)} className="col-span-2" required />
+                  <Input label={t('streetNumber')} value={primaryAddr.streetNumber} onChange={(e) => handleAddressChange('streetNumber', e.target.value)} required />
+                  <Input label={t('additionalAddressInfo')} value={primaryAddr.additionalAddressInfo || ''} onChange={(e) => handleAddressChange('additionalAddressInfo', e.target.value)} placeholder={t('additionalAddressInfoPlaceholder')} />
                 </>
               )}
-              <Input label="City" value={primaryAddr.city} onChange={(e) => handleAddressChange('city', e.target.value)} required />
-              <Input label="ZIP / Postal Code" value={primaryAddr.postalCode} onChange={(e) => handleAddressChange('postalCode', e.target.value)} required />
-              <Input label="State / Region" value={primaryAddr.state || ''} onChange={(e) => handleAddressChange('state', e.target.value)} />
+              <Input label={t('city')} value={primaryAddr.city} onChange={(e) => handleAddressChange('city', e.target.value)} required />
+              <Input label={t('zipPostalCode')} value={primaryAddr.postalCode} onChange={(e) => handleAddressChange('postalCode', e.target.value)} required />
+              <Input label={t('stateRegion')} value={primaryAddr.state || ''} onChange={(e) => handleAddressChange('state', e.target.value)} />
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-charcoal-light uppercase tracking-wider">Country</label>
+                <label className="text-xs font-medium text-charcoal-light uppercase tracking-wider">{t('country')}</label>
                 <select
                   value={primaryAddr.country}
                   onChange={(e) => handleAddressChange('country', e.target.value)}
                   className="w-full border border-border px-3 py-2.5 text-sm rounded-sm bg-white focus:outline-none focus:border-charcoal"
                 >
-                  <option value="US">United States</option>
-                  <option value="GB">United Kingdom</option>
-                  <option value="DE">Germany</option>
+                  <option value="US">{t('countryUS')}</option>
+                  <option value="GB">{t('countryGB')}</option>
+                  <option value="DE">{t('countryDE')}</option>
                 </select>
               </div>
-              <Input label="Email" type="email" value={primaryAddr.email || ''} onChange={(e) => handleAddressChange('email', e.target.value)} className="col-span-2" />
+              <Input label={t('email')} type="email" value={primaryAddr.email || ''} onChange={(e) => handleAddressChange('email', e.target.value)} className="col-span-2" />
             </div>
           </div>
 
@@ -390,7 +392,7 @@ export default function CheckoutPage() {
                 className="accent-charcoal"
               />
               <label htmlFor="split-shipment" className="text-sm font-medium text-charcoal cursor-pointer">
-                Ship to multiple addresses (split shipment)
+                {t('splitShipment')}
               </label>
             </div>
 
@@ -399,24 +401,24 @@ export default function CheckoutPage() {
                 {/* Additional addresses */}
                 {additionalAddresses.map((addr, index) => (
                   <div key={addr.key} className="space-y-4">
-                    <h3 className="text-sm font-medium text-charcoal">Address {index + 2}</h3>
+                    <h3 className="text-sm font-medium text-charcoal">{t('address', { num: index + 2 })}</h3>
                     <div className="grid grid-cols-2 gap-3">
-                      <Input label="First Name" value={addr.firstName} onChange={(e) => updateSplitAddress(index, 'firstName', e.target.value)} />
-                      <Input label="Last Name" value={addr.lastName} onChange={(e) => updateSplitAddress(index, 'lastName', e.target.value)} />
+                      <Input label={t('firstName')} value={addr.firstName} onChange={(e) => updateSplitAddress(index, 'firstName', e.target.value)} />
+                      <Input label={t('lastName')} value={addr.lastName} onChange={(e) => updateSplitAddress(index, 'lastName', e.target.value)} />
                       {useCombinedStreetField(addr.country) ? (
                         <>
-                          <Input label="Street Address" value={addr.streetAddress} onChange={(e) => updateSplitAddress(index, 'streetAddress', e.target.value)} className="col-span-2" placeholder="123 Main Street" />
-                          <Input label="Additional Address Info" value={addr.additionalAddressInfo || ''} onChange={(e) => updateSplitAddress(index, 'additionalAddressInfo', e.target.value)} className="col-span-2" placeholder="Apt, suite, unit, etc. (optional)" />
+                          <Input label={t('streetAddress')} value={addr.streetAddress} onChange={(e) => updateSplitAddress(index, 'streetAddress', e.target.value)} className="col-span-2" placeholder={t('streetAddressPlaceholder')} />
+                          <Input label={t('additionalAddressInfo')} value={addr.additionalAddressInfo || ''} onChange={(e) => updateSplitAddress(index, 'additionalAddressInfo', e.target.value)} className="col-span-2" placeholder={t('additionalAddressInfoPlaceholder')} />
                         </>
                       ) : (
                         <>
-                          <Input label="Street Name" value={addr.streetName} onChange={(e) => updateSplitAddress(index, 'streetName', e.target.value)} className="col-span-2" />
-                          <Input label="Street Number" value={addr.streetNumber} onChange={(e) => updateSplitAddress(index, 'streetNumber', e.target.value)} />
-                          <Input label="Additional Address Info" value={addr.additionalAddressInfo || ''} onChange={(e) => updateSplitAddress(index, 'additionalAddressInfo', e.target.value)} placeholder="Optional" />
+                          <Input label={t('streetName')} value={addr.streetName} onChange={(e) => updateSplitAddress(index, 'streetName', e.target.value)} className="col-span-2" />
+                          <Input label={t('streetNumber')} value={addr.streetNumber} onChange={(e) => updateSplitAddress(index, 'streetNumber', e.target.value)} />
+                          <Input label={t('additionalAddressInfo')} value={addr.additionalAddressInfo || ''} onChange={(e) => updateSplitAddress(index, 'additionalAddressInfo', e.target.value)} placeholder={t('additionalAddressInfoPlaceholder')} />
                         </>
                       )}
-                      <Input label="City" value={addr.city} onChange={(e) => updateSplitAddress(index, 'city', e.target.value)} />
-                      <Input label="ZIP Code" value={addr.postalCode} onChange={(e) => updateSplitAddress(index, 'postalCode', e.target.value)} />
+                      <Input label={t('city')} value={addr.city} onChange={(e) => updateSplitAddress(index, 'city', e.target.value)} />
+                      <Input label={t('zipCode')} value={addr.postalCode} onChange={(e) => updateSplitAddress(index, 'postalCode', e.target.value)} />
                     </div>
                   </div>
                 ))}
@@ -426,13 +428,13 @@ export default function CheckoutPage() {
                   onClick={addSplitAddress}
                   className="text-sm text-terra hover:underline flex items-center gap-1"
                 >
-                  + Add another address
+                  {t('addAnotherAddress')}
                 </button>
 
                 {/* Per-item address assignment */}
                 {additionalAddresses.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-medium text-charcoal mb-3">Assign items to addresses</h3>
+                    <h3 className="text-sm font-medium text-charcoal mb-3">{t('assignItems')}</h3>
                     <div className="space-y-4">
                       {itemShipping.map((is) => (
                         <div key={is.lineItemId} className="text-sm">
@@ -469,7 +471,7 @@ export default function CheckoutPage() {
           {/* Shipping Method */}
           {shippingMethods.length > 0 && (
             <div>
-              <h2 className="text-lg font-semibold text-charcoal mb-4">Shipping Method</h2>
+              <h2 className="text-lg font-semibold text-charcoal mb-4">{t('shippingMethod')}</h2>
               <div className="space-y-2">
                 {shippingMethods.map((method) => {
                   const isFree = method.freeAbove && cart.totalPrice.centAmount >= method.freeAbove.centAmount;
@@ -499,7 +501,7 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                       <span className={`text-sm font-medium ${isFree ? 'text-sage' : 'text-charcoal'}`}>
-                        {!method.price ? 'TBD' : isFree ? 'Free' : formatMoney(method.price.centAmount, method.price.currencyCode)}
+                        {!method.price ? t('tbd') : isFree ? t('free') : formatMoney(method.price.centAmount, method.price.currencyCode)}
                       </span>
                     </label>
                   );
@@ -511,7 +513,7 @@ export default function CheckoutPage() {
                   const remaining = sm.freeAbove.centAmount - cart.totalPrice.centAmount;
                   return (
                     <p className="text-xs text-charcoal-light mt-2">
-                      Add {formatMoney(remaining, cart.totalPrice.currencyCode)} more for free shipping
+                      {t('addMoreForFreeShipping', { amount: formatMoney(remaining, cart.totalPrice.currencyCode) })}
                     </p>
                   );
                 }
@@ -522,7 +524,7 @@ export default function CheckoutPage() {
 
           {/* Billing Address */}
           <div>
-            <h2 className="text-lg font-semibold text-charcoal mb-4">Billing Address</h2>
+            <h2 className="text-lg font-semibold text-charcoal mb-4">{t('billingAddress')}</h2>
             <div className="flex items-center gap-3 mb-4">
               <input
                 type="checkbox"
@@ -532,38 +534,38 @@ export default function CheckoutPage() {
                 className="accent-charcoal"
               />
               <label htmlFor="billing-same" className="text-sm text-charcoal cursor-pointer">
-                Same as shipping address
+                {t('billingSameAsShipping')}
               </label>
             </div>
             {!billingSameAsShipping && (
               <div className="grid grid-cols-2 gap-4">
-                <Input label="First Name" value={billingAddr.firstName} onChange={(e) => setBillingAddr(p => ({ ...p, firstName: e.target.value }))} required />
-                <Input label="Last Name" value={billingAddr.lastName} onChange={(e) => setBillingAddr(p => ({ ...p, lastName: e.target.value }))} required />
+                <Input label={t('firstName')} value={billingAddr.firstName} onChange={(e) => setBillingAddr(p => ({ ...p, firstName: e.target.value }))} required />
+                <Input label={t('lastName')} value={billingAddr.lastName} onChange={(e) => setBillingAddr(p => ({ ...p, lastName: e.target.value }))} required />
                 {useCombinedStreetField(billingAddr.country) ? (
                   <>
-                    <Input label="Street Address" value={billingAddr.streetAddress} onChange={(e) => setBillingAddr(p => ({ ...p, streetAddress: e.target.value }))} className="col-span-2" required placeholder="123 Main Street" />
-                    <Input label="Additional Address Info" value={billingAddr.additionalAddressInfo || ''} onChange={(e) => setBillingAddr(p => ({ ...p, additionalAddressInfo: e.target.value }))} className="col-span-2" placeholder="Apt, suite, unit, etc. (optional)" />
+                    <Input label={t('streetAddress')} value={billingAddr.streetAddress} onChange={(e) => setBillingAddr(p => ({ ...p, streetAddress: e.target.value }))} className="col-span-2" required placeholder={t('streetAddressPlaceholder')} />
+                    <Input label={t('additionalAddressInfo')} value={billingAddr.additionalAddressInfo || ''} onChange={(e) => setBillingAddr(p => ({ ...p, additionalAddressInfo: e.target.value }))} className="col-span-2" placeholder={t('additionalAddressInfoPlaceholder')} />
                   </>
                 ) : (
                   <>
-                    <Input label="Street Name" value={billingAddr.streetName} onChange={(e) => setBillingAddr(p => ({ ...p, streetName: e.target.value }))} className="col-span-2" required />
-                    <Input label="Street Number" value={billingAddr.streetNumber} onChange={(e) => setBillingAddr(p => ({ ...p, streetNumber: e.target.value }))} required />
-                    <Input label="Additional Address Info" value={billingAddr.additionalAddressInfo || ''} onChange={(e) => setBillingAddr(p => ({ ...p, additionalAddressInfo: e.target.value }))} placeholder="Optional" />
+                    <Input label={t('streetName')} value={billingAddr.streetName} onChange={(e) => setBillingAddr(p => ({ ...p, streetName: e.target.value }))} className="col-span-2" required />
+                    <Input label={t('streetNumber')} value={billingAddr.streetNumber} onChange={(e) => setBillingAddr(p => ({ ...p, streetNumber: e.target.value }))} required />
+                    <Input label={t('additionalAddressInfo')} value={billingAddr.additionalAddressInfo || ''} onChange={(e) => setBillingAddr(p => ({ ...p, additionalAddressInfo: e.target.value }))} placeholder={t('additionalAddressInfoPlaceholder')} />
                   </>
                 )}
-                <Input label="City" value={billingAddr.city} onChange={(e) => setBillingAddr(p => ({ ...p, city: e.target.value }))} required />
-                <Input label="ZIP / Postal Code" value={billingAddr.postalCode} onChange={(e) => setBillingAddr(p => ({ ...p, postalCode: e.target.value }))} required />
-                <Input label="State / Region" value={billingAddr.state || ''} onChange={(e) => setBillingAddr(p => ({ ...p, state: e.target.value }))} />
+                <Input label={t('city')} value={billingAddr.city} onChange={(e) => setBillingAddr(p => ({ ...p, city: e.target.value }))} required />
+                <Input label={t('zipPostalCode')} value={billingAddr.postalCode} onChange={(e) => setBillingAddr(p => ({ ...p, postalCode: e.target.value }))} required />
+                <Input label={t('stateRegion')} value={billingAddr.state || ''} onChange={(e) => setBillingAddr(p => ({ ...p, state: e.target.value }))} />
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-charcoal-light uppercase tracking-wider">Country</label>
+                  <label className="text-xs font-medium text-charcoal-light uppercase tracking-wider">{t('country')}</label>
                   <select
                     value={billingAddr.country}
                     onChange={(e) => setBillingAddr(p => ({ ...p, country: e.target.value }))}
                     className="w-full border border-border px-3 py-2.5 text-sm rounded-sm bg-white focus:outline-none focus:border-charcoal"
                   >
-                    <option value="US">United States</option>
-                    <option value="GB">United Kingdom</option>
-                    <option value="DE">Germany</option>
+                    <option value="US">{t('countryUS')}</option>
+                    <option value="GB">{t('countryGB')}</option>
+                    <option value="DE">{t('countryDE')}</option>
                   </select>
                 </div>
               </div>
@@ -573,38 +575,38 @@ export default function CheckoutPage() {
           {/* Payment */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-charcoal">Payment</h2>
+              <h2 className="text-lg font-semibold text-charcoal">{t('payment')}</h2>
               <button
                 type="button"
                 onClick={autoFillCard}
                 className="text-xs text-terra hover:underline border border-terra/30 px-3 py-1 rounded-sm hover:bg-terra/5 transition-colors"
               >
-                Auto-fill test card
+                {t('autoFillTestCard')}
               </button>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Card Number"
+                label={t('cardNumber')}
                 value={payment.cardNumber}
                 onChange={(e) => setPayment((p) => ({ ...p, cardNumber: e.target.value }))}
                 placeholder="4242 4242 4242 4242"
                 className="col-span-2"
               />
               <Input
-                label="Cardholder Name"
+                label={t('cardholderName')}
                 value={payment.cardName}
                 onChange={(e) => setPayment((p) => ({ ...p, cardName: e.target.value }))}
-                placeholder="Full name on card"
+                placeholder={t('cardholderNamePlaceholder')}
                 className="col-span-2"
               />
               <Input
-                label="Expiry Date"
+                label={t('expiryDate')}
                 value={payment.cardExpiry}
                 onChange={(e) => setPayment((p) => ({ ...p, cardExpiry: e.target.value }))}
                 placeholder="MM/YY"
               />
               <Input
-                label="CVC"
+                label={t('cvc')}
                 value={payment.cardCvc}
                 onChange={(e) => setPayment((p) => ({ ...p, cardCvc: e.target.value }))}
                 placeholder="123"
@@ -633,7 +635,7 @@ export default function CheckoutPage() {
         {/* Order summary */}
         <div className="lg:col-span-2">
           <div className="bg-cream p-5 rounded-sm sticky top-24">
-            <h2 className="font-semibold text-charcoal mb-4">Order Summary</h2>
+            <h2 className="font-semibold text-charcoal mb-4">{t('orderSummary')}</h2>
             <div className="space-y-3 mb-4">
               {cart.lineItems.map((item) => {
                 const name = getLocalizedString(item.name, locale);
@@ -648,10 +650,10 @@ export default function CheckoutPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-charcoal line-clamp-1">{name}</p>
                       {item.recurrenceInfo?.recurrencePolicy && (
-                        <p className="text-xs text-sage">♻ Subscription</p>
+                        <p className="text-xs text-sage">{t('subscription')}</p>
                       )}
                       <p className="text-xs text-charcoal-light mt-0.5">
-                        Qty: {item.quantity} · {formatMoney(item.price?.value?.centAmount || 0, item.price?.value?.currencyCode || currency)}
+                        {t('qty', { quantity: item.quantity })} · {formatMoney(item.price?.value?.centAmount || 0, item.price?.value?.currencyCode || currency)}
                       </p>
                     </div>
                   </div>
@@ -670,25 +672,25 @@ export default function CheckoutPage() {
               return (
                 <div className="border-t border-border pt-3 space-y-1.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-charcoal-light">Subtotal</span>
+                    <span className="text-charcoal-light">{t('subtotal')}</span>
                     <span>{formatMoney(cart.totalPrice.centAmount, cart.totalPrice.currencyCode)}</span>
                   </div>
                   {taxAmount > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-charcoal-light">{taxIsEstimate ? 'Est. Tax (10%)' : 'Tax'}</span>
+                      <span className="text-charcoal-light">{taxIsEstimate ? t('estimatedTax') : t('tax')}</span>
                       <span>{formatMoney(taxAmount, cart.totalPrice.currencyCode)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span className="text-charcoal-light">
-                      {sm?.name ? `Shipping (${sm.name})` : 'Shipping'}
+                      {sm?.name ? t('shippingWithMethod', { name: sm.name }) : t('subtotal')}
                     </span>
                     <span className={isFree ? 'text-sage text-xs' : ''}>
-                      {!sm?.price ? <span className="text-xs">Calculated at order</span> : isFree ? 'Free' : formatMoney(sm.price.centAmount, sm.price.currencyCode)}
+                      {!sm?.price ? <span className="text-xs">{t('calculatedAtOrder')}</span> : isFree ? t('free') : formatMoney(sm.price.centAmount, sm.price.currencyCode)}
                     </span>
                   </div>
                   <div className="flex justify-between font-semibold pt-1 border-t border-border">
-                    <span>Estimated Total</span>
+                    <span>{t('estimatedTotal')}</span>
                     <span>{formatMoney(total, cart.totalPrice.currencyCode)}</span>
                   </div>
                 </div>

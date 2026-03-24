@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
+import { useTranslations } from 'next-intl';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, setUser } = useAuth();
   const { localePath } = useLocale();
+  const t = useTranslations('auth');
   const redirect = searchParams.get('redirect') || localePath('/account');
 
   const [email, setEmail] = useState('');
@@ -34,14 +36,14 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Invalid email or password');
+        setError(data.error || t('invalidCredentials'));
       } else {
         const c = data.customer || data;
         setUser({ id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName });
         router.push(redirect);
       }
     } catch {
-      setError('Something went wrong. Please try again.');
+      setError(t('invalidCredentials'));
     } finally {
       setIsLoading(false);
     }
@@ -51,15 +53,15 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-charcoal">Welcome Back</h1>
-          <p className="text-charcoal-light mt-2">Sign in to your Vibe Home account</p>
+          <h1 className="text-3xl font-semibold text-charcoal">{t('welcomeBack')}</h1>
+          <p className="text-charcoal-light mt-2">{t('signInToAccount')}</p>
         </div>
 
         <div className="bg-white border border-border rounded-sm p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-charcoal mb-1.5">
-                Email address
+                {t('emailAddress')}
               </label>
               <input
                 id="email"
@@ -69,13 +71,13 @@ export default function LoginPage() {
                 required
                 autoComplete="email"
                 className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
-                placeholder="you@example.com"
+                placeholder={t('emailPlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-charcoal mb-1.5">
-                Password
+                {t('password')}
               </label>
               <input
                 id="password"
@@ -85,7 +87,7 @@ export default function LoginPage() {
                 required
                 autoComplete="current-password"
                 className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
-                placeholder="••••••••"
+                placeholder={t('passwordPlaceholder')}
               />
             </div>
 
@@ -100,15 +102,15 @@ export default function LoginPage() {
               disabled={isLoading}
               className="w-full bg-charcoal text-white py-3 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Signing in…' : 'Sign In'}
+              {isLoading ? t('signingIn') : t('signIn')}
             </button>
           </form>
 
           <div className="mt-6 pt-6 border-t border-border text-center">
             <p className="text-sm text-charcoal-light">
-              Don&apos;t have an account?{' '}
+              {t('noAccount')}{' '}
               <Link href={`${localePath('/register')}${redirect !== localePath('/account') ? `?redirect=${redirect}` : ''}`} className="text-terra hover:underline font-medium">
-                Create one
+                {t('createOne')}
               </Link>
             </p>
           </div>
@@ -119,7 +121,7 @@ export default function LoginPage() {
               onClick={() => { setEmail('jen@example.com'); setPassword('123'); }}
               className="text-xs text-terra hover:underline font-medium"
             >
-              Use test credentials
+              {t('useTestCredentials')}
             </button>
           </div>
         </div>

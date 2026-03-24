@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface StoredCard {
   id: string;
@@ -37,6 +38,7 @@ function BrandBadge({ brand }: { brand: string }) {
 }
 
 export default function PaymentsPage() {
+  const t = useTranslations('payments');
   const [cards, setCards] = useState<StoredCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -55,8 +57,8 @@ export default function PaymentsPage() {
     e.preventDefault();
     setFormError('');
     const raw = form.cardNumber.replace(/\s/g, '');
-    if (raw.length < 12) { setFormError('Enter a valid card number'); return; }
-    if (!form.expiry.match(/^\d{2}\/\d{2}$/)) { setFormError('Enter expiry as MM/YY'); return; }
+    if (raw.length < 12) { setFormError(t('invalidCardNumber')); return; }
+    if (!form.expiry.match(/^\d{2}\/\d{2}$/)) { setFormError(t('invalidExpiry')); return; }
     setSaving(true);
     const res = await fetch('/api/account/payments', {
       method: 'POST',
@@ -75,7 +77,7 @@ export default function PaymentsPage() {
       setForm({ cardholderName: '', cardNumber: '', expiry: '' });
       setShowForm(false);
     } else {
-      setFormError(d.error || 'Failed to save card');
+      setFormError(d.error || t('failedToSave'));
     }
   }
 
@@ -104,7 +106,7 @@ export default function PaymentsPage() {
   if (isLoading) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold text-charcoal mb-6">Payment Methods</h1>
+        <h1 className="text-2xl font-semibold text-charcoal mb-6">{t('title')}</h1>
         <div className="space-y-3">
           {[1, 2].map(i => <div key={i} className="h-20 bg-cream-dark rounded-sm animate-pulse" />)}
         </div>
@@ -115,41 +117,41 @@ export default function PaymentsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-charcoal">Payment Methods</h1>
+        <h1 className="text-2xl font-semibold text-charcoal">{t('title')}</h1>
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
             className="text-sm bg-charcoal text-white px-4 py-2 rounded-sm hover:bg-charcoal/80 transition-colors"
           >
-            Add Card
+            {t('addCard')}
           </button>
         )}
       </div>
 
       <p className="text-xs text-charcoal-light mb-6 bg-cream border border-border rounded-sm px-3 py-2">
-        This is a demo store. Only the last 4 digits are stored. A secure tokenization reference is generated for each card.
+        {t('demoNotice')}
       </p>
 
       {showForm && (
         <div className="bg-white border border-border rounded-sm p-6 mb-6">
-          <h2 className="font-semibold text-charcoal mb-4">Add Payment Method</h2>
+          <h2 className="font-semibold text-charcoal mb-4">{t('addPaymentMethod')}</h2>
           <form onSubmit={handleAdd} className="space-y-4">
             <div>
-              <label htmlFor="pay-cardholder" className="block text-xs font-medium text-charcoal mb-1">Cardholder Name</label>
-              <input id="pay-cardholder" type="text" required placeholder="Full name on card"
+              <label htmlFor="pay-cardholder" className="block text-xs font-medium text-charcoal mb-1">{t('cardholderName')}</label>
+              <input id="pay-cardholder" type="text" required placeholder={t('cardholderNamePlaceholder')}
                 value={form.cardholderName}
                 onChange={e => setForm(f => ({ ...f, cardholderName: e.target.value }))}
                 className="w-full border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-charcoal" />
             </div>
             <div>
-              <label htmlFor="pay-card-number" className="block text-xs font-medium text-charcoal mb-1">Card Number</label>
+              <label htmlFor="pay-card-number" className="block text-xs font-medium text-charcoal mb-1">{t('cardNumber')}</label>
               <input id="pay-card-number" type="text" required placeholder="4242 4242 4242 4242"
                 value={form.cardNumber}
                 onChange={e => setForm(f => ({ ...f, cardNumber: formatCardNumber(e.target.value) }))}
                 className="w-full border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-charcoal font-mono" />
             </div>
             <div className="w-32">
-              <label htmlFor="pay-expiry" className="block text-xs font-medium text-charcoal mb-1">Expiry (MM/YY)</label>
+              <label htmlFor="pay-expiry" className="block text-xs font-medium text-charcoal mb-1">{t('expiry')}</label>
               <input id="pay-expiry" type="text" required placeholder="12/28" maxLength={5}
                 value={form.expiry}
                 onChange={e => {
@@ -163,11 +165,11 @@ export default function PaymentsPage() {
             <div className="flex gap-3">
               <button type="submit" disabled={saving}
                 className="bg-charcoal text-white px-5 py-2 text-sm font-medium rounded-sm hover:bg-charcoal/80 disabled:opacity-50">
-                {saving ? 'Saving…' : 'Save Card'}
+                {saving ? t('saving') : t('saveCard')}
               </button>
               <button type="button" onClick={() => { setShowForm(false); setFormError(''); }}
                 className="border border-border text-charcoal-light px-5 py-2 text-sm rounded-sm hover:text-charcoal">
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           </form>
@@ -181,8 +183,8 @@ export default function PaymentsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
           </div>
-          <h2 className="font-semibold text-charcoal mb-2">No saved payment methods</h2>
-          <p className="text-sm text-charcoal-light max-w-xs mx-auto">Add a card above to save it for faster checkout.</p>
+          <h2 className="font-semibold text-charcoal mb-2">{t('noPaymentMethods')}</h2>
+          <p className="text-sm text-charcoal-light max-w-xs mx-auto">{t('noPaymentMethodsDescription')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -194,10 +196,10 @@ export default function PaymentsPage() {
                   <p className="text-sm font-medium text-charcoal">
                     •••• •••• •••• {card.last4}
                     {card.isDefault && (
-                      <span className="ml-2 text-xs bg-sage/10 text-sage border border-sage/20 px-1.5 py-0.5 rounded-full">Default</span>
+                      <span className="ml-2 text-xs bg-sage/10 text-sage border border-sage/20 px-1.5 py-0.5 rounded-full">{t('default')}</span>
                     )}
                   </p>
-                  <p className="text-xs text-charcoal-light">{card.cardholderName} · Expires {card.expiry}</p>
+                  <p className="text-xs text-charcoal-light">{card.cardholderName} · {t('expires')} {card.expiry}</p>
                   <p className="text-xs text-charcoal-light/50 font-mono mt-0.5">{card.token.slice(0, 24)}…</p>
                 </div>
               </div>
@@ -205,12 +207,12 @@ export default function PaymentsPage() {
                 {!card.isDefault && (
                   <button onClick={() => handleSetDefault(card.id)}
                     className="text-xs text-charcoal-light hover:text-charcoal border border-border px-2.5 py-1 rounded-sm hover:border-charcoal transition-colors">
-                    Set Default
+                    {t('setDefault')}
                   </button>
                 )}
                 <button onClick={() => handleDelete(card.id)}
                   className="text-xs text-charcoal-light hover:text-red-500 border border-border px-2.5 py-1 rounded-sm hover:border-red-300 transition-colors">
-                  Remove
+                  {t('remove')}
                 </button>
               </div>
             </div>

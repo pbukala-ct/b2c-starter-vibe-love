@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
+import { useTranslations } from 'next-intl';
 
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, setUser } = useAuth();
   const { localePath } = useLocale();
+  const t = useTranslations('auth');
   const redirect = searchParams.get('redirect') || localePath('/account');
 
   const [firstName, setFirstName] = useState('');
@@ -29,11 +31,11 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
     if (password !== confirm) {
-      setError('Passwords do not match');
+      setError(t('passwordsDoNotMatch'));
       return;
     }
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('passwordTooShort'));
       return;
     }
     setIsLoading(true);
@@ -45,14 +47,14 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Registration failed');
+        setError(data.error || t('registrationFailed'));
       } else {
         const c = data.customer || data;
         setUser({ id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName });
         router.push(redirect);
       }
     } catch {
-      setError('Something went wrong. Please try again.');
+      setError(t('registrationFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -62,8 +64,8 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-charcoal">Create Account</h1>
-          <p className="text-charcoal-light mt-2">Join Vibe Home for a better shopping experience</p>
+          <h1 className="text-3xl font-semibold text-charcoal">{t('createAccount')}</h1>
+          <p className="text-charcoal-light mt-2">{t('joinVibe')}</p>
         </div>
 
         <div className="bg-white border border-border rounded-sm p-8">
@@ -71,7 +73,7 @@ export default function RegisterPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-charcoal mb-1.5">
-                  First name
+                  {t('firstName')}
                 </label>
                 <input
                   id="firstName"
@@ -81,12 +83,12 @@ export default function RegisterPage() {
                   required
                   autoComplete="given-name"
                   className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
-                  placeholder="Jane"
+                  placeholder={t('firstNamePlaceholder')}
                 />
               </div>
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium text-charcoal mb-1.5">
-                  Last name
+                  {t('lastName')}
                 </label>
                 <input
                   id="lastName"
@@ -96,14 +98,14 @@ export default function RegisterPage() {
                   required
                   autoComplete="family-name"
                   className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
-                  placeholder="Smith"
+                  placeholder={t('lastNamePlaceholder')}
                 />
               </div>
             </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-charcoal mb-1.5">
-                Email address
+                {t('emailAddress')}
               </label>
               <input
                 id="email"
@@ -113,13 +115,13 @@ export default function RegisterPage() {
                 required
                 autoComplete="email"
                 className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
-                placeholder="you@example.com"
+                placeholder={t('emailPlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-charcoal mb-1.5">
-                Password
+                {t('newPassword')}
               </label>
               <input
                 id="password"
@@ -129,13 +131,13 @@ export default function RegisterPage() {
                 required
                 autoComplete="new-password"
                 className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
-                placeholder="Min. 6 characters"
+                placeholder={t('newPasswordPlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="confirm" className="block text-sm font-medium text-charcoal mb-1.5">
-                Confirm password
+                {t('confirmPassword')}
               </label>
               <input
                 id="confirm"
@@ -145,7 +147,7 @@ export default function RegisterPage() {
                 required
                 autoComplete="new-password"
                 className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
-                placeholder="••••••••"
+                placeholder={t('passwordPlaceholder')}
               />
             </div>
 
@@ -160,15 +162,15 @@ export default function RegisterPage() {
               disabled={isLoading}
               className="w-full bg-charcoal text-white py-3 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Creating account…' : 'Create Account'}
+              {isLoading ? t('creatingAccount') : t('createAccount')}
             </button>
           </form>
 
           <div className="mt-6 pt-6 border-t border-border text-center">
             <p className="text-sm text-charcoal-light">
-              Already have an account?{' '}
+              {t('alreadyHaveAccount')}{' '}
               <Link href={`${localePath('/login')}${redirect !== localePath('/account') ? `?redirect=${redirect}` : ''}`} className="text-terra hover:underline font-medium">
-                Sign in
+                {t('signIn')}
               </Link>
             </p>
           </div>

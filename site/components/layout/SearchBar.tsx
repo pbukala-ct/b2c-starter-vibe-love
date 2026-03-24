@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/context/LocaleContext';
+import { useTranslations } from 'next-intl';
 
 export default function SearchBar() {
   const [query, setQuery] = useState('');
@@ -10,6 +11,7 @@ export default function SearchBar() {
   const router = useRouter();
   const { localePath } = useLocale();
   const inputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations('search');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,9 +32,9 @@ export default function SearchBar() {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          placeholder="Search products..."
+          placeholder={t('placeholder')}
           className="w-full px-3 py-2 text-sm bg-transparent outline-none placeholder:text-charcoal-light/60 min-w-0"
-          aria-label="Search products"
+          aria-label={t('placeholder')}
         />
         <button
           type="submit"

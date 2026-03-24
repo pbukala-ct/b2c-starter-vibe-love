@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 import { LocaleProvider } from '@/context/LocaleContext';
 import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
@@ -25,9 +27,10 @@ export default async function LocaleLayout({
   const country = URL_LOCALE_TO_COUNTRY[locale];
   if (!country) notFound();
 
-  const [categories, session] = await Promise.all([
+  const [categories, session, messages] = await Promise.all([
     getCategoryTree(),
     getSession(),
+    getMessages(),
   ]);
 
   let initialCart = null;
@@ -48,14 +51,16 @@ export default async function LocaleLayout({
     : null;
 
   return (
-    <LocaleProvider initialCountry={country}>
-      <AuthProvider initialUser={initialUser}>
-        <CartProvider initialCart={initialCart}>
-          <Header categories={categories} />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-        </CartProvider>
-      </AuthProvider>
-    </LocaleProvider>
+    <NextIntlClientProvider messages={messages}>
+      <LocaleProvider initialCountry={country}>
+        <AuthProvider initialUser={initialUser}>
+          <CartProvider initialCart={initialCart}>
+            <Header categories={categories} />
+            <main className="min-h-screen">{children}</main>
+            <Footer />
+          </CartProvider>
+        </AuthProvider>
+      </LocaleProvider>
+    </NextIntlClientProvider>
   );
 }

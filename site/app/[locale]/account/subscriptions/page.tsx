@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatMoney } from '@/lib/utils';
 import { useLocale } from '@/context/LocaleContext';
+import { useTranslations } from 'next-intl';
 
 interface RecurringOrder {
   id: string;
@@ -20,11 +21,7 @@ interface RecurringOrder {
   }[];
 }
 
-const STATE_LABELS: Record<string, string> = {
-  Active: 'Active',
-  Paused: 'Paused',
-  Cancelled: 'Cancelled',
-};
+// STATE_LABELS now use translations, see component
 
 const STATE_COLORS: Record<string, string> = {
   Active: 'bg-sage/10 text-sage border-sage/20',
@@ -32,30 +29,37 @@ const STATE_COLORS: Record<string, string> = {
   Cancelled: 'bg-red-50 text-red-700 border-red-200',
 };
 
-const SCHEDULES = [
-  { label: 'Monthly',   schedule: { type: 'standard', value: 1, intervalUnit: 'months' } },
-  { label: 'Bi-weekly', schedule: { type: 'standard', value: 2, intervalUnit: 'weeks' } },
-  { label: 'Weekly',    schedule: { type: 'standard', value: 1, intervalUnit: 'weeks' } },
-];
-
-function scheduleLabel(schedule: { type: string; value: number; intervalUnit: string }) {
-  const unit = schedule.intervalUnit?.toLowerCase();
-  if (unit === 'weeks' && schedule.value === 1) return 'Weekly';
-  if (unit === 'weeks' && schedule.value === 2) return 'Bi-weekly';
-  if (unit === 'months' && schedule.value === 1) return 'Monthly';
-  return `Every ${schedule.value} ${unit}`;
-}
-
-function isCurrentSchedule(sub: RecurringOrder, s: typeof SCHEDULES[0]) {
+function isCurrentSchedule(sub: RecurringOrder, s: { label: string; schedule: { type: string; value: number; intervalUnit: string } }) {
   return sub.schedule.value === s.schedule.value && sub.schedule.intervalUnit === s.schedule.intervalUnit;
 }
 
 export default function SubscriptionsPage() {
   const { localePath } = useLocale();
+  const t = useTranslations('subscriptions');
   const [subscriptions, setSubscriptions] = useState<RecurringOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const STATE_LABELS: Record<string, string> = {
+    Active: t('stateActive'),
+    Paused: t('statePaused'),
+    Cancelled: t('stateCancelled'),
+  };
+
+  const SCHEDULES = [
+    { label: t('scheduleMonthly'), schedule: { type: 'standard', value: 1, intervalUnit: 'months' } },
+    { label: t('scheduleBiWeekly'), schedule: { type: 'standard', value: 2, intervalUnit: 'weeks' } },
+    { label: t('scheduleWeekly'),   schedule: { type: 'standard', value: 1, intervalUnit: 'weeks' } },
+  ];
+
+  function scheduleLabel(schedule: { type: string; value: number; intervalUnit: string }) {
+    const unit = schedule.intervalUnit?.toLowerCase();
+    if (unit === 'weeks' && schedule.value === 1) return t('scheduleWeekly');
+    if (unit === 'weeks' && schedule.value === 2) return t('scheduleBiWeekly');
+    if (unit === 'months' && schedule.value === 1) return t('scheduleMonthly');
+    return t('everyInterval', { value: schedule.value, unit });
+  }
 
   useEffect(() => {
     fetchSubscriptions();
@@ -96,7 +100,7 @@ export default function SubscriptionsPage() {
   if (isLoading) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold text-charcoal mb-6">Subscriptions</h1>
+        <h1 className="text-2xl font-semibold text-charcoal mb-6">{t('title')}</h1>
         <div className="space-y-3">
           {[1, 2].map(i => <div key={i} className="h-36 bg-cream-dark rounded-sm animate-pulse" />)}
         </div>
@@ -106,7 +110,7 @@ export default function SubscriptionsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-charcoal mb-6">Subscriptions</h1>
+      <h1 className="text-2xl font-semibold text-charcoal mb-6">{t('title')}</h1>
 
       {actionError && (
         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-sm">
@@ -116,12 +120,12 @@ export default function SubscriptionsPage() {
 
       {subscriptions.length === 0 ? (
         <div className="bg-white border border-border rounded-sm p-12 text-center">
-          <p className="text-charcoal-light mb-2">You don&apos;t have any active subscriptions.</p>
+          <p className="text-charcoal-light mb-2">{t('noSubscriptions')}</p>
           <p className="text-sm text-charcoal-light mb-6">
-            Subscribe to eligible products and save up to 20% on every order.
+            {t('noSubscriptionsDescription')}
           </p>
           <Link href={localePath('/search?subscriptionEligible=true')} className="bg-sage text-white px-6 py-2.5 text-sm font-medium hover:bg-sage/90 transition-colors rounded-sm inline-block">
-            Shop Subscribe &amp; Save
+            {t('shopSubscribeAndSave')}
           </Link>
         </div>
       ) : (
@@ -148,13 +152,13 @@ export default function SubscriptionsPage() {
                       <span className="text-xs text-charcoal-light">{scheduleLabel(sub.schedule)}</span>
                       {pendingSkips > 0 && (
                         <span className="text-xs bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-0.5 rounded-full">
-                          Skipping {pendingSkips} order{pendingSkips > 1 ? 's' : ''}
+                          {t('skipping', { count: pendingSkips })}
                         </span>
                       )}
                     </div>
                     {sub.nextOrderDate && !isCancelled && (
                       <p className="text-xs text-charcoal-light">
-                        Next order: {new Date(sub.nextOrderDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        {t('nextOrder', { date: new Date(sub.nextOrderDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) })}
                       </p>
                     )}
                   </div>
@@ -182,7 +186,7 @@ export default function SubscriptionsPage() {
                           disabled={actionLoading === sub.id + 'pause'}
                           className="text-xs border border-border text-charcoal-light hover:text-charcoal hover:border-charcoal px-3 py-1.5 rounded-sm transition-colors disabled:opacity-50"
                         >
-                          {actionLoading === sub.id + 'pause' ? 'Pausing…' : 'Pause'}
+                          {actionLoading === sub.id + 'pause' ? t('pausing') : t('pause')}
                         </button>
                       )}
                       {isPaused && (
@@ -191,7 +195,7 @@ export default function SubscriptionsPage() {
                           disabled={actionLoading === sub.id + 'resume'}
                           className="text-xs border border-sage text-sage hover:bg-sage/10 px-3 py-1.5 rounded-sm transition-colors disabled:opacity-50"
                         >
-                          {actionLoading === sub.id + 'resume' ? 'Resuming…' : 'Resume'}
+                          {actionLoading === sub.id + 'resume' ? t('resuming') : t('resume')}
                         </button>
                       )}
                       {isActive && (
@@ -204,25 +208,25 @@ export default function SubscriptionsPage() {
                           disabled={actionLoading === sub.id + 'skip'}
                           className="text-xs border border-border text-charcoal-light hover:text-charcoal hover:border-charcoal px-3 py-1.5 rounded-sm transition-colors disabled:opacity-50"
                         >
-                          {actionLoading === sub.id + 'skip' ? 'Skipping…' : 'Skip next order'}
+                          {actionLoading === sub.id + 'skip' ? t('skippingOrder') : t('skipNextOrder')}
                         </button>
                       )}
                       <button
                         onClick={() => {
-                          if (confirm('Are you sure you want to cancel this subscription?')) {
+                          if (confirm(t('cancelConfirm'))) {
                             handleAction(sub.id, 'cancel');
                           }
                         }}
                         disabled={actionLoading === sub.id + 'cancel'}
                         className="text-xs text-red-500 hover:text-red-700 px-3 py-1.5 rounded-sm transition-colors disabled:opacity-50"
                       >
-                        {actionLoading === sub.id + 'cancel' ? 'Cancelling…' : 'Cancel subscription'}
+                        {actionLoading === sub.id + 'cancel' ? t('cancelling') : t('cancelSubscription')}
                       </button>
                     </div>
 
                     {/* Schedule pills */}
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-charcoal-light">Change schedule:</span>
+                      <span className="text-xs text-charcoal-light">{t('changeSchedule')}</span>
                       {SCHEDULES.map(s => {
                         const isCurrent = isCurrentSchedule(sub, s);
                         const loadKey = sub.id + 'setSchedule' + s.label;

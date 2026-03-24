@@ -11,6 +11,7 @@ import SearchBar from './SearchBar';
 import { Category } from '@/lib/ct/categories';
 import { useLocale } from '@/context/LocaleContext';
 import { getLocalizedString } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface HeaderProps {
   categories: Category[];
@@ -21,6 +22,8 @@ export default function Header({ categories }: HeaderProps) {
   const { locale, localePath } = useLocale();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const t = useTranslations('header');
+  const tNav = useTranslations('nav');
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -34,7 +37,7 @@ export default function Header({ categories }: HeaderProps) {
     <header className="sticky top-0 z-50 bg-white border-b border-border">
       {/* Top bar */}
       <div className="bg-charcoal text-white text-xs py-2 px-4 text-center">
-        Free shipping on orders over $500 · Premium home goods & furniture
+        {t('topBar')}
       </div>
 
       {/* Main header */}
@@ -93,14 +96,14 @@ export default function Header({ categories }: HeaderProps) {
 
               {isLoggedIn && (
                 <div className="absolute right-0 top-full mt-1 bg-white border border-border shadow-lg rounded-sm w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
-                  <Link href={localePath('/account')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Profile</Link>
-                  <Link href={localePath('/account/orders')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Orders</Link>
-                  <Link href={localePath('/account/subscriptions')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Subscriptions</Link>
-                  <Link href={localePath('/account/addresses')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Addresses</Link>
-                  <Link href={localePath('/account/payments')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Payment Methods</Link>
+                  <Link href={localePath('/account')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">{tNav('profile')}</Link>
+                  <Link href={localePath('/account/orders')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">{tNav('orders')}</Link>
+                  <Link href={localePath('/account/subscriptions')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">{tNav('subscriptions')}</Link>
+                  <Link href={localePath('/account/addresses')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">{tNav('addresses')}</Link>
+                  <Link href={localePath('/account/payments')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">{tNav('paymentMethods')}</Link>
                   <div className="border-t border-border" />
                   <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-charcoal-light hover:bg-cream hover:text-charcoal">
-                    Sign Out
+                    {tNav('logout')}
                   </button>
                 </div>
               )}

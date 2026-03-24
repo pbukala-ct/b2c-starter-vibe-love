@@ -7,6 +7,7 @@ import { formatMoney, getLocalizedString } from '@/lib/utils';
 import { useLocale } from '@/context/LocaleContext';
 import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface ProductCardProps {
   product: ProductProjection;
@@ -16,6 +17,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { locale, currency, localePath } = useLocale();
   const { addToCartAndShow } = useCart();
   const [adding, setAdding] = useState(false);
+  const t = useTranslations('product');
 
   const name = getLocalizedString(product.name, locale);
   const slug = product.slug?.['en-US'] || product.slug?.['en-GB'] || product.key || product.id;
@@ -66,7 +68,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {hasSubscription && (
           <div className="absolute top-2 left-2 bg-sage text-white text-xs px-2 py-0.5 rounded-sm font-medium">
-            Subscribe & Save
+            {t('subscribeAndSave')}
           </div>
         )}
 
@@ -76,7 +78,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           disabled={adding}
           className="absolute bottom-2 right-2 bg-white text-charcoal text-xs px-3 py-1.5 rounded-sm opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm hover:bg-charcoal hover:text-white font-medium"
         >
-          {adding ? '...' : 'Add to Cart'}
+          {adding ? t('adding') : t('addToCart')}
         </button>
       </div>
 
@@ -89,7 +91,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             {formatMoney(price.value.centAmount, price.value.currencyCode)}
           </p>
         ) : (
-          <p className="text-sm text-charcoal-light">See options</p>
+          <p className="text-sm text-charcoal-light">{t('seeOptions')}</p>
         )}
       </div>
     </Link>

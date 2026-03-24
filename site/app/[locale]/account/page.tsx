@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslations } from 'next-intl';
 
 interface Profile {
   firstName: string;
@@ -11,6 +12,7 @@ interface Profile {
 
 export default function AccountProfilePage() {
   const { user, setUser } = useAuth();
+  const t = useTranslations('account');
   const [form, setForm] = useState<Profile>({ firstName: '', lastName: '', email: '' });
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -35,13 +37,13 @@ export default function AccountProfilePage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Failed to update profile');
+        setError(data.error || t('updateFailed'));
       } else {
         setUser({ ...user!, firstName: data.firstName, lastName: data.lastName, email: data.email });
-        setMessage('Profile updated successfully');
+        setMessage(t('profileUpdated'));
       }
     } catch {
-      setError('Something went wrong');
+      setError(t('somethingWentWrong'));
     } finally {
       setIsSaving(false);
     }
@@ -49,13 +51,13 @@ export default function AccountProfilePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-charcoal mb-6">Profile</h1>
+      <h1 className="text-2xl font-semibold text-charcoal mb-6">{t('profile')}</h1>
 
       <div className="bg-white border border-border rounded-sm p-6">
         <form onSubmit={handleSubmit} className="space-y-5 max-w-md">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="profile-first-name" className="block text-sm font-medium text-charcoal mb-1.5">First name</label>
+              <label htmlFor="profile-first-name" className="block text-sm font-medium text-charcoal mb-1.5">{t('firstName')}</label>
               <input
                 id="profile-first-name"
                 type="text"
@@ -66,7 +68,7 @@ export default function AccountProfilePage() {
               />
             </div>
             <div>
-              <label htmlFor="profile-last-name" className="block text-sm font-medium text-charcoal mb-1.5">Last name</label>
+              <label htmlFor="profile-last-name" className="block text-sm font-medium text-charcoal mb-1.5">{t('lastName')}</label>
               <input
                 id="profile-last-name"
                 type="text"
@@ -79,7 +81,7 @@ export default function AccountProfilePage() {
           </div>
 
           <div>
-            <label htmlFor="profile-email" className="block text-sm font-medium text-charcoal mb-1.5">Email address</label>
+            <label htmlFor="profile-email" className="block text-sm font-medium text-charcoal mb-1.5">{t('emailAddress')}</label>
             <input
               id="profile-email"
               type="email"
@@ -106,7 +108,7 @@ export default function AccountProfilePage() {
             disabled={isSaving}
             className="bg-charcoal text-white px-6 py-2.5 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm disabled:opacity-50"
           >
-            {isSaving ? 'Saving…' : 'Save Changes'}
+            {isSaving ? t('saving') : t('saveChanges')}
           </button>
         </form>
       </div>

@@ -6,6 +6,7 @@ import { formatMoney } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
 import { useLocale } from '@/context/LocaleContext';
 import Button from '@/components/ui/Button';
+import { useTranslations } from 'next-intl';
 
 interface RecurrencePolicy {
   id: string;
@@ -34,6 +35,7 @@ export default function SubscribeAndSave({
 }: SubscribeAndSaveProps) {
   const { addToCartAndShow } = useCart();
   const { locale, currency, country } = useLocale();
+  const t = useTranslations('product');
   const [mode, setMode] = useState<'one-time' | 'subscribe'>('one-time');
   const [selectedPolicyId, setSelectedPolicyId] = useState<string>(
     recurrencePolicies[0]?.id || ''
@@ -98,7 +100,7 @@ export default function SubscribeAndSave({
         onClick={handleAddToCart}
         isLoading={adding}
       >
-        Add to Cart
+        {t('addToCart')}
       </Button>
     );
   }
@@ -121,7 +123,7 @@ export default function SubscribeAndSave({
         />
         <div className="flex-1">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-charcoal">One-time purchase</span>
+            <span className="text-sm font-medium text-charcoal">{t('oneTimePurchase')}</span>
             <span className="text-sm font-semibold text-charcoal">
               {formatMoney(regularPrice.value.centAmount, regularPrice.value.currencyCode)}
             </span>
@@ -146,10 +148,10 @@ export default function SubscribeAndSave({
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
             <span className="text-sm font-medium text-charcoal">
-              Subscribe & Save
+              {t('subscribeOption')}
               {mode === 'subscribe' && savingsPct > 0 && (
                 <span className="ml-2 text-xs bg-sage text-white px-1.5 py-0.5 rounded-sm">
-                  Save {savingsPct}%
+                  {t('save', { pct: savingsPct })}
                 </span>
               )}
             </span>
@@ -162,7 +164,7 @@ export default function SubscribeAndSave({
 
           {mode === 'subscribe' && policyPrices.length > 0 && (
             <div className="mt-3 space-y-2">
-              <p className="text-xs text-charcoal-light">Choose delivery frequency:</p>
+              <p className="text-xs text-charcoal-light">{t('deliveryFrequency')}</p>
               {policyPrices.map(({ policy, price }) => {
                 const policyName = policy.name[locale] || policy.name['en-US'];
                 const saving = regularCentAmount - price.value.centAmount;
@@ -204,12 +206,12 @@ export default function SubscribeAndSave({
         onClick={handleAddToCart}
         isLoading={adding}
       >
-        {mode === 'subscribe' ? 'Subscribe & Add to Cart' : 'Add to Cart'}
+        {mode === 'subscribe' ? t('subscribeAndAddToCart') : t('addToCart')}
       </Button>
 
       {mode === 'subscribe' && (
         <p className="text-xs text-charcoal-light text-center">
-          Cancel or pause anytime from your account
+          {t('cancelAnytime')}
         </p>
       )}
     </div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatMoney, getLocalizedString, formatStreetAddress } from '@/lib/utils';
 import { useLocale } from '@/context/LocaleContext';
+import { useTranslations } from 'next-intl';
 
 interface LineItem {
   id: string;
@@ -73,6 +74,7 @@ interface Order {
 export default function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const { localePath } = useLocale();
+  const t = useTranslations('orderDetail');
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -100,8 +102,8 @@ export default function OrderDetailPage() {
   if (!order) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold text-charcoal mb-6">Order Not Found</h1>
-        <Link href={localePath('/account/orders')} className="text-terra hover:underline text-sm">← Back to orders</Link>
+        <h1 className="text-2xl font-semibold text-charcoal mb-6">{t('orderNotFound')}</h1>
+        <Link href={localePath('/account/orders')} className="text-terra hover:underline text-sm">{t('backToOrdersList')}</Link>
       </div>
     );
   }
@@ -139,9 +141,9 @@ export default function OrderDetailPage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Link href={localePath('/account/orders')} className="text-charcoal-light hover:text-charcoal text-sm">← Orders</Link>
+        <Link href={localePath('/account/orders')} className="text-charcoal-light hover:text-charcoal text-sm">{t('backToOrders')}</Link>
         <span className="text-border">/</span>
-        <h1 className="text-2xl font-semibold text-charcoal">Order #{order.orderNumber}</h1>
+        <h1 className="text-2xl font-semibold text-charcoal">{t('orderHeading', { number: order.orderNumber })}</h1>
       </div>
 
       <div className="flex items-center gap-3 mb-6">
@@ -165,7 +167,7 @@ export default function OrderDetailPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h2 className="font-semibold text-charcoal">
-                        Shipment {gi + 1} of {shipmentGroups.size}
+                        {t('shipment', { current: gi + 1, total: shipmentGroups.size })}
                       </h2>
                       {a && (
                         <p className="text-sm text-charcoal-light mt-0.5">
@@ -183,7 +185,7 @@ export default function OrderDetailPage() {
                           <span className="text-charcoal">{getLocalizedString(item.name, 'en-US')}</span>
                           <span className="text-charcoal-light ml-2">× {qty}</span>
                           {item.recurrenceInfo?.recurrencePolicy && (
-                            <span className="ml-2 text-sage text-xs border border-sage/30 px-1.5 py-0.5 rounded-full">♻ Subscription</span>
+                            <span className="ml-2 text-sage text-xs border border-sage/30 px-1.5 py-0.5 rounded-full">{t('subscription')}</span>
                           )}
                         </div>
                         <span className="text-charcoal font-medium">
@@ -201,26 +203,26 @@ export default function OrderDetailPage() {
 
             {/* Totals card */}
             <div className="bg-white border border-border rounded-sm p-5">
-              <h2 className="font-semibold text-charcoal mb-4">Order Total</h2>
+              <h2 className="font-semibold text-charcoal mb-4">{t('orderTotal')}</h2>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-charcoal-light">
-                  <span>Subtotal</span>
+                  <span>{t('subtotal')}</span>
                   <span>{formatMoney(order.lineItems.reduce((s, i) => s + i.totalPrice.centAmount, 0), order.totalPrice.currencyCode)}</span>
                 </div>
                 {order.shippingInfo && (
                   <div className="flex justify-between text-charcoal-light">
-                    <span>Shipping ({order.shippingInfo.shippingMethodName})</span>
+                    <span>{t('shipping', { method: order.shippingInfo.shippingMethodName })}</span>
                     <span>{formatMoney(order.shippingInfo.price.centAmount, order.shippingInfo.price.currencyCode)}</span>
                   </div>
                 )}
                 {order.taxedPrice && (
                   <div className="flex justify-between text-charcoal-light">
-                    <span>Tax</span>
+                    <span>{t('tax')}</span>
                     <span>{formatMoney(order.taxedPrice.totalGross.centAmount - order.taxedPrice.totalNet.centAmount, order.taxedPrice.totalGross.currencyCode)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-semibold text-charcoal pt-1 border-t border-border">
-                  <span>Total</span>
+                  <span>{t('total')}</span>
                   <span>{formatMoney(order.taxedPrice?.totalGross?.centAmount ?? order.totalPrice.centAmount, order.taxedPrice?.totalGross?.currencyCode ?? order.totalPrice.currencyCode)}</span>
                 </div>
               </div>
@@ -229,7 +231,7 @@ export default function OrderDetailPage() {
         ) : (
           /* ── Single-shipment: flat item list ──────────────────── */
           <div className="bg-white border border-border rounded-sm p-5">
-            <h2 className="font-semibold text-charcoal mb-4">Items</h2>
+            <h2 className="font-semibold text-charcoal mb-4">{t('items')}</h2>
             <div className="space-y-3">
               {order.lineItems.map(item => (
                 <div key={item.id} className="flex justify-between text-sm">
@@ -237,7 +239,7 @@ export default function OrderDetailPage() {
                     <span className="text-charcoal">{getLocalizedString(item.name, 'en-US')}</span>
                     <span className="text-charcoal-light ml-2">× {item.quantity}</span>
                     {item.recurrenceInfo?.recurrencePolicy && (
-                      <span className="ml-2 text-sage text-xs border border-sage/30 px-1.5 py-0.5 rounded-full">♻ Subscription</span>
+                      <span className="ml-2 text-sage text-xs border border-sage/30 px-1.5 py-0.5 rounded-full">{t('subscription')}</span>
                     )}
                   </div>
                   <span className="text-charcoal font-medium">
@@ -248,23 +250,23 @@ export default function OrderDetailPage() {
             </div>
             <div className="border-t border-border mt-4 pt-4 space-y-2 text-sm">
               <div className="flex justify-between text-charcoal-light">
-                <span>Subtotal</span>
+                <span>{t('subtotal')}</span>
                 <span>{formatMoney(order.lineItems.reduce((s, i) => s + i.totalPrice.centAmount, 0), order.totalPrice.currencyCode)}</span>
               </div>
               {order.shippingInfo && (
                 <div className="flex justify-between text-charcoal-light">
-                  <span>Shipping ({order.shippingInfo.shippingMethodName})</span>
+                  <span>{t('shipping', { method: order.shippingInfo.shippingMethodName })}</span>
                   <span>{formatMoney(order.shippingInfo.price.centAmount, order.shippingInfo.price.currencyCode)}</span>
                 </div>
               )}
               {order.taxedPrice && (
                 <div className="flex justify-between text-charcoal-light">
-                  <span>Tax</span>
+                  <span>{t('tax')}</span>
                   <span>{formatMoney(order.taxedPrice.totalGross.centAmount - order.taxedPrice.totalNet.centAmount, order.taxedPrice.totalGross.currencyCode)}</span>
                 </div>
               )}
               <div className="flex justify-between font-semibold text-charcoal pt-1 border-t border-border">
-                <span>Total</span>
+                <span>{t('total')}</span>
                 <span>{formatMoney(order.taxedPrice?.totalGross?.centAmount ?? order.totalPrice.centAmount, order.taxedPrice?.totalGross?.currencyCode ?? order.totalPrice.currencyCode)}</span>
               </div>
             </div>
@@ -276,7 +278,7 @@ export default function OrderDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {addr && (
               <div className="bg-white border border-border rounded-sm p-5">
-                <h2 className="font-semibold text-charcoal mb-3">Shipping Address</h2>
+                <h2 className="font-semibold text-charcoal mb-3">{t('shippingAddress')}</h2>
                 <address className="text-sm text-charcoal-light not-italic space-y-0.5">
                   <p>{addr.firstName} {addr.lastName}</p>
                   <p>{formatStreetAddress(addr.streetNumber, addr.streetName)}</p>
@@ -289,7 +291,7 @@ export default function OrderDetailPage() {
 
             {order.billingAddress && (
               <div className="bg-white border border-border rounded-sm p-5">
-                <h2 className="font-semibold text-charcoal mb-3">Billing Address</h2>
+                <h2 className="font-semibold text-charcoal mb-3">{t('billingAddress')}</h2>
                 <address className="text-sm text-charcoal-light not-italic space-y-0.5">
                   <p>{order.billingAddress.firstName} {order.billingAddress.lastName}</p>
                   <p>{formatStreetAddress(order.billingAddress.streetNumber, order.billingAddress.streetName)}</p>
@@ -305,7 +307,7 @@ export default function OrderDetailPage() {
         {/* Billing (split shipment) */}
         {isSplitShipment && order.billingAddress && (
           <div className="bg-white border border-border rounded-sm p-5">
-            <h2 className="font-semibold text-charcoal mb-3">Billing Address</h2>
+            <h2 className="font-semibold text-charcoal mb-3">{t('billingAddress')}</h2>
             <address className="text-sm text-charcoal-light not-italic space-y-0.5">
               <p>{order.billingAddress.firstName} {order.billingAddress.lastName}</p>
               <p>{formatStreetAddress(order.billingAddress.streetNumber, order.billingAddress.streetName)}</p>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatMoney } from '@/lib/utils';
 import { useLocale } from '@/context/LocaleContext';
+import { useTranslations } from 'next-intl';
 
 interface Order {
   id: string;
@@ -14,12 +15,7 @@ interface Order {
   lineItems: { id: string; name: Record<string, string>; quantity: number }[];
 }
 
-const STATE_LABELS: Record<string, string> = {
-  Open: 'Processing',
-  Confirmed: 'Confirmed',
-  Complete: 'Delivered',
-  Cancelled: 'Cancelled',
-};
+// STATE_LABELS now use translations, see component below
 
 const STATE_COLORS: Record<string, string> = {
   Open: 'bg-yellow-50 text-yellow-700 border-yellow-200',
@@ -30,8 +26,16 @@ const STATE_COLORS: Record<string, string> = {
 
 export default function OrdersPage() {
   const { localePath } = useLocale();
+  const t = useTranslations('orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const STATE_LABELS: Record<string, string> = {
+    Open: t('stateProcessing'),
+    Confirmed: t('stateConfirmed'),
+    Complete: t('stateDelivered'),
+    Cancelled: t('stateCancelled'),
+  };
 
   useEffect(() => {
     fetch('/api/account/orders')
@@ -46,7 +50,7 @@ export default function OrdersPage() {
   if (isLoading) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold text-charcoal mb-6">Orders</h1>
+        <h1 className="text-2xl font-semibold text-charcoal mb-6">{t('title')}</h1>
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
             <div key={i} className="h-24 bg-cream-dark rounded-sm animate-pulse" />
@@ -58,13 +62,13 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-charcoal mb-6">Orders</h1>
+      <h1 className="text-2xl font-semibold text-charcoal mb-6">{t('title')}</h1>
 
       {orders.length === 0 ? (
         <div className="bg-white border border-border rounded-sm p-12 text-center">
-          <p className="text-charcoal-light mb-4">You haven&apos;t placed any orders yet.</p>
+          <p className="text-charcoal-light mb-4">{t('noOrders')}</p>
           <Link href={localePath('/')} className="bg-charcoal text-white px-6 py-2.5 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm inline-block">
-            Start Shopping
+            {t('startShopping')}
           </Link>
         </div>
       ) : (
@@ -74,7 +78,7 @@ export default function OrdersPage() {
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <div className="flex items-center gap-3 mb-1">
-                    <p className="font-semibold text-charcoal text-sm">Order #{order.orderNumber}</p>
+                    <p className="font-semibold text-charcoal text-sm">{t('orderNumber', { number: order.orderNumber })}</p>
                     <span className={`text-xs border px-2 py-0.5 rounded-full ${STATE_COLORS[order.orderState] || 'bg-cream text-charcoal-light border-border'}`}>
                       {STATE_LABELS[order.orderState] || order.orderState}
                     </span>
@@ -88,7 +92,7 @@ export default function OrdersPage() {
                     {formatMoney(order.totalPrice.centAmount, order.totalPrice.currencyCode)}
                   </p>
                   <Link href={localePath(`/account/orders/${order.id}`)} className="text-xs text-terra hover:underline">
-                    View details →
+                    {t('viewDetails')}
                   </Link>
                 </div>
               </div>
@@ -99,7 +103,7 @@ export default function OrdersPage() {
                     {order.lineItems.indexOf(item) < Math.min(order.lineItems.length, 3) - 1 ? ', ' : ''}
                   </span>
                 ))}
-                {order.lineItems.length > 3 && ` +${order.lineItems.length - 3} more`}
+                {order.lineItems.length > 3 && ` ${t('more', { count: order.lineItems.length - 3 })}`}
               </div>
             </div>
           ))}
