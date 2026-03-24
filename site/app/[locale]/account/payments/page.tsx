@@ -31,7 +31,9 @@ function BrandBadge({ brand }: { brand: string }) {
     Card: 'bg-charcoal',
   };
   return (
-    <span className={`inline-flex items-center justify-center text-white text-xs font-bold rounded px-1.5 py-0.5 ${colors[brand] || 'bg-charcoal'}`}>
+    <span
+      className={`inline-flex items-center justify-center rounded px-1.5 py-0.5 text-xs font-bold text-white ${colors[brand] || 'bg-charcoal'}`}
+    >
       {brand === 'Mastercard' ? 'MC' : brand.slice(0, 4)}
     </span>
   );
@@ -48,8 +50,8 @@ export default function PaymentsPage() {
 
   useEffect(() => {
     fetch('/api/account/payments')
-      .then(r => r.json())
-      .then(d => setCards(d.cards || []))
+      .then((r) => r.json())
+      .then((d) => setCards(d.cards || []))
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -57,8 +59,14 @@ export default function PaymentsPage() {
     e.preventDefault();
     setFormError('');
     const raw = form.cardNumber.replace(/\s/g, '');
-    if (raw.length < 12) { setFormError(t('invalidCardNumber')); return; }
-    if (!form.expiry.match(/^\d{2}\/\d{2}$/)) { setFormError(t('invalidExpiry')); return; }
+    if (raw.length < 12) {
+      setFormError(t('invalidCardNumber'));
+      return;
+    }
+    if (!form.expiry.match(/^\d{2}\/\d{2}$/)) {
+      setFormError(t('invalidExpiry'));
+      return;
+    }
     setSaving(true);
     const res = await fetch('/api/account/payments', {
       method: 'POST',
@@ -100,15 +108,20 @@ export default function PaymentsPage() {
   }
 
   function formatCardNumber(val: string) {
-    return val.replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ');
+    return val
+      .replace(/\D/g, '')
+      .slice(0, 16)
+      .replace(/(\d{4})(?=\d)/g, '$1 ');
   }
 
   if (isLoading) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold text-charcoal mb-6">{t('title')}</h1>
+        <h1 className="text-charcoal mb-6 text-2xl font-semibold">{t('title')}</h1>
         <div className="space-y-3">
-          {[1, 2].map(i => <div key={i} className="h-20 bg-cream-dark rounded-sm animate-pulse" />)}
+          {[1, 2].map((i) => (
+            <div key={i} className="bg-cream-dark h-20 animate-pulse rounded-sm" />
+          ))}
         </div>
       </div>
     );
@@ -116,59 +129,98 @@ export default function PaymentsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-charcoal">{t('title')}</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-charcoal text-2xl font-semibold">{t('title')}</h1>
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="text-sm bg-charcoal text-white px-4 py-2 rounded-sm hover:bg-charcoal/80 transition-colors"
+            className="bg-charcoal hover:bg-charcoal/80 rounded-sm px-4 py-2 text-sm text-white transition-colors"
           >
             {t('addCard')}
           </button>
         )}
       </div>
 
-      <p className="text-xs text-charcoal-light mb-6 bg-cream border border-border rounded-sm px-3 py-2">
+      <p className="text-charcoal-light bg-cream border-border mb-6 rounded-sm border px-3 py-2 text-xs">
         {t('demoNotice')}
       </p>
 
       {showForm && (
-        <div className="bg-white border border-border rounded-sm p-6 mb-6">
-          <h2 className="font-semibold text-charcoal mb-4">{t('addPaymentMethod')}</h2>
+        <div className="border-border mb-6 rounded-sm border bg-white p-6">
+          <h2 className="text-charcoal mb-4 font-semibold">{t('addPaymentMethod')}</h2>
           <form onSubmit={handleAdd} className="space-y-4">
             <div>
-              <label htmlFor="pay-cardholder" className="block text-xs font-medium text-charcoal mb-1">{t('cardholderName')}</label>
-              <input id="pay-cardholder" type="text" required placeholder={t('cardholderNamePlaceholder')}
+              <label
+                htmlFor="pay-cardholder"
+                className="text-charcoal mb-1 block text-xs font-medium"
+              >
+                {t('cardholderName')}
+              </label>
+              <input
+                id="pay-cardholder"
+                type="text"
+                required
+                placeholder={t('cardholderNamePlaceholder')}
                 value={form.cardholderName}
-                onChange={e => setForm(f => ({ ...f, cardholderName: e.target.value }))}
-                className="w-full border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-charcoal" />
+                onChange={(e) => setForm((f) => ({ ...f, cardholderName: e.target.value }))}
+                className="border-border focus:border-charcoal w-full rounded-sm border px-3 py-2 text-sm focus:outline-none"
+              />
             </div>
             <div>
-              <label htmlFor="pay-card-number" className="block text-xs font-medium text-charcoal mb-1">{t('cardNumber')}</label>
-              <input id="pay-card-number" type="text" required placeholder="4242 4242 4242 4242"
+              <label
+                htmlFor="pay-card-number"
+                className="text-charcoal mb-1 block text-xs font-medium"
+              >
+                {t('cardNumber')}
+              </label>
+              <input
+                id="pay-card-number"
+                type="text"
+                required
+                placeholder="4242 4242 4242 4242"
                 value={form.cardNumber}
-                onChange={e => setForm(f => ({ ...f, cardNumber: formatCardNumber(e.target.value) }))}
-                className="w-full border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-charcoal font-mono" />
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, cardNumber: formatCardNumber(e.target.value) }))
+                }
+                className="border-border focus:border-charcoal w-full rounded-sm border px-3 py-2 font-mono text-sm focus:outline-none"
+              />
             </div>
             <div className="w-32">
-              <label htmlFor="pay-expiry" className="block text-xs font-medium text-charcoal mb-1">{t('expiry')}</label>
-              <input id="pay-expiry" type="text" required placeholder="12/28" maxLength={5}
+              <label htmlFor="pay-expiry" className="text-charcoal mb-1 block text-xs font-medium">
+                {t('expiry')}
+              </label>
+              <input
+                id="pay-expiry"
+                type="text"
+                required
+                placeholder="12/28"
+                maxLength={5}
                 value={form.expiry}
-                onChange={e => {
+                onChange={(e) => {
                   let v = e.target.value.replace(/\D/g, '').slice(0, 4);
                   if (v.length > 2) v = v.slice(0, 2) + '/' + v.slice(2);
-                  setForm(f => ({ ...f, expiry: v }));
+                  setForm((f) => ({ ...f, expiry: v }));
                 }}
-                className="w-full border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-charcoal font-mono" />
+                className="border-border focus:border-charcoal w-full rounded-sm border px-3 py-2 font-mono text-sm focus:outline-none"
+              />
             </div>
-            {formError && <p className="text-red-600 text-sm">{formError}</p>}
+            {formError && <p className="text-sm text-red-600">{formError}</p>}
             <div className="flex gap-3">
-              <button type="submit" disabled={saving}
-                className="bg-charcoal text-white px-5 py-2 text-sm font-medium rounded-sm hover:bg-charcoal/80 disabled:opacity-50">
+              <button
+                type="submit"
+                disabled={saving}
+                className="bg-charcoal hover:bg-charcoal/80 rounded-sm px-5 py-2 text-sm font-medium text-white disabled:opacity-50"
+              >
                 {saving ? t('saving') : t('saveCard')}
               </button>
-              <button type="button" onClick={() => { setShowForm(false); setFormError(''); }}
-                className="border border-border text-charcoal-light px-5 py-2 text-sm rounded-sm hover:text-charcoal">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false);
+                  setFormError('');
+                }}
+                className="border-border text-charcoal-light hover:text-charcoal rounded-sm border px-5 py-2 text-sm"
+              >
                 {t('cancel')}
               </button>
             </div>
@@ -177,41 +229,66 @@ export default function PaymentsPage() {
       )}
 
       {cards.length === 0 && !showForm ? (
-        <div className="bg-white border border-border rounded-sm p-12 text-center">
-          <div className="w-12 h-12 bg-cream-dark rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-charcoal-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        <div className="border-border rounded-sm border bg-white p-12 text-center">
+          <div className="bg-cream-dark mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
+            <svg
+              className="text-charcoal-light h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              />
             </svg>
           </div>
-          <h2 className="font-semibold text-charcoal mb-2">{t('noPaymentMethods')}</h2>
-          <p className="text-sm text-charcoal-light max-w-xs mx-auto">{t('noPaymentMethodsDescription')}</p>
+          <h2 className="text-charcoal mb-2 font-semibold">{t('noPaymentMethods')}</h2>
+          <p className="text-charcoal-light mx-auto max-w-xs text-sm">
+            {t('noPaymentMethodsDescription')}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {cards.map(card => (
-            <div key={card.id} className="bg-white border border-border rounded-sm p-5 flex items-center justify-between gap-4">
+          {cards.map((card) => (
+            <div
+              key={card.id}
+              className="border-border flex items-center justify-between gap-4 rounded-sm border bg-white p-5"
+            >
               <div className="flex items-center gap-4">
                 <BrandBadge brand={card.brand} />
                 <div>
-                  <p className="text-sm font-medium text-charcoal">
+                  <p className="text-charcoal text-sm font-medium">
                     •••• •••• •••• {card.last4}
                     {card.isDefault && (
-                      <span className="ml-2 text-xs bg-sage/10 text-sage border border-sage/20 px-1.5 py-0.5 rounded-full">{t('default')}</span>
+                      <span className="bg-sage/10 text-sage border-sage/20 ml-2 rounded-full border px-1.5 py-0.5 text-xs">
+                        {t('default')}
+                      </span>
                     )}
                   </p>
-                  <p className="text-xs text-charcoal-light">{card.cardholderName} · {t('expires')} {card.expiry}</p>
-                  <p className="text-xs text-charcoal-light/50 font-mono mt-0.5">{card.token.slice(0, 24)}…</p>
+                  <p className="text-charcoal-light text-xs">
+                    {card.cardholderName} · {t('expires')} {card.expiry}
+                  </p>
+                  <p className="text-charcoal-light/50 mt-0.5 font-mono text-xs">
+                    {card.token.slice(0, 24)}…
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex flex-shrink-0 items-center gap-2">
                 {!card.isDefault && (
-                  <button onClick={() => handleSetDefault(card.id)}
-                    className="text-xs text-charcoal-light hover:text-charcoal border border-border px-2.5 py-1 rounded-sm hover:border-charcoal transition-colors">
+                  <button
+                    onClick={() => handleSetDefault(card.id)}
+                    className="text-charcoal-light hover:text-charcoal border-border hover:border-charcoal rounded-sm border px-2.5 py-1 text-xs transition-colors"
+                  >
                     {t('setDefault')}
                   </button>
                 )}
-                <button onClick={() => handleDelete(card.id)}
-                  className="text-xs text-charcoal-light hover:text-red-500 border border-border px-2.5 py-1 rounded-sm hover:border-red-300 transition-colors">
+                <button
+                  onClick={() => handleDelete(card.id)}
+                  className="text-charcoal-light border-border rounded-sm border px-2.5 py-1 text-xs transition-colors hover:border-red-300 hover:text-red-500"
+                >
                   {t('remove')}
                 </button>
               </div>

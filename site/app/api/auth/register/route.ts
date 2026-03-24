@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession, createSessionToken, setSessionCookie } from '@/lib/session';
-import { signUpCustomer, signInCustomer } from '@/lib/ct/auth';
+import { signUpCustomer } from '@/lib/ct/auth';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const customer = result.customer;
 
     // Sign in to get proper session
-    let cartId = session.cartId;
+    const cartId = session.cartId;
 
     const newSession = {
       ...session,

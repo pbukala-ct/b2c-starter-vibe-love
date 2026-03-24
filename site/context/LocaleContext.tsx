@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { COUNTRY_CONFIG } from '@/lib/utils';
 
 const COUNTRY_TO_URL_LOCALE: Record<string, string> = {
@@ -34,18 +34,17 @@ export function LocaleProvider({
   children: ReactNode;
   initialCountry?: string;
 }) {
-  const [country, setCountryState] = useState(initialCountry || 'US');
-
-  useEffect(() => {
-    if (initialCountry) return;
-    const saved = document.cookie
-      .split('; ')
-      .find((r) => r.startsWith('vibe-country='))
-      ?.split('=')[1];
-    if (saved && COUNTRY_CONFIG[saved]) {
-      setCountryState(saved);
+  const [country, setCountryState] = useState(() => {
+    if (initialCountry) return initialCountry;
+    if (typeof window !== 'undefined') {
+      const saved = document.cookie
+        .split('; ')
+        .find((r) => r.startsWith('vibe-country='))
+        ?.split('=')[1];
+      if (saved && COUNTRY_CONFIG[saved]) return saved;
     }
-  }, [initialCountry]);
+    return 'US';
+  });
 
   const setCountry = async (newCountry: string) => {
     if (!COUNTRY_CONFIG[newCountry]) return;
@@ -65,8 +64,7 @@ export function LocaleProvider({
 
   const config = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
   const urlLocale = COUNTRY_TO_URL_LOCALE[country] || 'en-us';
-  const localePath = (path: string) =>
-    `/${urlLocale}${path.startsWith('/') ? path : `/${path}`}`;
+  const localePath = (path: string) => `/${urlLocale}${path.startsWith('/') ? path : `/${path}`}`;
 
   return (
     <LocaleContext.Provider

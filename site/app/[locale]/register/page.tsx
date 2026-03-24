@@ -61,98 +61,104 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-charcoal">{t('createAccount')}</h1>
+        <div className="mb-8 text-center">
+          <h1 className="text-charcoal text-3xl font-semibold">{t('createAccount')}</h1>
           <p className="text-charcoal-light mt-2">{t('joinVibe')}</p>
         </div>
 
-        <div className="bg-white border border-border rounded-sm p-8">
+        <div className="border-border rounded-sm border bg-white p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-charcoal mb-1.5">
+                <label
+                  htmlFor="firstName"
+                  className="text-charcoal mb-1.5 block text-sm font-medium"
+                >
                   {t('firstName')}
                 </label>
                 <input
                   id="firstName"
                   type="text"
                   value={firstName}
-                  onChange={e => setFirstName(e.target.value)}
+                  onChange={(e) => setFirstName(e.target.value)}
                   required
                   autoComplete="given-name"
-                  className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                  className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 text-sm transition-colors focus:outline-none"
                   placeholder={t('firstNamePlaceholder')}
                 />
               </div>
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-charcoal mb-1.5">
+                <label
+                  htmlFor="lastName"
+                  className="text-charcoal mb-1.5 block text-sm font-medium"
+                >
                   {t('lastName')}
                 </label>
                 <input
                   id="lastName"
                   type="text"
                   value={lastName}
-                  onChange={e => setLastName(e.target.value)}
+                  onChange={(e) => setLastName(e.target.value)}
                   required
                   autoComplete="family-name"
-                  className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                  className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 text-sm transition-colors focus:outline-none"
                   placeholder={t('lastNamePlaceholder')}
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-charcoal mb-1.5">
+              <label htmlFor="email" className="text-charcoal mb-1.5 block text-sm font-medium">
                 {t('emailAddress')}
               </label>
               <input
                 id="email"
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 text-sm transition-colors focus:outline-none"
                 placeholder={t('emailPlaceholder')}
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-charcoal mb-1.5">
+              <label htmlFor="password" className="text-charcoal mb-1.5 block text-sm font-medium">
                 {t('newPassword')}
               </label>
               <input
                 id="password"
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 text-sm transition-colors focus:outline-none"
                 placeholder={t('newPasswordPlaceholder')}
               />
             </div>
 
             <div>
-              <label htmlFor="confirm" className="block text-sm font-medium text-charcoal mb-1.5">
+              <label htmlFor="confirm" className="text-charcoal mb-1.5 block text-sm font-medium">
                 {t('confirmPassword')}
               </label>
               <input
                 id="confirm"
                 type="password"
                 value={confirm}
-                onChange={e => setConfirm(e.target.value)}
+                onChange={(e) => setConfirm(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 text-sm transition-colors focus:outline-none"
                 placeholder={t('passwordPlaceholder')}
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-sm">
+              <div className="rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
               </div>
             )}
@@ -160,16 +166,19 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-charcoal text-white py-3 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-charcoal hover:bg-charcoal/80 w-full rounded-sm py-3 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? t('creatingAccount') : t('createAccount')}
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-border text-center">
-            <p className="text-sm text-charcoal-light">
+          <div className="border-border mt-6 border-t pt-6 text-center">
+            <p className="text-charcoal-light text-sm">
               {t('alreadyHaveAccount')}{' '}
-              <Link href={`${localePath('/login')}${redirect !== localePath('/account') ? `?redirect=${redirect}` : ''}`} className="text-terra hover:underline font-medium">
+              <Link
+                href={`${localePath('/login')}${redirect !== localePath('/account') ? `?redirect=${redirect}` : ''}`}
+                className="text-terra font-medium hover:underline"
+              >
                 {t('signIn')}
               </Link>
             </p>

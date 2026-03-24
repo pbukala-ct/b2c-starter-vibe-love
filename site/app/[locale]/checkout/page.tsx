@@ -5,13 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
-import { formatMoney, getLocalizedString, useCombinedStreetField, formatStreetAddress, parseStreetAddress } from '@/lib/utils';
+import {
+  formatMoney,
+  getLocalizedString,
+  isCombinedStreetField,
+  formatStreetAddress,
+  parseStreetAddress,
+} from '@/lib/utils';
 import Image from 'next/image';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useTranslations } from 'next-intl';
-
-type Step = 'shipping' | 'split' | 'payment' | 'review';
 
 interface Address {
   key: string;
@@ -19,7 +23,7 @@ interface Address {
   lastName: string;
   streetName: string;
   streetNumber: string;
-  streetAddress: string;       // combined field for US-style input
+  streetAddress: string; // combined field for US-style input
   additionalAddressInfo?: string;
   city: string;
   postalCode: string;
@@ -54,7 +58,6 @@ export default function CheckoutPage() {
   const { user, isLoggedIn } = useAuth();
   const { currency, country, locale, localePath } = useLocale();
   const t = useTranslations('checkout');
-  const [step, setStep] = useState<Step>('shipping');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -83,11 +86,15 @@ export default function CheckoutPage() {
   const [itemShipping, setItemShipping] = useState<ItemShipping[]>([]);
 
   // Shipping methods
-  const [shippingMethods, setShippingMethods] = useState<Array<{
-    id: string; name: string; description?: string;
-    price: { centAmount: number; currencyCode: string } | null;
-    freeAbove: { centAmount: number } | null;
-  }>>([]);
+  const [shippingMethods, setShippingMethods] = useState<
+    Array<{
+      id: string;
+      name: string;
+      description?: string;
+      price: { centAmount: number; currencyCode: string } | null;
+      freeAbove: { centAmount: number } | null;
+    }>
+  >([]);
   const [selectedShippingMethodId, setSelectedShippingMethodId] = useState<string>('');
 
   // Billing address
@@ -117,8 +124,8 @@ export default function CheckoutPage() {
   useEffect(() => {
     refreshCart();
     fetch('/api/shipping-methods')
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         if (data.shippingMethods?.length) {
           setShippingMethods(data.shippingMethods);
           setSelectedShippingMethodId(data.shippingMethods[0].id);
@@ -127,11 +134,11 @@ export default function CheckoutPage() {
       .catch(() => {});
     if (isLoggedIn) {
       fetch('/api/account/addresses')
-        .then(r => r.json())
-        .then(data => setSavedAddresses(data.addresses || []))
+        .then((r) => r.json())
+        .then((data) => setSavedAddresses(data.addresses || []))
         .catch(() => {});
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (cart) {
@@ -163,9 +170,9 @@ export default function CheckoutPage() {
 
   const applySavedAddress = (id: string) => {
     setSelectedSavedAddressId(id);
-    const saved = savedAddresses.find(a => a.id === id);
+    const saved = savedAddresses.find((a) => a.id === id);
     if (saved) {
-      setPrimaryAddr(prev => ({
+      setPrimaryAddr((prev) => ({
         ...prev,
         firstName: saved.firstName,
         lastName: saved.lastName,
@@ -215,9 +222,7 @@ export default function CheckoutPage() {
         if (existing) {
           return {
             ...is,
-            addresses: is.addresses.map((a) =>
-              a.addressKey === addressKey ? { ...a, qty } : a
-            ),
+            addresses: is.addresses.map((a) => (a.addressKey === addressKey ? { ...a, qty } : a)),
           };
         }
         return {
@@ -230,7 +235,7 @@ export default function CheckoutPage() {
 
   /** Convert a form Address to the CT API shape (separate streetNumber/streetName) */
   const toApiAddress = (addr: Address) => {
-    const isCombined = useCombinedStreetField(addr.country);
+    const isCombined = isCombinedStreetField(addr.country);
     const street = isCombined
       ? parseStreetAddress(addr.streetAddress)
       : { streetNumber: addr.streetNumber, streetName: addr.streetName };
@@ -300,90 +305,161 @@ export default function CheckoutPage() {
 
   if (!cart || cart.lineItems.length === 0) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <p className="text-charcoal-light">{t('emptyCart')} <a href={localePath('/')} className="text-terra hover:underline">{t('continueShopping')}</a></p>
+      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+        <p className="text-charcoal-light">
+          {t('emptyCart')}{' '}
+          <a href={localePath('/')} className="text-terra hover:underline">
+            {t('continueShopping')}
+          </a>
+        </p>
       </div>
     );
   }
 
   const allAddresses = [primaryAddr, ...additionalAddresses];
-  const hasSubscriptions = cart.lineItems.some((i) => i.recurrenceInfo?.recurrencePolicy);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 lg:px-8 py-8">
-      <h1 className="text-2xl font-semibold text-charcoal mb-8">{t('title')}</h1>
+    <div className="mx-auto max-w-5xl px-4 py-8 lg:px-8">
+      <h1 className="text-charcoal mb-8 text-2xl font-semibold">{t('title')}</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
         {/* Form */}
-        <div className="lg:col-span-3 space-y-8">
+        <div className="space-y-8 lg:col-span-3">
           {/* Guest/Login notice */}
           {!isLoggedIn && (
-            <div className="bg-cream border border-border rounded-sm p-4 text-sm">
+            <div className="bg-cream border-border rounded-sm border p-4 text-sm">
               <span className="text-charcoal-light">{t('guestNotice')} </span>
-              <a href={localePath('/login') + '?redirect=' + localePath('/checkout')} className="text-terra hover:underline">{t('signIn')}</a>
+              <a
+                href={localePath('/login') + '?redirect=' + localePath('/checkout')}
+                className="text-terra hover:underline"
+              >
+                {t('signIn')}
+              </a>
               <span className="text-charcoal-light"> {t('signInForFaster')}</span>
             </div>
           )}
 
           {/* Shipping Address */}
           <div>
-            <h2 className="text-lg font-semibold text-charcoal mb-4">{t('shippingAddress')}</h2>
+            <h2 className="text-charcoal mb-4 text-lg font-semibold">{t('shippingAddress')}</h2>
             {savedAddresses.length > 0 && (
               <div className="mb-4">
-                <label className="text-xs font-medium text-charcoal-light uppercase tracking-wider block mb-1.5">
+                <label className="text-charcoal-light mb-1.5 block text-xs font-medium tracking-wider uppercase">
                   {t('useSavedAddress')}
                 </label>
                 <select
                   value={selectedSavedAddressId}
-                  onChange={e => applySavedAddress(e.target.value)}
-                  className="w-full border border-border px-3 py-2.5 text-sm rounded-sm bg-white focus:outline-none focus:border-charcoal"
+                  onChange={(e) => applySavedAddress(e.target.value)}
+                  className="border-border focus:border-charcoal w-full rounded-sm border bg-white px-3 py-2.5 text-sm focus:outline-none"
                 >
                   <option value="">{t('enterNewAddress')}</option>
-                  {savedAddresses.map(a => (
+                  {savedAddresses.map((a) => (
                     <option key={a.id} value={a.id}>
-                      {a.firstName} {a.lastName} — {formatStreetAddress(a.streetNumber, a.streetName)}, {a.city}
+                      {a.firstName} {a.lastName} —{' '}
+                      {formatStreetAddress(a.streetNumber, a.streetName)}, {a.city}
                     </option>
                   ))}
                 </select>
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
-              <Input label={t('firstName')} value={primaryAddr.firstName} onChange={(e) => handleAddressChange('firstName', e.target.value)} required />
-              <Input label={t('lastName')} value={primaryAddr.lastName} onChange={(e) => handleAddressChange('lastName', e.target.value)} required />
-              {useCombinedStreetField(primaryAddr.country) ? (
+              <Input
+                label={t('firstName')}
+                value={primaryAddr.firstName}
+                onChange={(e) => handleAddressChange('firstName', e.target.value)}
+                required
+              />
+              <Input
+                label={t('lastName')}
+                value={primaryAddr.lastName}
+                onChange={(e) => handleAddressChange('lastName', e.target.value)}
+                required
+              />
+              {isCombinedStreetField(primaryAddr.country) ? (
                 <>
-                  <Input label={t('streetAddress')} value={primaryAddr.streetAddress} onChange={(e) => handleAddressChange('streetAddress', e.target.value)} className="col-span-2" required placeholder={t('streetAddressPlaceholder')} />
-                  <Input label={t('additionalAddressInfo')} value={primaryAddr.additionalAddressInfo || ''} onChange={(e) => handleAddressChange('additionalAddressInfo', e.target.value)} className="col-span-2" placeholder={t('additionalAddressInfoPlaceholder')} />
+                  <Input
+                    label={t('streetAddress')}
+                    value={primaryAddr.streetAddress}
+                    onChange={(e) => handleAddressChange('streetAddress', e.target.value)}
+                    className="col-span-2"
+                    required
+                    placeholder={t('streetAddressPlaceholder')}
+                  />
+                  <Input
+                    label={t('additionalAddressInfo')}
+                    value={primaryAddr.additionalAddressInfo || ''}
+                    onChange={(e) => handleAddressChange('additionalAddressInfo', e.target.value)}
+                    className="col-span-2"
+                    placeholder={t('additionalAddressInfoPlaceholder')}
+                  />
                 </>
               ) : (
                 <>
-                  <Input label={t('streetName')} value={primaryAddr.streetName} onChange={(e) => handleAddressChange('streetName', e.target.value)} className="col-span-2" required />
-                  <Input label={t('streetNumber')} value={primaryAddr.streetNumber} onChange={(e) => handleAddressChange('streetNumber', e.target.value)} required />
-                  <Input label={t('additionalAddressInfo')} value={primaryAddr.additionalAddressInfo || ''} onChange={(e) => handleAddressChange('additionalAddressInfo', e.target.value)} placeholder={t('additionalAddressInfoPlaceholder')} />
+                  <Input
+                    label={t('streetName')}
+                    value={primaryAddr.streetName}
+                    onChange={(e) => handleAddressChange('streetName', e.target.value)}
+                    className="col-span-2"
+                    required
+                  />
+                  <Input
+                    label={t('streetNumber')}
+                    value={primaryAddr.streetNumber}
+                    onChange={(e) => handleAddressChange('streetNumber', e.target.value)}
+                    required
+                  />
+                  <Input
+                    label={t('additionalAddressInfo')}
+                    value={primaryAddr.additionalAddressInfo || ''}
+                    onChange={(e) => handleAddressChange('additionalAddressInfo', e.target.value)}
+                    placeholder={t('additionalAddressInfoPlaceholder')}
+                  />
                 </>
               )}
-              <Input label={t('city')} value={primaryAddr.city} onChange={(e) => handleAddressChange('city', e.target.value)} required />
-              <Input label={t('zipPostalCode')} value={primaryAddr.postalCode} onChange={(e) => handleAddressChange('postalCode', e.target.value)} required />
-              <Input label={t('stateRegion')} value={primaryAddr.state || ''} onChange={(e) => handleAddressChange('state', e.target.value)} />
+              <Input
+                label={t('city')}
+                value={primaryAddr.city}
+                onChange={(e) => handleAddressChange('city', e.target.value)}
+                required
+              />
+              <Input
+                label={t('zipPostalCode')}
+                value={primaryAddr.postalCode}
+                onChange={(e) => handleAddressChange('postalCode', e.target.value)}
+                required
+              />
+              <Input
+                label={t('stateRegion')}
+                value={primaryAddr.state || ''}
+                onChange={(e) => handleAddressChange('state', e.target.value)}
+              />
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-charcoal-light uppercase tracking-wider">{t('country')}</label>
+                <label className="text-charcoal-light text-xs font-medium tracking-wider uppercase">
+                  {t('country')}
+                </label>
                 <select
                   value={primaryAddr.country}
                   onChange={(e) => handleAddressChange('country', e.target.value)}
-                  className="w-full border border-border px-3 py-2.5 text-sm rounded-sm bg-white focus:outline-none focus:border-charcoal"
+                  className="border-border focus:border-charcoal w-full rounded-sm border bg-white px-3 py-2.5 text-sm focus:outline-none"
                 >
                   <option value="US">{t('countryUS')}</option>
                   <option value="GB">{t('countryGB')}</option>
                   <option value="DE">{t('countryDE')}</option>
                 </select>
               </div>
-              <Input label={t('email')} type="email" value={primaryAddr.email || ''} onChange={(e) => handleAddressChange('email', e.target.value)} className="col-span-2" />
+              <Input
+                label={t('email')}
+                type="email"
+                value={primaryAddr.email || ''}
+                onChange={(e) => handleAddressChange('email', e.target.value)}
+                className="col-span-2"
+              />
             </div>
           </div>
 
           {/* Split Shipment */}
           <div>
-            <div className="flex items-center gap-3 mb-4">
+            <div className="mb-4 flex items-center gap-3">
               <input
                 type="checkbox"
                 id="split-shipment"
@@ -391,34 +467,91 @@ export default function CheckoutPage() {
                 onChange={(e) => setUseSplitShipment(e.target.checked)}
                 className="accent-charcoal"
               />
-              <label htmlFor="split-shipment" className="text-sm font-medium text-charcoal cursor-pointer">
+              <label
+                htmlFor="split-shipment"
+                className="text-charcoal cursor-pointer text-sm font-medium"
+              >
                 {t('splitShipment')}
               </label>
             </div>
 
             {useSplitShipment && (
-              <div className="space-y-6 pl-4 border-l-2 border-border">
+              <div className="border-border space-y-6 border-l-2 pl-4">
                 {/* Additional addresses */}
                 {additionalAddresses.map((addr, index) => (
                   <div key={addr.key} className="space-y-4">
-                    <h3 className="text-sm font-medium text-charcoal">{t('address', { num: index + 2 })}</h3>
+                    <h3 className="text-charcoal text-sm font-medium">
+                      {t('address', { num: index + 2 })}
+                    </h3>
                     <div className="grid grid-cols-2 gap-3">
-                      <Input label={t('firstName')} value={addr.firstName} onChange={(e) => updateSplitAddress(index, 'firstName', e.target.value)} />
-                      <Input label={t('lastName')} value={addr.lastName} onChange={(e) => updateSplitAddress(index, 'lastName', e.target.value)} />
-                      {useCombinedStreetField(addr.country) ? (
+                      <Input
+                        label={t('firstName')}
+                        value={addr.firstName}
+                        onChange={(e) => updateSplitAddress(index, 'firstName', e.target.value)}
+                      />
+                      <Input
+                        label={t('lastName')}
+                        value={addr.lastName}
+                        onChange={(e) => updateSplitAddress(index, 'lastName', e.target.value)}
+                      />
+                      {isCombinedStreetField(addr.country) ? (
                         <>
-                          <Input label={t('streetAddress')} value={addr.streetAddress} onChange={(e) => updateSplitAddress(index, 'streetAddress', e.target.value)} className="col-span-2" placeholder={t('streetAddressPlaceholder')} />
-                          <Input label={t('additionalAddressInfo')} value={addr.additionalAddressInfo || ''} onChange={(e) => updateSplitAddress(index, 'additionalAddressInfo', e.target.value)} className="col-span-2" placeholder={t('additionalAddressInfoPlaceholder')} />
+                          <Input
+                            label={t('streetAddress')}
+                            value={addr.streetAddress}
+                            onChange={(e) =>
+                              updateSplitAddress(index, 'streetAddress', e.target.value)
+                            }
+                            className="col-span-2"
+                            placeholder={t('streetAddressPlaceholder')}
+                          />
+                          <Input
+                            label={t('additionalAddressInfo')}
+                            value={addr.additionalAddressInfo || ''}
+                            onChange={(e) =>
+                              updateSplitAddress(index, 'additionalAddressInfo', e.target.value)
+                            }
+                            className="col-span-2"
+                            placeholder={t('additionalAddressInfoPlaceholder')}
+                          />
                         </>
                       ) : (
                         <>
-                          <Input label={t('streetName')} value={addr.streetName} onChange={(e) => updateSplitAddress(index, 'streetName', e.target.value)} className="col-span-2" />
-                          <Input label={t('streetNumber')} value={addr.streetNumber} onChange={(e) => updateSplitAddress(index, 'streetNumber', e.target.value)} />
-                          <Input label={t('additionalAddressInfo')} value={addr.additionalAddressInfo || ''} onChange={(e) => updateSplitAddress(index, 'additionalAddressInfo', e.target.value)} placeholder={t('additionalAddressInfoPlaceholder')} />
+                          <Input
+                            label={t('streetName')}
+                            value={addr.streetName}
+                            onChange={(e) =>
+                              updateSplitAddress(index, 'streetName', e.target.value)
+                            }
+                            className="col-span-2"
+                          />
+                          <Input
+                            label={t('streetNumber')}
+                            value={addr.streetNumber}
+                            onChange={(e) =>
+                              updateSplitAddress(index, 'streetNumber', e.target.value)
+                            }
+                          />
+                          <Input
+                            label={t('additionalAddressInfo')}
+                            value={addr.additionalAddressInfo || ''}
+                            onChange={(e) =>
+                              updateSplitAddress(index, 'additionalAddressInfo', e.target.value)
+                            }
+                            placeholder={t('additionalAddressInfoPlaceholder')}
+                          />
                         </>
                       )}
-                      <Input label={t('city')} value={addr.city} onChange={(e) => updateSplitAddress(index, 'city', e.target.value)} />
-                      <Input label={t('zipCode')} value={addr.postalCode} onChange={(e) => updateSplitAddress(index, 'postalCode', e.target.value)} />
+                      <Input
+                        label={t('city')}
+                        value={addr.city}
+                        onChange={(e) => updateSplitAddress(index, 'city', e.target.value)}
+                      />
+                      <Input
+                        label={t('zipCode')}
+                        value={addr.postalCode}
+                        onChange={(e) => updateSplitAddress(index, 'postalCode', e.target.value)}
+                      />
                     </div>
                   </div>
                 ))}
@@ -426,7 +559,7 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   onClick={addSplitAddress}
-                  className="text-sm text-terra hover:underline flex items-center gap-1"
+                  className="text-terra flex items-center gap-1 text-sm hover:underline"
                 >
                   {t('addAnotherAddress')}
                 </button>
@@ -434,26 +567,36 @@ export default function CheckoutPage() {
                 {/* Per-item address assignment */}
                 {additionalAddresses.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-medium text-charcoal mb-3">{t('assignItems')}</h3>
+                    <h3 className="text-charcoal mb-3 text-sm font-medium">{t('assignItems')}</h3>
                     <div className="space-y-4">
                       {itemShipping.map((is) => (
                         <div key={is.lineItemId} className="text-sm">
-                          <p className="font-medium text-charcoal mb-2 line-clamp-1">{is.productName} (qty: {is.quantity})</p>
+                          <p className="text-charcoal mb-2 line-clamp-1 font-medium">
+                            {is.productName} (qty: {is.quantity})
+                          </p>
                           <div className="space-y-1">
                             {allAddresses.map((addr) => {
-                              const current = is.addresses.find((a) => a.addressKey === addr.key)?.qty || 0;
+                              const current =
+                                is.addresses.find((a) => a.addressKey === addr.key)?.qty || 0;
                               return (
                                 <div key={addr.key} className="flex items-center gap-3">
-                                  <span className="text-charcoal-light text-xs w-32 truncate">
-                                    {addr.firstName} {addr.lastName || `(Address ${allAddresses.indexOf(addr) + 1})`}
+                                  <span className="text-charcoal-light w-32 truncate text-xs">
+                                    {addr.firstName}{' '}
+                                    {addr.lastName || `(Address ${allAddresses.indexOf(addr) + 1})`}
                                   </span>
                                   <input
                                     type="number"
                                     min="0"
                                     max={is.quantity}
                                     value={current}
-                                    onChange={(e) => updateItemAddressQty(is.lineItemId, addr.key, parseInt(e.target.value) || 0)}
-                                    className="w-16 border border-border px-2 py-1 text-sm rounded-sm focus:outline-none focus:border-charcoal"
+                                    onChange={(e) =>
+                                      updateItemAddressQty(
+                                        is.lineItemId,
+                                        addr.key,
+                                        parseInt(e.target.value) || 0
+                                      )
+                                    }
+                                    className="border-border focus:border-charcoal w-16 rounded-sm border px-2 py-1 text-sm focus:outline-none"
                                   />
                                 </div>
                               );
@@ -471,14 +614,15 @@ export default function CheckoutPage() {
           {/* Shipping Method */}
           {shippingMethods.length > 0 && (
             <div>
-              <h2 className="text-lg font-semibold text-charcoal mb-4">{t('shippingMethod')}</h2>
+              <h2 className="text-charcoal mb-4 text-lg font-semibold">{t('shippingMethod')}</h2>
               <div className="space-y-2">
                 {shippingMethods.map((method) => {
-                  const isFree = method.freeAbove && cart.totalPrice.centAmount >= method.freeAbove.centAmount;
+                  const isFree =
+                    method.freeAbove && cart.totalPrice.centAmount >= method.freeAbove.centAmount;
                   return (
                     <label
                       key={method.id}
-                      className={`flex items-center justify-between border rounded-sm p-4 cursor-pointer transition-colors ${
+                      className={`flex cursor-pointer items-center justify-between rounded-sm border p-4 transition-colors ${
                         selectedShippingMethodId === method.id
                           ? 'border-charcoal bg-cream'
                           : 'border-border hover:border-charcoal/40'
@@ -494,26 +638,36 @@ export default function CheckoutPage() {
                           className="accent-charcoal"
                         />
                         <div>
-                          <span className="text-sm font-medium text-charcoal">{method.name}</span>
+                          <span className="text-charcoal text-sm font-medium">{method.name}</span>
                           {method.description && (
-                            <p className="text-xs text-charcoal-light mt-0.5">{method.description}</p>
+                            <p className="text-charcoal-light mt-0.5 text-xs">
+                              {method.description}
+                            </p>
                           )}
                         </div>
                       </div>
-                      <span className={`text-sm font-medium ${isFree ? 'text-sage' : 'text-charcoal'}`}>
-                        {!method.price ? t('tbd') : isFree ? t('free') : formatMoney(method.price.centAmount, method.price.currencyCode)}
+                      <span
+                        className={`text-sm font-medium ${isFree ? 'text-sage' : 'text-charcoal'}`}
+                      >
+                        {!method.price
+                          ? t('tbd')
+                          : isFree
+                            ? t('free')
+                            : formatMoney(method.price.centAmount, method.price.currencyCode)}
                       </span>
                     </label>
                   );
                 })}
               </div>
               {(() => {
-                const sm = shippingMethods.find(m => m.id === selectedShippingMethodId);
+                const sm = shippingMethods.find((m) => m.id === selectedShippingMethodId);
                 if (sm?.freeAbove && cart.totalPrice.centAmount < sm.freeAbove.centAmount) {
                   const remaining = sm.freeAbove.centAmount - cart.totalPrice.centAmount;
                   return (
-                    <p className="text-xs text-charcoal-light mt-2">
-                      {t('addMoreForFreeShipping', { amount: formatMoney(remaining, cart.totalPrice.currencyCode) })}
+                    <p className="text-charcoal-light mt-2 text-xs">
+                      {t('addMoreForFreeShipping', {
+                        amount: formatMoney(remaining, cart.totalPrice.currencyCode),
+                      })}
                     </p>
                   );
                 }
@@ -524,8 +678,8 @@ export default function CheckoutPage() {
 
           {/* Billing Address */}
           <div>
-            <h2 className="text-lg font-semibold text-charcoal mb-4">{t('billingAddress')}</h2>
-            <div className="flex items-center gap-3 mb-4">
+            <h2 className="text-charcoal mb-4 text-lg font-semibold">{t('billingAddress')}</h2>
+            <div className="mb-4 flex items-center gap-3">
               <input
                 type="checkbox"
                 id="billing-same"
@@ -533,35 +687,100 @@ export default function CheckoutPage() {
                 onChange={(e) => setBillingSameAsShipping(e.target.checked)}
                 className="accent-charcoal"
               />
-              <label htmlFor="billing-same" className="text-sm text-charcoal cursor-pointer">
+              <label htmlFor="billing-same" className="text-charcoal cursor-pointer text-sm">
                 {t('billingSameAsShipping')}
               </label>
             </div>
             {!billingSameAsShipping && (
               <div className="grid grid-cols-2 gap-4">
-                <Input label={t('firstName')} value={billingAddr.firstName} onChange={(e) => setBillingAddr(p => ({ ...p, firstName: e.target.value }))} required />
-                <Input label={t('lastName')} value={billingAddr.lastName} onChange={(e) => setBillingAddr(p => ({ ...p, lastName: e.target.value }))} required />
-                {useCombinedStreetField(billingAddr.country) ? (
+                <Input
+                  label={t('firstName')}
+                  value={billingAddr.firstName}
+                  onChange={(e) => setBillingAddr((p) => ({ ...p, firstName: e.target.value }))}
+                  required
+                />
+                <Input
+                  label={t('lastName')}
+                  value={billingAddr.lastName}
+                  onChange={(e) => setBillingAddr((p) => ({ ...p, lastName: e.target.value }))}
+                  required
+                />
+                {isCombinedStreetField(billingAddr.country) ? (
                   <>
-                    <Input label={t('streetAddress')} value={billingAddr.streetAddress} onChange={(e) => setBillingAddr(p => ({ ...p, streetAddress: e.target.value }))} className="col-span-2" required placeholder={t('streetAddressPlaceholder')} />
-                    <Input label={t('additionalAddressInfo')} value={billingAddr.additionalAddressInfo || ''} onChange={(e) => setBillingAddr(p => ({ ...p, additionalAddressInfo: e.target.value }))} className="col-span-2" placeholder={t('additionalAddressInfoPlaceholder')} />
+                    <Input
+                      label={t('streetAddress')}
+                      value={billingAddr.streetAddress}
+                      onChange={(e) =>
+                        setBillingAddr((p) => ({ ...p, streetAddress: e.target.value }))
+                      }
+                      className="col-span-2"
+                      required
+                      placeholder={t('streetAddressPlaceholder')}
+                    />
+                    <Input
+                      label={t('additionalAddressInfo')}
+                      value={billingAddr.additionalAddressInfo || ''}
+                      onChange={(e) =>
+                        setBillingAddr((p) => ({ ...p, additionalAddressInfo: e.target.value }))
+                      }
+                      className="col-span-2"
+                      placeholder={t('additionalAddressInfoPlaceholder')}
+                    />
                   </>
                 ) : (
                   <>
-                    <Input label={t('streetName')} value={billingAddr.streetName} onChange={(e) => setBillingAddr(p => ({ ...p, streetName: e.target.value }))} className="col-span-2" required />
-                    <Input label={t('streetNumber')} value={billingAddr.streetNumber} onChange={(e) => setBillingAddr(p => ({ ...p, streetNumber: e.target.value }))} required />
-                    <Input label={t('additionalAddressInfo')} value={billingAddr.additionalAddressInfo || ''} onChange={(e) => setBillingAddr(p => ({ ...p, additionalAddressInfo: e.target.value }))} placeholder={t('additionalAddressInfoPlaceholder')} />
+                    <Input
+                      label={t('streetName')}
+                      value={billingAddr.streetName}
+                      onChange={(e) =>
+                        setBillingAddr((p) => ({ ...p, streetName: e.target.value }))
+                      }
+                      className="col-span-2"
+                      required
+                    />
+                    <Input
+                      label={t('streetNumber')}
+                      value={billingAddr.streetNumber}
+                      onChange={(e) =>
+                        setBillingAddr((p) => ({ ...p, streetNumber: e.target.value }))
+                      }
+                      required
+                    />
+                    <Input
+                      label={t('additionalAddressInfo')}
+                      value={billingAddr.additionalAddressInfo || ''}
+                      onChange={(e) =>
+                        setBillingAddr((p) => ({ ...p, additionalAddressInfo: e.target.value }))
+                      }
+                      placeholder={t('additionalAddressInfoPlaceholder')}
+                    />
                   </>
                 )}
-                <Input label={t('city')} value={billingAddr.city} onChange={(e) => setBillingAddr(p => ({ ...p, city: e.target.value }))} required />
-                <Input label={t('zipPostalCode')} value={billingAddr.postalCode} onChange={(e) => setBillingAddr(p => ({ ...p, postalCode: e.target.value }))} required />
-                <Input label={t('stateRegion')} value={billingAddr.state || ''} onChange={(e) => setBillingAddr(p => ({ ...p, state: e.target.value }))} />
+                <Input
+                  label={t('city')}
+                  value={billingAddr.city}
+                  onChange={(e) => setBillingAddr((p) => ({ ...p, city: e.target.value }))}
+                  required
+                />
+                <Input
+                  label={t('zipPostalCode')}
+                  value={billingAddr.postalCode}
+                  onChange={(e) => setBillingAddr((p) => ({ ...p, postalCode: e.target.value }))}
+                  required
+                />
+                <Input
+                  label={t('stateRegion')}
+                  value={billingAddr.state || ''}
+                  onChange={(e) => setBillingAddr((p) => ({ ...p, state: e.target.value }))}
+                />
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-charcoal-light uppercase tracking-wider">{t('country')}</label>
+                  <label className="text-charcoal-light text-xs font-medium tracking-wider uppercase">
+                    {t('country')}
+                  </label>
                   <select
                     value={billingAddr.country}
-                    onChange={(e) => setBillingAddr(p => ({ ...p, country: e.target.value }))}
-                    className="w-full border border-border px-3 py-2.5 text-sm rounded-sm bg-white focus:outline-none focus:border-charcoal"
+                    onChange={(e) => setBillingAddr((p) => ({ ...p, country: e.target.value }))}
+                    className="border-border focus:border-charcoal w-full rounded-sm border bg-white px-3 py-2.5 text-sm focus:outline-none"
                   >
                     <option value="US">{t('countryUS')}</option>
                     <option value="GB">{t('countryGB')}</option>
@@ -574,12 +793,12 @@ export default function CheckoutPage() {
 
           {/* Payment */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-charcoal">{t('payment')}</h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-charcoal text-lg font-semibold">{t('payment')}</h2>
               <button
                 type="button"
                 onClick={autoFillCard}
-                className="text-xs text-terra hover:underline border border-terra/30 px-3 py-1 rounded-sm hover:bg-terra/5 transition-colors"
+                className="text-terra border-terra/30 hover:bg-terra/5 rounded-sm border px-3 py-1 text-xs transition-colors hover:underline"
               >
                 {t('autoFillTestCard')}
               </button>
@@ -615,7 +834,7 @@ export default function CheckoutPage() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-sm">
+            <div className="rounded-sm border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               {error}
             </div>
           )}
@@ -626,7 +845,14 @@ export default function CheckoutPage() {
             className="w-full"
             onClick={handleSubmit}
             isLoading={submitting}
-            disabled={!primaryAddr.firstName || !(useCombinedStreetField(primaryAddr.country) ? primaryAddr.streetAddress : primaryAddr.streetName) || !primaryAddr.city || !payment.cardNumber}
+            disabled={
+              !primaryAddr.firstName ||
+              !(isCombinedStreetField(primaryAddr.country)
+                ? primaryAddr.streetAddress
+                : primaryAddr.streetName) ||
+              !primaryAddr.city ||
+              !payment.cardNumber
+            }
           >
             Place Order • {formatMoney(cart.totalPrice.centAmount, cart.totalPrice.currencyCode)}
           </Button>
@@ -634,26 +860,30 @@ export default function CheckoutPage() {
 
         {/* Order summary */}
         <div className="lg:col-span-2">
-          <div className="bg-cream p-5 rounded-sm sticky top-24">
-            <h2 className="font-semibold text-charcoal mb-4">{t('orderSummary')}</h2>
-            <div className="space-y-3 mb-4">
+          <div className="bg-cream sticky top-24 rounded-sm p-5">
+            <h2 className="text-charcoal mb-4 font-semibold">{t('orderSummary')}</h2>
+            <div className="mb-4 space-y-3">
               {cart.lineItems.map((item) => {
                 const name = getLocalizedString(item.name, locale);
                 const img = item.variant?.images?.[0]?.url;
                 return (
                   <div key={item.id} className="flex gap-3">
                     {img && (
-                      <div className="w-12 h-12 relative flex-shrink-0 bg-cream-dark rounded-sm overflow-hidden">
+                      <div className="bg-cream-dark relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-sm">
                         <Image src={img} alt={name} fill className="object-cover" sizes="48px" />
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-charcoal line-clamp-1">{name}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-charcoal line-clamp-1 text-xs font-medium">{name}</p>
                       {item.recurrenceInfo?.recurrencePolicy && (
-                        <p className="text-xs text-sage">{t('subscription')}</p>
+                        <p className="text-sage text-xs">{t('subscription')}</p>
                       )}
-                      <p className="text-xs text-charcoal-light mt-0.5">
-                        {t('qty', { quantity: item.quantity })} · {formatMoney(item.price?.value?.centAmount || 0, item.price?.value?.currencyCode || currency)}
+                      <p className="text-charcoal-light mt-0.5 text-xs">
+                        {t('qty', { quantity: item.quantity })} ·{' '}
+                        {formatMoney(
+                          item.price?.value?.centAmount || 0,
+                          item.price?.value?.currencyCode || currency
+                        )}
                       </p>
                     </div>
                   </div>
@@ -661,23 +891,32 @@ export default function CheckoutPage() {
               })}
             </div>
             {(() => {
-              const sm = shippingMethods.find(m => m.id === selectedShippingMethodId) || shippingMethods[0];
+              const sm =
+                shippingMethods.find((m) => m.id === selectedShippingMethodId) ||
+                shippingMethods[0];
               const isFree = sm?.freeAbove && cart.totalPrice.centAmount >= sm.freeAbove.centAmount;
-              const shippingCost = (sm?.price && !isFree) ? sm.price.centAmount : 0;
+              const shippingCost = sm?.price && !isFree ? sm.price.centAmount : 0;
               const taxAmount = cart.taxedPrice
                 ? cart.taxedPrice.totalGross.centAmount - cart.taxedPrice.totalNet.centAmount
-                : country === 'US' ? Math.round(cart.totalPrice.centAmount * 0.1) : 0;
+                : country === 'US'
+                  ? Math.round(cart.totalPrice.centAmount * 0.1)
+                  : 0;
               const taxIsEstimate = !cart.taxedPrice && taxAmount > 0;
-              const total = cart.totalPrice.centAmount + shippingCost + (taxIsEstimate ? taxAmount : 0);
+              const total =
+                cart.totalPrice.centAmount + shippingCost + (taxIsEstimate ? taxAmount : 0);
               return (
-                <div className="border-t border-border pt-3 space-y-1.5 text-sm">
+                <div className="border-border space-y-1.5 border-t pt-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-charcoal-light">{t('subtotal')}</span>
-                    <span>{formatMoney(cart.totalPrice.centAmount, cart.totalPrice.currencyCode)}</span>
+                    <span>
+                      {formatMoney(cart.totalPrice.centAmount, cart.totalPrice.currencyCode)}
+                    </span>
                   </div>
                   {taxAmount > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-charcoal-light">{taxIsEstimate ? t('estimatedTax') : t('tax')}</span>
+                      <span className="text-charcoal-light">
+                        {taxIsEstimate ? t('estimatedTax') : t('tax')}
+                      </span>
                       <span>{formatMoney(taxAmount, cart.totalPrice.currencyCode)}</span>
                     </div>
                   )}
@@ -686,10 +925,16 @@ export default function CheckoutPage() {
                       {sm?.name ? t('shippingWithMethod', { name: sm.name }) : t('subtotal')}
                     </span>
                     <span className={isFree ? 'text-sage text-xs' : ''}>
-                      {!sm?.price ? <span className="text-xs">{t('calculatedAtOrder')}</span> : isFree ? t('free') : formatMoney(sm.price.centAmount, sm.price.currencyCode)}
+                      {!sm?.price ? (
+                        <span className="text-xs">{t('calculatedAtOrder')}</span>
+                      ) : isFree ? (
+                        t('free')
+                      ) : (
+                        formatMoney(sm.price.centAmount, sm.price.currencyCode)
+                      )}
                     </span>
                   </div>
-                  <div className="flex justify-between font-semibold pt-1 border-t border-border">
+                  <div className="border-border flex justify-between border-t pt-1 font-semibold">
                     <span>{t('estimatedTotal')}</span>
                     <span>{formatMoney(total, cart.totalPrice.currencyCode)}</span>
                   </div>

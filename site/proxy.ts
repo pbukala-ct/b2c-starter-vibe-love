@@ -22,9 +22,7 @@ export function proxy(request: NextRequest) {
   }
 
   // Already has a locale prefix — pass through with x-next-intl-locale header
-  const matchedLocale = LOCALES.find(
-    (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`)
-  );
+  const matchedLocale = LOCALES.find((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`));
   if (matchedLocale) {
     const response = NextResponse.next();
     response.headers.set('x-next-intl-locale', matchedLocale);

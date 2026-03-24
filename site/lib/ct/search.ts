@@ -67,10 +67,15 @@ export interface Image {
 
 async function getAdminToken(): Promise<string> {
   const authUrl = process.env.CTP_AUTH_URL!;
-  const creds = Buffer.from(`${process.env.CTP_CLIENT_ID}:${process.env.CTP_CLIENT_SECRET}`).toString('base64');
+  const creds = Buffer.from(
+    `${process.env.CTP_CLIENT_ID}:${process.env.CTP_CLIENT_SECRET}`
+  ).toString('base64');
   const resp = await fetch(`${authUrl}/oauth/token`, {
     method: 'POST',
-    headers: { 'Authorization': `Basic ${creds}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: {
+      Authorization: `Basic ${creds}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
     body: `grant_type=client_credentials&scope=${encodeURIComponent(process.env.CTP_SCOPES!)}`,
     next: { revalidate: 3500 },
   });
@@ -138,17 +143,19 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
     });
   }
 
-  const searchQuery = queryParts.length === 0
-    ? undefined
-    : queryParts.length === 1
-    ? queryParts[0]
-    : { and: queryParts };
+  const searchQuery =
+    queryParts.length === 0
+      ? undefined
+      : queryParts.length === 1
+        ? queryParts[0]
+        : { and: queryParts };
 
-  const sortParam = sort === 'price-asc' || sort === 'price-desc'
-    ? [{ field: 'variants.prices.centAmount', order: sort === 'price-asc' ? 'asc' : 'desc' }]
-    : sort === 'name'
-    ? [{ field: 'name', locale, order: 'asc' }]
-    : [{ field: 'createdAt', order: 'desc' as const }];
+  const sortParam =
+    sort === 'price-asc' || sort === 'price-desc'
+      ? [{ field: 'variants.prices.centAmount', order: sort === 'price-asc' ? 'asc' : 'desc' }]
+      : sort === 'name'
+        ? [{ field: 'name', locale, order: 'asc' }]
+        : [{ field: 'createdAt', order: 'desc' as const }];
 
   const body: Record<string, unknown> = {
     limit,
@@ -164,7 +171,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
 
   const resp = await fetch(`${apiUrl}/${projectKey}/products/search`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
     next: { revalidate: 60 },
   });
@@ -177,16 +184,25 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
   return resp.json();
 }
 
-export async function getProductBySku(sku: string, locale: string, currency: string, country: string): Promise<ProductProjection | null> {
+export async function getProductBySku(
+  sku: string,
+  locale: string,
+  currency: string,
+  country: string
+): Promise<ProductProjection | null> {
   const token = await getAdminToken();
 
   const resp = await fetch(`${apiUrl}/${projectKey}/products/search`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       limit: 1,
       query: { exact: { field: 'variants.sku', value: sku } },
-      productProjectionParameters: { priceCurrency: currency, priceCountry: country, localeProjection: [locale] },
+      productProjectionParameters: {
+        priceCurrency: currency,
+        priceCountry: country,
+        localeProjection: [locale],
+      },
     }),
     next: { revalidate: 60 },
   });
@@ -196,12 +212,16 @@ export async function getProductBySku(sku: string, locale: string, currency: str
   return data.results[0]?.productProjection || null;
 }
 
-export async function getProductById(id: string, currency: string, country: string): Promise<ProductProjection | null> {
+export async function getProductById(
+  id: string,
+  currency: string,
+  country: string
+): Promise<ProductProjection | null> {
   const token = await getAdminToken();
 
   const resp = await fetch(`${apiUrl}/${projectKey}/products/search`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       limit: 1,
       query: { exact: { field: 'id', value: id } },

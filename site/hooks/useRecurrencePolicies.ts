@@ -16,15 +16,12 @@ export function useRecurrencePolicies(): Map<string, string> {
   const [policyMap, setPolicyMap] = useState<Map<string, string>>(cache || new Map());
 
   useEffect(() => {
-    if (cache) {
-      setPolicyMap(cache);
-      return;
-    }
+    if (cache) return;
     fetch('/api/recurrence-policies')
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         const map = new Map<string, string>();
-        for (const policy of (data.policies || [])) {
+        for (const policy of data.policies || []) {
           let label = '';
           if (policy.schedule) {
             label = formatInterval(policy.schedule);

@@ -59,7 +59,13 @@ const CartContext = createContext<CartContextType>({
   refreshCart: async () => {},
 });
 
-export function CartProvider({ initialCart, children }: { initialCart: Cart | null; children: ReactNode }) {
+export function CartProvider({
+  initialCart,
+  children,
+}: {
+  initialCart: Cart | null;
+  children: ReactNode;
+}) {
   const [cart, setCart] = useState<Cart | null>(initialCart);
   const [isLoading, setIsLoading] = useState(false);
   const [showMiniCart, setShowMiniCart] = useState(false);
@@ -86,7 +92,18 @@ export function CartProvider({ initialCart, children }: { initialCart: Cart | nu
   }, []);
 
   return (
-    <CartContext.Provider value={{ cart, isLoading, showMiniCart, setCart, setShowMiniCart, itemCount, addToCartAndShow, refreshCart }}>
+    <CartContext.Provider
+      value={{
+        cart,
+        isLoading,
+        showMiniCart,
+        setCart,
+        setShowMiniCart,
+        itemCount,
+        addToCartAndShow,
+        refreshCart,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

@@ -26,7 +26,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     if (user === null) {
       router.replace(localePath('/login') + '?redirect=' + encodeURIComponent(pathname));
     }
-  }, [user, router, pathname]);
+  }, [user, router, pathname, localePath]);
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -37,17 +37,19 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   if (!user) return null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
+    <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
       <div className="lg:grid lg:grid-cols-[220px_1fr] lg:gap-10">
         {/* Sidebar */}
         <aside className="mb-8 lg:mb-0">
-          <div className="bg-white border border-border rounded-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-border bg-cream">
-              <p className="font-semibold text-charcoal text-sm">{user.firstName} {user.lastName}</p>
-              <p className="text-xs text-charcoal-light truncate">{user.email}</p>
+          <div className="border-border overflow-hidden rounded-sm border bg-white">
+            <div className="border-border bg-cream border-b px-5 py-4">
+              <p className="text-charcoal text-sm font-semibold">
+                {user.firstName} {user.lastName}
+              </p>
+              <p className="text-charcoal-light truncate text-xs">{user.email}</p>
             </div>
             <nav className="py-2">
-              {navItems.map(item => {
+              {navItems.map((item) => {
                 const href = localePath(item.path);
                 const isActive = item.exact ? pathname === href : pathname.startsWith(href);
                 return (
@@ -56,7 +58,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                     href={href}
                     className={`block px-5 py-2.5 text-sm transition-colors ${
                       isActive
-                        ? 'text-terra font-medium bg-terra/5'
+                        ? 'text-terra bg-terra/5 font-medium'
                         : 'text-charcoal-light hover:text-charcoal hover:bg-cream'
                     }`}
                   >
@@ -66,7 +68,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
               })}
               <button
                 onClick={handleLogout}
-                className="w-full text-left px-5 py-2.5 text-sm text-charcoal-light hover:text-charcoal hover:bg-cream transition-colors border-t border-border mt-2"
+                className="text-charcoal-light hover:text-charcoal hover:bg-cream border-border mt-2 w-full border-t px-5 py-2.5 text-left text-sm transition-colors"
               >
                 {t('logout')}
               </button>

@@ -17,7 +17,11 @@ const COLORS = [
   { key: 'yellow', label: 'Yellow', hex: '#EAB308' },
   { key: 'gold', label: 'Gold', hex: '#D97706' },
   { key: 'silver', label: 'Silver', hex: '#C0C0C0' },
-  { key: 'multicolored', label: 'Multi', hex: 'linear-gradient(135deg, #3B82F6, #EC4899, #22C55E)' },
+  {
+    key: 'multicolored',
+    label: 'Multi',
+    hex: 'linear-gradient(135deg, #3B82F6, #EC4899, #22C55E)',
+  },
 ];
 
 const FINISHES = [
@@ -60,16 +64,19 @@ export default function ProductFilters({
   const searchParams = useSearchParams();
   const t = useTranslations('search');
 
-  const updateFilter = useCallback((key: string, value: string | null) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    params.delete('offset'); // Reset pagination
-    router.push(`${pathname}?${params.toString()}`);
-  }, [router, pathname, searchParams]);
+  const updateFilter = useCallback(
+    (key: string, value: string | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
+      params.delete('offset'); // Reset pagination
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [router, pathname, searchParams]
+  );
 
   const clearFilters = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -85,84 +92,101 @@ export default function ProductFilters({
     <div className="space-y-6">
       {/* Sort */}
       <div>
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-charcoal mb-3">{t('sortBy')}</h3>
+        <h3 className="text-charcoal mb-3 text-xs font-semibold tracking-wider uppercase">
+          {t('sortBy')}
+        </h3>
         <select
           value={currentSort}
           onChange={(e) => updateFilter('sort', e.target.value)}
-          className="w-full border border-border text-sm px-3 py-2 rounded-sm bg-white focus:outline-none focus:border-charcoal"
+          className="border-border focus:border-charcoal w-full rounded-sm border bg-white px-3 py-2 text-sm focus:outline-none"
         >
           {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
       </div>
 
       {/* Color filter */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-charcoal">{t('color')}</h3>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-charcoal text-xs font-semibold tracking-wider uppercase">
+            {t('color')}
+          </h3>
           {currentColor && (
-            <button onClick={() => updateFilter('color', null)} className="text-xs text-terra hover:underline">
+            <button
+              onClick={() => updateFilter('color', null)}
+              className="text-terra text-xs hover:underline"
+            >
               {t('clear')}
             </button>
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          {COLORS.filter(c => !availableColors || availableColors.includes(c.key)).map((color) => (
-            <button
-              key={color.key}
-              onClick={() => updateFilter('color', currentColor === color.key ? null : color.key)}
-              title={color.label}
-              aria-label={color.label}
-              className={`w-7 h-7 rounded-full border-2 transition-all ${
-                currentColor === color.key
-                  ? 'border-charcoal scale-110'
-                  : 'border-border hover:border-charcoal-light'
-              }`}
-              style={{
-                background: color.hex,
-                boxShadow: color.key === 'white' ? 'inset 0 0 0 1px #E5E0D8' : undefined,
-              }}
-            />
-          ))}
+          {COLORS.filter((c) => !availableColors || availableColors.includes(c.key)).map(
+            (color) => (
+              <button
+                key={color.key}
+                onClick={() => updateFilter('color', currentColor === color.key ? null : color.key)}
+                title={color.label}
+                aria-label={color.label}
+                className={`h-7 w-7 rounded-full border-2 transition-all ${
+                  currentColor === color.key
+                    ? 'border-charcoal scale-110'
+                    : 'border-border hover:border-charcoal-light'
+                }`}
+                style={{
+                  background: color.hex,
+                  boxShadow: color.key === 'white' ? 'inset 0 0 0 1px #E5E0D8' : undefined,
+                }}
+              />
+            )
+          )}
         </div>
       </div>
 
       {/* Finish filter */}
       {showFinish && (
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-charcoal">{t('finish')}</h3>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-charcoal text-xs font-semibold tracking-wider uppercase">
+              {t('finish')}
+            </h3>
             {currentFinish && (
-              <button onClick={() => updateFilter('finish', null)} className="text-xs text-terra hover:underline">
+              <button
+                onClick={() => updateFilter('finish', null)}
+                className="text-terra text-xs hover:underline"
+              >
                 {t('clear')}
               </button>
             )}
           </div>
           <div className="flex flex-wrap gap-2">
-            {FINISHES.filter(f => !availableFinishes || availableFinishes.includes(f.key)).map((finish) => (
-              <button
-                key={finish.key}
-                onClick={() => updateFilter('finish', currentFinish === finish.key ? null : finish.key)}
-                className={`px-3 py-1 text-xs rounded-sm border transition-all ${
-                  currentFinish === finish.key
-                    ? 'bg-charcoal text-white border-charcoal'
-                    : 'border-border text-charcoal-light hover:border-charcoal hover:text-charcoal'
-                }`}
-              >
-                {finish.label}
-              </button>
-            ))}
+            {FINISHES.filter((f) => !availableFinishes || availableFinishes.includes(f.key)).map(
+              (finish) => (
+                <button
+                  key={finish.key}
+                  onClick={() =>
+                    updateFilter('finish', currentFinish === finish.key ? null : finish.key)
+                  }
+                  className={`rounded-sm border px-3 py-1 text-xs transition-all ${
+                    currentFinish === finish.key
+                      ? 'bg-charcoal border-charcoal text-white'
+                      : 'border-border text-charcoal-light hover:border-charcoal hover:text-charcoal'
+                  }`}
+                >
+                  {finish.label}
+                </button>
+              )
+            )}
           </div>
         </div>
       )}
 
       {/* Clear all */}
       {hasFilters && (
-        <button
-          onClick={clearFilters}
-          className="text-xs text-terra hover:underline"
-        >
+        <button onClick={clearFilters} className="text-terra text-xs hover:underline">
           {t('clearAllFilters')}
         </button>
       )}

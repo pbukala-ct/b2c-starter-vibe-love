@@ -20,7 +20,11 @@ export default function AccountProfilePage() {
 
   useEffect(() => {
     if (user) {
-      setForm({ firstName: user.firstName || '', lastName: user.lastName || '', email: user.email || '' });
+      setForm({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+      });
     }
   }, [user]);
 
@@ -39,7 +43,12 @@ export default function AccountProfilePage() {
       if (!res.ok) {
         setError(data.error || t('updateFailed'));
       } else {
-        setUser({ ...user!, firstName: data.firstName, lastName: data.lastName, email: data.email });
+        setUser({
+          ...user!,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+        });
         setMessage(t('profileUpdated'));
       }
     } catch {
@@ -51,54 +60,69 @@ export default function AccountProfilePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-charcoal mb-6">{t('profile')}</h1>
+      <h1 className="text-charcoal mb-6 text-2xl font-semibold">{t('profile')}</h1>
 
-      <div className="bg-white border border-border rounded-sm p-6">
-        <form onSubmit={handleSubmit} className="space-y-5 max-w-md">
+      <div className="border-border rounded-sm border bg-white p-6">
+        <form onSubmit={handleSubmit} className="max-w-md space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="profile-first-name" className="block text-sm font-medium text-charcoal mb-1.5">{t('firstName')}</label>
+              <label
+                htmlFor="profile-first-name"
+                className="text-charcoal mb-1.5 block text-sm font-medium"
+              >
+                {t('firstName')}
+              </label>
               <input
                 id="profile-first-name"
                 type="text"
                 value={form.firstName}
-                onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
                 required
-                className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 text-sm transition-colors focus:outline-none"
               />
             </div>
             <div>
-              <label htmlFor="profile-last-name" className="block text-sm font-medium text-charcoal mb-1.5">{t('lastName')}</label>
+              <label
+                htmlFor="profile-last-name"
+                className="text-charcoal mb-1.5 block text-sm font-medium"
+              >
+                {t('lastName')}
+              </label>
               <input
                 id="profile-last-name"
                 type="text"
                 value={form.lastName}
-                onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
                 required
-                className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 text-sm transition-colors focus:outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="profile-email" className="block text-sm font-medium text-charcoal mb-1.5">{t('emailAddress')}</label>
+            <label
+              htmlFor="profile-email"
+              className="text-charcoal mb-1.5 block text-sm font-medium"
+            >
+              {t('emailAddress')}
+            </label>
             <input
               id="profile-email"
               type="email"
               value={form.email}
-              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
               required
-              className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+              className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 text-sm transition-colors focus:outline-none"
             />
           </div>
 
           {message && (
-            <div className="bg-sage/10 border border-sage/20 text-charcoal text-sm px-4 py-3 rounded-sm">
+            <div className="bg-sage/10 border-sage/20 text-charcoal rounded-sm border px-4 py-3 text-sm">
               {message}
             </div>
           )}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-sm">
+            <div className="rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           )}
@@ -106,7 +130,7 @@ export default function AccountProfilePage() {
           <button
             type="submit"
             disabled={isSaving}
-            className="bg-charcoal text-white px-6 py-2.5 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm disabled:opacity-50"
+            className="bg-charcoal hover:bg-charcoal/80 rounded-sm px-6 py-2.5 text-sm font-medium text-white transition-colors disabled:opacity-50"
           >
             {isSaving ? t('saving') : t('saveChanges')}
           </button>

@@ -15,7 +15,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ item
   return NextResponse.json({ cart: updatedCart });
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ itemId: string }> }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ itemId: string }> }
+) {
   const { itemId } = await params;
 
   const session = await getSession();

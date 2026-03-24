@@ -5,6 +5,7 @@ import { getLocale } from '@/lib/session';
 import { toUrlLocale } from '@/lib/utils';
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { Metadata } from 'next';
 
 interface PageProps {
   searchParams: Promise<{
@@ -17,7 +18,7 @@ interface PageProps {
   }>;
 }
 
-export const metadata = { title: 'Search' };
+export const metadata: Metadata = { title: 'Search' };
 
 export default async function SearchPage({ searchParams }: PageProps) {
   const sp = await searchParams;
@@ -44,18 +45,44 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const products = result.results.map((r) => r.productProjection);
 
   // Extract available filter options from results
-  const availableColors = [...new Set(products.flatMap(p =>
-    [...(p.masterVariant?.attributes || []), ...(p.variants?.flatMap((v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []) || [])]
-      .filter((a: { name: string }) => a.name === 'search-color')
-      .map((a: { name: string; value: unknown }) => typeof a.value === 'object' && a.value !== null ? (a.value as { key?: string }).key || '' : String(a.value))
-      .filter(Boolean)
-  ))];
-  const availableFinishes = [...new Set(products.flatMap(p =>
-    [...(p.masterVariant?.attributes || []), ...(p.variants?.flatMap((v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []) || [])]
-      .filter((a: { name: string }) => a.name === 'search-finish')
-      .map((a: { name: string; value: unknown }) => typeof a.value === 'object' && a.value !== null ? (a.value as { key?: string }).key || '' : String(a.value))
-      .filter(Boolean)
-  ))];
+  const availableColors = [
+    ...new Set(
+      products.flatMap((p) =>
+        [
+          ...(p.masterVariant?.attributes || []),
+          ...(p.variants?.flatMap(
+            (v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []
+          ) || []),
+        ]
+          .filter((a: { name: string }) => a.name === 'search-color')
+          .map((a: { name: string; value: unknown }) =>
+            typeof a.value === 'object' && a.value !== null
+              ? (a.value as { key?: string }).key || ''
+              : String(a.value)
+          )
+          .filter(Boolean)
+      )
+    ),
+  ];
+  const availableFinishes = [
+    ...new Set(
+      products.flatMap((p) =>
+        [
+          ...(p.masterVariant?.attributes || []),
+          ...(p.variants?.flatMap(
+            (v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []
+          ) || []),
+        ]
+          .filter((a: { name: string }) => a.name === 'search-finish')
+          .map((a: { name: string; value: unknown }) =>
+            typeof a.value === 'object' && a.value !== null
+              ? (a.value as { key?: string }).key || ''
+              : String(a.value)
+          )
+          .filter(Boolean)
+      )
+    ),
+  ];
 
   const totalPages = Math.ceil(result.total / limit);
   const currentPage = Math.floor(offset / limit) + 1;
@@ -63,19 +90,21 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const title = sp.q
     ? `Search results for "${sp.q}"`
     : sp.newArrival === 'true'
-    ? 'New Arrivals'
-    : 'All Products';
+      ? 'New Arrivals'
+      : 'All Products';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
-      <nav className="flex items-center gap-2 text-xs text-charcoal-light mb-6">
-        <Link href={lp('/')} className="hover:text-terra">Home</Link>
+    <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+      <nav className="text-charcoal-light mb-6 flex items-center gap-2 text-xs">
+        <Link href={lp('/')} className="hover:text-terra">
+          Home
+        </Link>
         <span>/</span>
         <span className="text-charcoal">{title}</span>
       </nav>
 
       <div className="flex gap-8">
-        <aside className="hidden md:block w-52 flex-shrink-0">
+        <aside className="hidden w-52 flex-shrink-0 md:block">
           <Suspense>
             <ProductFilters
               currentColor={sp.color}
@@ -87,16 +116,18 @@ export default async function SearchPage({ searchParams }: PageProps) {
           </Suspense>
         </aside>
 
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <ProductGrid products={products} title={title} total={result.total} />
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-10">
+            <div className="mt-10 flex items-center justify-center gap-2">
               {currentPage > 1 && (
                 <Link
                   href={`?${new URLSearchParams({ ...sp, offset: String((currentPage - 2) * limit) })}`}
-                  className="px-4 py-2 border border-border text-sm hover:bg-cream transition-colors rounded-sm"
-                >← Prev</Link>
+                  className="border-border hover:bg-cream rounded-sm border px-4 py-2 text-sm transition-colors"
+                >
+                  ← Prev
+                </Link>
               )}
               {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
                 const page = i + 1;
@@ -104,7 +135,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
                   <Link
                     key={page}
                     href={`?${new URLSearchParams({ ...sp, offset: String((page - 1) * limit) })}`}
-                    className={`w-9 h-9 flex items-center justify-center border text-sm rounded-sm ${page === currentPage ? 'bg-charcoal text-white border-charcoal' : 'border-border hover:bg-cream'}`}
+                    className={`flex h-9 w-9 items-center justify-center rounded-sm border text-sm ${page === currentPage ? 'bg-charcoal border-charcoal text-white' : 'border-border hover:bg-cream'}`}
                   >
                     {page}
                   </Link>
@@ -113,8 +144,10 @@ export default async function SearchPage({ searchParams }: PageProps) {
               {currentPage < totalPages && (
                 <Link
                   href={`?${new URLSearchParams({ ...sp, offset: String(currentPage * limit) })}`}
-                  className="px-4 py-2 border border-border text-sm hover:bg-cream transition-colors rounded-sm"
-                >Next →</Link>
+                  className="border-border hover:bg-cream rounded-sm border px-4 py-2 text-sm transition-colors"
+                >
+                  Next →
+                </Link>
               )}
             </div>
           )}

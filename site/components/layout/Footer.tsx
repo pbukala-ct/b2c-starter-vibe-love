@@ -10,55 +10,115 @@ export default function Footer() {
   const tCommon = useTranslations('common');
 
   return (
-    <footer className="bg-charcoal text-white mt-16">
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-charcoal mt-16 text-white">
+      <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 bg-terra rounded-sm flex items-center justify-center">
-                <span className="text-white text-xs font-bold">V</span>
+            <div className="mb-4 flex items-center gap-2">
+              <div className="bg-terra flex h-7 w-7 items-center justify-center rounded-sm">
+                <span className="text-xs font-bold text-white">V</span>
               </div>
-              <span className="font-semibold text-lg">Vibe Home</span>
+              <span className="text-lg font-semibold">Vibe Home</span>
             </div>
-            <p className="text-white/60 text-sm leading-relaxed">
-              {t('tagline')}
-            </p>
+            <p className="text-sm leading-relaxed text-white/60">{t('tagline')}</p>
           </div>
 
           {/* Shop */}
           <div>
-            <h3 className="font-semibold text-sm uppercase tracking-wider mb-4">{t('shopHeading')}</h3>
+            <h3 className="mb-4 text-sm font-semibold tracking-wider uppercase">
+              {t('shopHeading')}
+            </h3>
             <ul className="space-y-2 text-sm text-white/70">
-              <li><Link href={localePath('/category/furniture')} className="hover:text-terra transition-colors">{t('furniture')}</Link></li>
-              <li><Link href={localePath('/category/home-decor')} className="hover:text-terra transition-colors">{t('homeDecor')}</Link></li>
-              <li><Link href={localePath('/category/kitchen')} className="hover:text-terra transition-colors">{t('kitchen')}</Link></li>
-              <li><Link href={localePath('/search?newArrival=true')} className="hover:text-terra transition-colors">{t('newArrivals')}</Link></li>
+              <li>
+                <Link
+                  href={localePath('/category/furniture')}
+                  className="hover:text-terra transition-colors"
+                >
+                  {t('furniture')}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={localePath('/category/home-decor')}
+                  className="hover:text-terra transition-colors"
+                >
+                  {t('homeDecor')}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={localePath('/category/kitchen')}
+                  className="hover:text-terra transition-colors"
+                >
+                  {t('kitchen')}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={localePath('/search?newArrival=true')}
+                  className="hover:text-terra transition-colors"
+                >
+                  {t('newArrivals')}
+                </Link>
+              </li>
             </ul>
           </div>
 
           {/* Help */}
           <div>
-            <h3 className="font-semibold text-sm uppercase tracking-wider mb-4">{t('helpHeading')}</h3>
+            <h3 className="mb-4 text-sm font-semibold tracking-wider uppercase">
+              {t('helpHeading')}
+            </h3>
             <ul className="space-y-2 text-sm text-white/70">
-              <li><Link href={localePath('/account/orders')} className="hover:text-terra transition-colors">{t('trackOrder')}</Link></li>
-              <li><Link href={localePath('/account/subscriptions')} className="hover:text-terra transition-colors">{t('manageSubscriptions')}</Link></li>
+              <li>
+                <Link
+                  href={localePath('/account/orders')}
+                  className="hover:text-terra transition-colors"
+                >
+                  {t('trackOrder')}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={localePath('/account/subscriptions')}
+                  className="hover:text-terra transition-colors"
+                >
+                  {t('manageSubscriptions')}
+                </Link>
+              </li>
             </ul>
           </div>
 
           {/* Account */}
           <div>
-            <h3 className="font-semibold text-sm uppercase tracking-wider mb-4">{t('accountHeading')}</h3>
+            <h3 className="mb-4 text-sm font-semibold tracking-wider uppercase">
+              {t('accountHeading')}
+            </h3>
             <ul className="space-y-2 text-sm text-white/70">
-              <li><Link href={localePath('/login')} className="hover:text-terra transition-colors">{t('signIn')}</Link></li>
-              <li><Link href={localePath('/register')} className="hover:text-terra transition-colors">{t('createAccount')}</Link></li>
-              <li><Link href={localePath('/account')} className="hover:text-terra transition-colors">{t('myAccount')}</Link></li>
+              <li>
+                <Link href={localePath('/login')} className="hover:text-terra transition-colors">
+                  {t('signIn')}
+                </Link>
+              </li>
+              <li>
+                <Link href={localePath('/register')} className="hover:text-terra transition-colors">
+                  {t('createAccount')}
+                </Link>
+              </li>
+              <li>
+                <Link href={localePath('/account')} className="hover:text-terra transition-colors">
+                  {t('myAccount')}
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-white/10 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-white/50 text-xs">
-          <p>© {new Date().getFullYear()} Vibe Home. {tCommon('allRightsReserved')}</p>
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/50 md:flex-row">
+          <p>
+            © {new Date().getFullYear()} Vibe Home. {tCommon('allRightsReserved')}
+          </p>
           <div className="flex gap-4">
             <span>{tCommon('poweredBy')}</span>
           </div>

@@ -132,6 +132,12 @@ All commercetools calls go through server-side Next.js API routes. The browser n
 | `/api/shipping-methods` | GET | Shipping options |
 | `/api/recurrence-policies` | GET | Subscription frequencies |
 
+## Developer Tooling
+
+- **ESLint 9** flat config (`eslint.config.mjs`) with Next.js, TypeScript, React Hooks, and jsx-a11y rules
+- **Prettier** with `prettier-plugin-tailwindcss` for automatic Tailwind class sorting
+- Lint scripts: `npm run lint`, `npm run lint:fix`, `npm run format`, `npm run format:check`
+
 ## Admin Tools
 
 Scripts in `tools/` for commercetools project setup and exploration. All use `tools/.env` (admin scope).

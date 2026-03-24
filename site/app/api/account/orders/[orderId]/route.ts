@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
-import { getOrderById, getCustomerById } from '@/lib/ct/auth';
+import { getOrderById } from '@/lib/ct/auth';
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ orderId: string }> }
-) {
+export async function GET(_req: Request, { params }: { params: Promise<{ orderId: string }> }) {
   const session = await getSession();
   if (!session.customerId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });

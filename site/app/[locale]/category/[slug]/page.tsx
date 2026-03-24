@@ -7,6 +7,7 @@ import { getLocalizedString, toUrlLocale } from '@/lib/utils';
 import { getLocale } from '@/lib/session';
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { Metadata } from 'next';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -19,7 +20,7 @@ interface PageProps {
   }>;
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const category = await getCategoryBySlug(slug);
   if (!category) return { title: 'Category Not Found' };
@@ -33,10 +34,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const { country, currency, locale } = await getLocale();
   const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
 
-  const [category, categoryTree] = await Promise.all([
-    getCategoryBySlug(slug),
-    getCategoryTree(),
-  ]);
+  const [category, categoryTree] = await Promise.all([getCategoryBySlug(slug), getCategoryTree()]);
 
   if (!category) notFound();
 
@@ -62,18 +60,44 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const products = result.results.map((r) => r.productProjection);
 
   // Extract available filter options from results
-  const availableColors = [...new Set(products.flatMap(p =>
-    [...(p.masterVariant?.attributes || []), ...(p.variants?.flatMap((v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []) || [])]
-      .filter((a: { name: string }) => a.name === 'search-color')
-      .map((a: { name: string; value: unknown }) => typeof a.value === 'object' && a.value !== null ? (a.value as { key?: string }).key || '' : String(a.value))
-      .filter(Boolean)
-  ))];
-  const availableFinishes = [...new Set(products.flatMap(p =>
-    [...(p.masterVariant?.attributes || []), ...(p.variants?.flatMap((v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []) || [])]
-      .filter((a: { name: string }) => a.name === 'search-finish')
-      .map((a: { name: string; value: unknown }) => typeof a.value === 'object' && a.value !== null ? (a.value as { key?: string }).key || '' : String(a.value))
-      .filter(Boolean)
-  ))];
+  const availableColors = [
+    ...new Set(
+      products.flatMap((p) =>
+        [
+          ...(p.masterVariant?.attributes || []),
+          ...(p.variants?.flatMap(
+            (v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []
+          ) || []),
+        ]
+          .filter((a: { name: string }) => a.name === 'search-color')
+          .map((a: { name: string; value: unknown }) =>
+            typeof a.value === 'object' && a.value !== null
+              ? (a.value as { key?: string }).key || ''
+              : String(a.value)
+          )
+          .filter(Boolean)
+      )
+    ),
+  ];
+  const availableFinishes = [
+    ...new Set(
+      products.flatMap((p) =>
+        [
+          ...(p.masterVariant?.attributes || []),
+          ...(p.variants?.flatMap(
+            (v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []
+          ) || []),
+        ]
+          .filter((a: { name: string }) => a.name === 'search-finish')
+          .map((a: { name: string; value: unknown }) =>
+            typeof a.value === 'object' && a.value !== null
+              ? (a.value as { key?: string }).key || ''
+              : String(a.value)
+          )
+          .filter(Boolean)
+      )
+    ),
+  ];
 
   // Build breadcrumb
   const breadcrumb: Array<{ name: string; slug: string }> = [];
@@ -94,17 +118,21 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const currentPage = Math.floor(offset / limit) + 1;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-charcoal-light mb-6">
-        <Link href={lp('/')} className="hover:text-terra">Home</Link>
+      <nav className="text-charcoal-light mb-6 flex items-center gap-2 text-xs">
+        <Link href={lp('/')} className="hover:text-terra">
+          Home
+        </Link>
         {breadcrumb.map((crumb, i) => (
           <span key={crumb.slug} className="flex items-center gap-2">
             <span>/</span>
             {i === breadcrumb.length - 1 ? (
               <span className="text-charcoal">{crumb.name}</span>
             ) : (
-              <Link href={lp(`/category/${crumb.slug}`)} className="hover:text-terra">{crumb.name}</Link>
+              <Link href={lp(`/category/${crumb.slug}`)} className="hover:text-terra">
+                {crumb.name}
+              </Link>
             )}
           </span>
         ))}
@@ -112,7 +140,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
       <div className="flex gap-8">
         {/* Filters sidebar */}
-        <aside className="hidden md:block w-52 flex-shrink-0">
+        <aside className="hidden w-52 flex-shrink-0 md:block">
           <Suspense>
             <ProductFilters
               currentColor={sp.color}
@@ -126,14 +154,14 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
           {/* Subcategory links */}
           {category.children && category.children.length > 0 && (
             <div className="mt-8">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-charcoal mb-3">
+              <h3 className="text-charcoal mb-3 text-xs font-semibold tracking-wider uppercase">
                 Subcategories
               </h3>
               <ul className="space-y-1">
                 <li>
                   <Link
                     href={lp(`/category/${slug}`)}
-                    className="block text-sm text-charcoal hover:text-terra py-1 font-medium"
+                    className="text-charcoal hover:text-terra block py-1 text-sm font-medium"
                   >
                     All {name}
                   </Link>
@@ -145,7 +173,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                     <li key={child.id}>
                       <Link
                         href={lp(`/category/${childSlug}`)}
-                        className="block text-sm text-charcoal-light hover:text-terra py-1"
+                        className="text-charcoal-light hover:text-terra block py-1 text-sm"
                       >
                         {childName}
                       </Link>
@@ -158,16 +186,16 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         </aside>
 
         {/* Products */}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <ProductGrid products={products} title={name} total={result.total} />
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-10">
+            <div className="mt-10 flex items-center justify-center gap-2">
               {currentPage > 1 && (
                 <Link
                   href={`?${new URLSearchParams({ ...sp, offset: String((currentPage - 2) * limit) })}`}
-                  className="px-4 py-2 border border-border text-sm hover:bg-cream transition-colors rounded-sm"
+                  className="border-border hover:bg-cream rounded-sm border px-4 py-2 text-sm transition-colors"
                 >
                   ← Prev
                 </Link>
@@ -178,7 +206,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                   <Link
                     key={page}
                     href={`?${new URLSearchParams({ ...sp, offset: String((page - 1) * limit) })}`}
-                    className={`w-9 h-9 flex items-center justify-center border text-sm rounded-sm transition-colors ${page === currentPage ? 'bg-charcoal text-white border-charcoal' : 'border-border hover:bg-cream'}`}
+                    className={`flex h-9 w-9 items-center justify-center rounded-sm border text-sm transition-colors ${page === currentPage ? 'bg-charcoal border-charcoal text-white' : 'border-border hover:bg-cream'}`}
                   >
                     {page}
                   </Link>
@@ -187,7 +215,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
               {currentPage < totalPages && (
                 <Link
                   href={`?${new URLSearchParams({ ...sp, offset: String(currentPage * limit) })}`}
-                  className="px-4 py-2 border border-border text-sm hover:bg-cream transition-colors rounded-sm"
+                  className="border-border hover:bg-cream rounded-sm border px-4 py-2 text-sm transition-colors"
                 >
                   Next →
                 </Link>

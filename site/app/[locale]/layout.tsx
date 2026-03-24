@@ -38,7 +38,9 @@ export default async function LocaleLayout({
     try {
       const cart = await getCart(session.cartId);
       if (cart.cartState === 'Active') initialCart = cart;
-    } catch { /* cart not found */ }
+    } catch {
+      /* cart not found */
+    }
   }
 
   const initialUser = session.customerId

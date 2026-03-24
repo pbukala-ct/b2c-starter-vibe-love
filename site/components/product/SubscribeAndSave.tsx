@@ -37,9 +37,7 @@ export default function SubscribeAndSave({
   const { locale, currency, country } = useLocale();
   const t = useTranslations('product');
   const [mode, setMode] = useState<'one-time' | 'subscribe'>('one-time');
-  const [selectedPolicyId, setSelectedPolicyId] = useState<string>(
-    recurrencePolicies[0]?.id || ''
-  );
+  const [selectedPolicyId, setSelectedPolicyId] = useState<string>(recurrencePolicies[0]?.id || '');
   const [adding, setAdding] = useState(false);
 
   // Filter recurring prices for current currency/country
@@ -50,16 +48,12 @@ export default function SubscribeAndSave({
   // Map policies to prices
   const policyPrices = recurrencePolicies
     .map((policy) => {
-      const price = availableRecurringPrices.find(
-        (p) => p.recurrencePolicy?.id === policy.id
-      );
+      const price = availableRecurringPrices.find((p) => p.recurrencePolicy?.id === policy.id);
       return price ? { policy, price } : null;
     })
     .filter(Boolean) as Array<{ policy: RecurrencePolicy; price: Price }>;
 
-  const selectedPolicyPrice = policyPrices.find(
-    (pp) => pp.policy.id === selectedPolicyId
-  );
+  const selectedPolicyPrice = policyPrices.find((pp) => pp.policy.id === selectedPolicyId);
 
   const regularCentAmount = regularPrice.value.centAmount;
   const subscribePriceCentAmount = selectedPolicyPrice?.price.value.centAmount || regularCentAmount;
@@ -108,23 +102,28 @@ export default function SubscribeAndSave({
   return (
     <div className="space-y-4">
       {/* One-time purchase option */}
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
       <label
-        className={`flex items-start gap-3 p-4 border rounded-sm cursor-pointer transition-all ${
-          mode === 'one-time' ? 'border-charcoal bg-cream' : 'border-border hover:border-charcoal-light'
+        htmlFor="purchase-mode-one-time"
+        className={`flex cursor-pointer items-start gap-3 rounded-sm border p-4 transition-all ${
+          mode === 'one-time'
+            ? 'border-charcoal bg-cream'
+            : 'border-border hover:border-charcoal-light'
         }`}
       >
         <input
+          id="purchase-mode-one-time"
           type="radio"
           name="purchase-mode"
           value="one-time"
           checked={mode === 'one-time'}
           onChange={() => setMode('one-time')}
-          className="mt-0.5 accent-charcoal"
+          className="accent-charcoal mt-0.5"
         />
         <div className="flex-1">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-charcoal">{t('oneTimePurchase')}</span>
-            <span className="text-sm font-semibold text-charcoal">
+            <span className="text-charcoal text-sm font-medium">{t('oneTimePurchase')}</span>
+            <span className="text-charcoal text-sm font-semibold">
               {formatMoney(regularPrice.value.centAmount, regularPrice.value.currencyCode)}
             </span>
           </div>
@@ -133,7 +132,7 @@ export default function SubscribeAndSave({
 
       {/* Subscribe & Save option */}
       <label
-        className={`flex items-start gap-3 p-4 border rounded-sm cursor-pointer transition-all ${
+        className={`flex cursor-pointer items-start gap-3 rounded-sm border p-4 transition-all ${
           mode === 'subscribe' ? 'border-sage bg-sage/5' : 'border-border hover:border-sage/50'
         }`}
       >
@@ -143,20 +142,20 @@ export default function SubscribeAndSave({
           value="subscribe"
           checked={mode === 'subscribe'}
           onChange={() => setMode('subscribe')}
-          className="mt-0.5 accent-sage"
+          className="accent-sage mt-0.5"
         />
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-medium text-charcoal">
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-charcoal text-sm font-medium">
               {t('subscribeOption')}
               {mode === 'subscribe' && savingsPct > 0 && (
-                <span className="ml-2 text-xs bg-sage text-white px-1.5 py-0.5 rounded-sm">
+                <span className="bg-sage ml-2 rounded-sm px-1.5 py-0.5 text-xs text-white">
                   {t('save', { pct: savingsPct })}
                 </span>
               )}
             </span>
             {mode === 'subscribe' && (
-              <span className="text-sm font-semibold text-charcoal">
+              <span className="text-charcoal text-sm font-semibold">
                 {formatMoney(subscribePriceCentAmount, currency)}
               </span>
             )}
@@ -164,7 +163,7 @@ export default function SubscribeAndSave({
 
           {mode === 'subscribe' && policyPrices.length > 0 && (
             <div className="mt-3 space-y-2">
-              <p className="text-xs text-charcoal-light">{t('deliveryFrequency')}</p>
+              <p className="text-charcoal-light text-xs">{t('deliveryFrequency')}</p>
               {policyPrices.map(({ policy, price }) => {
                 const policyName = policy.name[locale] || policy.name['en-US'];
                 const saving = regularCentAmount - price.value.centAmount;
@@ -172,7 +171,7 @@ export default function SubscribeAndSave({
                 return (
                   <label
                     key={policy.id}
-                    className={`flex items-center justify-between gap-2 p-2.5 border rounded-sm cursor-pointer text-xs ${
+                    className={`flex cursor-pointer items-center justify-between gap-2 rounded-sm border p-2.5 text-xs ${
                       selectedPolicyId === policy.id
                         ? 'border-sage bg-sage/10 text-charcoal'
                         : 'border-border/50 text-charcoal-light hover:border-sage/30'
@@ -187,10 +186,10 @@ export default function SubscribeAndSave({
                       className="accent-sage"
                     />
                     <span className="flex-1">{policyName}</span>
-                    <span className="font-medium">{formatMoney(price.value.centAmount, price.value.currencyCode)}</span>
-                    {pct > 0 && (
-                      <span className="text-sage font-medium">-{pct}%</span>
-                    )}
+                    <span className="font-medium">
+                      {formatMoney(price.value.centAmount, price.value.currencyCode)}
+                    </span>
+                    {pct > 0 && <span className="text-sage font-medium">-{pct}%</span>}
                   </label>
                 );
               })}
@@ -210,9 +209,7 @@ export default function SubscribeAndSave({
       </Button>
 
       {mode === 'subscribe' && (
-        <p className="text-xs text-charcoal-light text-center">
-          {t('cancelAnytime')}
-        </p>
+        <p className="text-charcoal-light text-center text-xs">{t('cancelAnytime')}</p>
       )}
     </div>
   );

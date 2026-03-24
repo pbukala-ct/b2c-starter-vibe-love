@@ -16,9 +16,7 @@ export async function GET() {
   const subs = (result.results || []).map((sub: any) => ({
     ...sub,
     // Prefer lineItems already on the sub (future-proofing); fall back to origin order.
-    lineItems: sub.lineItems?.length
-      ? sub.lineItems
-      : (sub.originOrder?.obj?.lineItems ?? []),
+    lineItems: sub.lineItems?.length ? sub.lineItems : (sub.originOrder?.obj?.lineItems ?? []),
     // Normalise the next-order field name (CT uses nextOrderAt).
     nextOrderDate: sub.nextOrderDate ?? sub.nextOrderAt,
   }));

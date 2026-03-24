@@ -39,8 +39,7 @@ const URL_LOCALE_TO_COUNTRY: Record<string, string> = {
   'en-gb': 'GB',
   'de-de': 'DE',
 };
-const DEFAULT_COUNTRY =
-  URL_LOCALE_TO_COUNTRY[process.env.DEFAULT_LOCALE || 'en-us'] || 'US';
+const DEFAULT_COUNTRY = URL_LOCALE_TO_COUNTRY[process.env.DEFAULT_LOCALE || 'en-us'] || 'US';
 
 export async function getLocale(): Promise<{ country: string; currency: string; locale: string }> {
   const session = await getSession();

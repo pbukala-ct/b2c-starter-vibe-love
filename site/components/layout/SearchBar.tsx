@@ -24,7 +24,9 @@ export default function SearchBar() {
 
   return (
     <form onSubmit={handleSubmit} className="relative">
-      <div className={`flex items-center border transition-all duration-150 rounded-sm ${focused ? 'border-charcoal' : 'border-border'} bg-white`}>
+      <div
+        className={`flex items-center rounded-sm border transition-all duration-150 ${focused ? 'border-charcoal' : 'border-border'} bg-white`}
+      >
         <input
           ref={inputRef}
           type="text"
@@ -33,16 +35,21 @@ export default function SearchBar() {
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           placeholder={t('placeholder')}
-          className="w-full px-3 py-2 text-sm bg-transparent outline-none placeholder:text-charcoal-light/60 min-w-0"
+          className="placeholder:text-charcoal-light/60 w-full min-w-0 bg-transparent px-3 py-2 text-sm outline-none"
           aria-label={t('placeholder')}
         />
         <button
           type="submit"
-          className="px-3 py-2 text-charcoal-light hover:text-charcoal transition-colors"
+          className="text-charcoal-light hover:text-charcoal px-3 py-2 transition-colors"
           aria-label={t('submit')}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
         </button>
       </div>

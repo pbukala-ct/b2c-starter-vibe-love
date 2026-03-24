@@ -39,8 +39,8 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetch('/api/account/orders')
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         setOrders(data.orders || []);
         setIsLoading(false);
       })
@@ -50,10 +50,10 @@ export default function OrdersPage() {
   if (isLoading) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold text-charcoal mb-6">{t('title')}</h1>
+        <h1 className="text-charcoal mb-6 text-2xl font-semibold">{t('title')}</h1>
         <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 bg-cream-dark rounded-sm animate-pulse" />
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-cream-dark h-24 animate-pulse rounded-sm" />
           ))}
         </div>
       </div>
@@ -62,48 +62,65 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-charcoal mb-6">{t('title')}</h1>
+      <h1 className="text-charcoal mb-6 text-2xl font-semibold">{t('title')}</h1>
 
       {orders.length === 0 ? (
-        <div className="bg-white border border-border rounded-sm p-12 text-center">
+        <div className="border-border rounded-sm border bg-white p-12 text-center">
           <p className="text-charcoal-light mb-4">{t('noOrders')}</p>
-          <Link href={localePath('/')} className="bg-charcoal text-white px-6 py-2.5 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm inline-block">
+          <Link
+            href={localePath('/')}
+            className="bg-charcoal hover:bg-charcoal/80 inline-block rounded-sm px-6 py-2.5 text-sm font-medium text-white transition-colors"
+          >
             {t('startShopping')}
           </Link>
         </div>
       ) : (
         <div className="space-y-4">
-          {orders.map(order => (
-            <div key={order.id} className="bg-white border border-border rounded-sm p-5">
-              <div className="flex items-start justify-between mb-3">
+          {orders.map((order) => (
+            <div key={order.id} className="border-border rounded-sm border bg-white p-5">
+              <div className="mb-3 flex items-start justify-between">
                 <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <p className="font-semibold text-charcoal text-sm">{t('orderNumber', { number: order.orderNumber })}</p>
-                    <span className={`text-xs border px-2 py-0.5 rounded-full ${STATE_COLORS[order.orderState] || 'bg-cream text-charcoal-light border-border'}`}>
+                  <div className="mb-1 flex items-center gap-3">
+                    <p className="text-charcoal text-sm font-semibold">
+                      {t('orderNumber', { number: order.orderNumber })}
+                    </p>
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-xs ${STATE_COLORS[order.orderState] || 'bg-cream text-charcoal-light border-border'}`}
+                    >
                       {STATE_LABELS[order.orderState] || order.orderState}
                     </span>
                   </div>
-                  <p className="text-xs text-charcoal-light">
-                    {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  <p className="text-charcoal-light text-xs">
+                    {new Date(order.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-charcoal text-sm">
+                  <p className="text-charcoal text-sm font-semibold">
                     {formatMoney(order.totalPrice.centAmount, order.totalPrice.currencyCode)}
                   </p>
-                  <Link href={localePath(`/account/orders/${order.id}`)} className="text-xs text-terra hover:underline">
+                  <Link
+                    href={localePath(`/account/orders/${order.id}`)}
+                    className="text-terra text-xs hover:underline"
+                  >
                     {t('viewDetails')}
                   </Link>
                 </div>
               </div>
-              <div className="text-xs text-charcoal-light">
-                {order.lineItems.slice(0, 3).map(item => (
+              <div className="text-charcoal-light text-xs">
+                {order.lineItems.slice(0, 3).map((item) => (
                   <span key={item.id}>
                     {item.name['en-US'] || Object.values(item.name)[0]} × {item.quantity}
-                    {order.lineItems.indexOf(item) < Math.min(order.lineItems.length, 3) - 1 ? ', ' : ''}
+                    {order.lineItems.indexOf(item) < Math.min(order.lineItems.length, 3) - 1
+                      ? ', '
+                      : ''}
                   </span>
                 ))}
-                {order.lineItems.length > 3 && ` ${t('more', { count: order.lineItems.length - 3 })}`}
+                {order.lineItems.length > 3 &&
+                  ` ${t('more', { count: order.lineItems.length - 3 })}`}
               </div>
             </div>
           ))}

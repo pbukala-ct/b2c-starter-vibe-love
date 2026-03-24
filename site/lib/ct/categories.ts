@@ -18,7 +18,10 @@ export async function getCategories(): Promise<Category[]> {
     return categoriesCache;
   }
 
-  const result = await apiRoot.categories().get({ queryArgs: { limit: 200 } }).execute();
+  const result = await apiRoot
+    .categories()
+    .get({ queryArgs: { limit: 200 } })
+    .execute();
   categoriesCache = result.body.results.map((c) => ({
     id: c.id,
     name: c.name as Record<string, string>,

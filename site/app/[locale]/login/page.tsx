@@ -50,49 +50,49 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-charcoal">{t('welcomeBack')}</h1>
+        <div className="mb-8 text-center">
+          <h1 className="text-charcoal text-3xl font-semibold">{t('welcomeBack')}</h1>
           <p className="text-charcoal-light mt-2">{t('signInToAccount')}</p>
         </div>
 
-        <div className="bg-white border border-border rounded-sm p-8">
+        <div className="border-border rounded-sm border bg-white p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-charcoal mb-1.5">
+              <label htmlFor="email" className="text-charcoal mb-1.5 block text-sm font-medium">
                 {t('emailAddress')}
               </label>
               <input
                 id="email"
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 text-sm transition-colors focus:outline-none"
                 placeholder={t('emailPlaceholder')}
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-charcoal mb-1.5">
+              <label htmlFor="password" className="text-charcoal mb-1.5 block text-sm font-medium">
                 {t('password')}
               </label>
               <input
                 id="password"
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 text-sm transition-colors focus:outline-none"
                 placeholder={t('passwordPlaceholder')}
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-sm">
+              <div className="rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
               </div>
             )}
@@ -100,16 +100,19 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-charcoal text-white py-3 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-charcoal hover:bg-charcoal/80 w-full rounded-sm py-3 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? t('signingIn') : t('signIn')}
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-border text-center">
-            <p className="text-sm text-charcoal-light">
+          <div className="border-border mt-6 border-t pt-6 text-center">
+            <p className="text-charcoal-light text-sm">
               {t('noAccount')}{' '}
-              <Link href={`${localePath('/register')}${redirect !== localePath('/account') ? `?redirect=${redirect}` : ''}`} className="text-terra hover:underline font-medium">
+              <Link
+                href={`${localePath('/register')}${redirect !== localePath('/account') ? `?redirect=${redirect}` : ''}`}
+                className="text-terra font-medium hover:underline"
+              >
                 {t('createOne')}
               </Link>
             </p>
@@ -118,8 +121,11 @@ export default function LoginPage() {
           <div className="mt-4 text-center">
             <button
               type="button"
-              onClick={() => { setEmail('jen@example.com'); setPassword('123'); }}
-              className="text-xs text-terra hover:underline font-medium"
+              onClick={() => {
+                setEmail('jen@example.com');
+                setPassword('123');
+              }}
+              className="text-terra text-xs font-medium hover:underline"
             >
               {t('useTestCredentials')}
             </button>

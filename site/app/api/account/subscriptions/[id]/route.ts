@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { getRecurringOrderById, updateRecurringOrder } from '@/lib/ct/auth';
+import { RecurringOrderStateValues, RecurringOrderUpdateAction } from '@commercetools/platform-sdk';
+import { RecurringOrderPaused } from '@commercetools/platform-sdk/dist/declarations/src/generated/models/recurring-order';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -12,19 +14,25 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  let ctAction: Record<string, unknown>;
+  let ctAction: RecurringOrderUpdateAction;
   if (action === 'pause') {
-    ctAction = { action: 'setRecurringOrderState', recurringOrderState: 'Paused' };
+    ctAction = {
+      action: 'setRecurringOrderState',
+      recurringOrderState: { type: 'paused' },
+    };
   } else if (action === 'resume') {
-    ctAction = { action: 'setRecurringOrderState', recurringOrderState: 'Active' };
+    ctAction = { action: 'setRecurringOrderState', recurringOrderState: { type: 'active' } };
   } else if (action === 'cancel') {
-    ctAction = { action: 'setRecurringOrderState', recurringOrderState: 'Cancelled' };
+    ctAction = { action: 'setRecurringOrderState', recurringOrderState: { type: 'canceled' } };
   } else if (action === 'skip') {
     const totalToSkip = (body.totalToSkip as number) || 1;
-    ctAction = { action: 'setOrderSkipConfiguration', skipConfigurationInputDraft: { Counter: { totalToSkip } } };
+    ctAction = {
+      action: 'setOrderSkipConfiguration',
+      skipConfigurationInputDraft: { type: 'Counter', totalToSkip: totalToSkip },
+    };
   } else if (action === 'setSchedule') {
     const { schedule } = body;
-    ctAction = { action: 'setSchedule', schedule };
+    ctAction = { action: 'setSchedule', recurrencePolicy: schedule };
   } else {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }

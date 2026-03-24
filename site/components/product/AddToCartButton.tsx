@@ -10,7 +10,11 @@ interface AddToCartButtonProps {
   label?: string;
 }
 
-export default function AddToCartButton({ productId, variantId, label = 'Add to Cart' }: AddToCartButtonProps) {
+export default function AddToCartButton({
+  productId,
+  variantId,
+  label = 'Add to Cart',
+}: AddToCartButtonProps) {
   const { addToCartAndShow } = useCart();
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
@@ -35,13 +39,7 @@ export default function AddToCartButton({ productId, variantId, label = 'Add to 
   };
 
   return (
-    <Button
-      variant="primary"
-      size="lg"
-      className="w-full"
-      onClick={handleClick}
-      isLoading={adding}
-    >
+    <Button variant="primary" size="lg" className="w-full" onClick={handleClick} isLoading={adding}>
       {added ? '✓ Added to Cart' : label}
     </Button>
   );
