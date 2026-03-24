@@ -19,6 +19,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const name = getLocalizedString(product.name, locale);
   const slug = product.slug?.['en-US'] || product.slug?.['en-GB'] || product.key || product.id;
+  const sku = product.masterVariant?.sku || product.id;
   const image = product.masterVariant?.images?.[0]?.url;
   const price = product.masterVariant?.price;
   const hasSubscription = product.masterVariant?.recurrencePrices?.some(
@@ -45,7 +46,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link href={localePath(`/products/${slug}`)} className="group block">
+    <Link href={localePath(`/${slug}/p/${sku}`)} className="group block">
       <div className="bg-cream-dark rounded-sm overflow-hidden aspect-square relative mb-3">
         {image ? (
           <Image

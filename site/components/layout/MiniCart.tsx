@@ -147,7 +147,7 @@ export default function MiniCart() {
                     )}
                     <div className="flex-1 min-w-0">
                       <Link
-                        href={localePath(`/products/${item.productSlug?.['en-US'] || item.productKey || item.productId}`)}
+                        href={localePath(`/${item.productSlug?.['en-US'] || item.productKey || item.productId}/p/${item.variant?.sku || item.productId}`)}
                         onClick={() => setShowMiniCart(false)}
                         className="text-sm font-medium text-charcoal hover:text-terra line-clamp-2"
                       >

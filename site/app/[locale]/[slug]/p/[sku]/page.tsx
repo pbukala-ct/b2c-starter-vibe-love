@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getProductBySlug } from '@/lib/ct/search';
+import { getProductBySku } from '@/lib/ct/search';
 import { getCategoryById } from '@/lib/ct/categories';
 import { getRecurrencePolicies } from '@/lib/ct/auth';
 import { formatMoney, getLocalizedString, toUrlLocale } from '@/lib/utils';
@@ -11,37 +11,41 @@ import AddToCartButton from '@/components/product/AddToCartButton';
 import type { Price } from '@/lib/ct/search';
 
 interface PageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; sku: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps) {
-  const { slug } = await params;
+  const { sku } = await params;
   const { currency, locale, country } = await getLocale();
-  const product = await getProductBySlug(slug, locale, currency, country);
+  const product = await getProductBySku(sku, locale, currency, country);
   if (!product) return { title: 'Product Not Found' };
   return { title: getLocalizedString(product.name, locale) };
 }
 
 export default async function ProductPage({ params }: PageProps) {
-  const { slug } = await params;
+  const { sku } = await params;
   const { country, currency, locale } = await getLocale();
   const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
   const [product, policiesResult] = await Promise.all([
-    getProductBySlug(slug, locale, currency, country),
+    getProductBySku(sku, locale, currency, country),
     getRecurrencePolicies(),
   ]);
   if (!product) notFound();
 
+  // Find the variant matching the SKU (CT returns the full product, so locate the right variant)
+  const allVariants = [product.masterVariant, ...(product.variants || [])];
+  const variant = allVariants.find((v) => v?.sku === sku) || product.masterVariant;
+
   const name = getLocalizedString(product.name, locale);
   const description = getLocalizedString(product.description, locale);
-  const images = product.masterVariant?.images || [];
-  const attrs = product.masterVariant?.attributes || [];
+  const images = variant?.images || product.masterVariant?.images || [];
+  const attrs = variant?.attributes || product.masterVariant?.attributes || [];
   const getAttr = (n: string) => attrs.find((a: { name: string }) => a.name === n)?.value;
 
-  const regularPrice = product.masterVariant?.prices?.find(
+  const regularPrice = variant?.prices?.find(
     (p: Price) => !p.recurrencePolicy && p.value.currencyCode === currency
-  ) || product.masterVariant?.price;
-  const recurringPrices = product.masterVariant?.prices?.filter((p: Price) => !!p.recurrencePolicy) || [];
+  ) || variant?.price;
+  const recurringPrices = variant?.prices?.filter((p: Price) => !!p.recurrencePolicy) || [];
   const recurrencePolicies = policiesResult.results || [];
 
   const specText = (() => { const v = getAttr('productspec') || getAttr('product-spec'); return v ? getLocalizedString(v as Record<string,string>, locale) : ''; })();
@@ -103,13 +107,13 @@ export default async function ProductPage({ params }: PageProps) {
             isSubscriptionEligible && recurringPrices.length > 0 && recurrencePolicies.length > 0 ? (
               <SubscribeAndSave
                 productId={product.id}
-                variantId={product.masterVariant.id}
+                variantId={variant?.id || product.masterVariant.id}
                 regularPrice={regularPrice}
                 recurringPrices={recurringPrices}
                 recurrencePolicies={recurrencePolicies}
               />
             ) : (
-              <AddToCartButton productId={product.id} variantId={product.masterVariant.id} />
+              <AddToCartButton productId={product.id} variantId={variant?.id || product.masterVariant.id} />
             )
           )}
 

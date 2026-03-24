@@ -15,7 +15,7 @@ interface CartItemProps {
 }
 
 export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
-  const { locale } = useLocale();
+  const { locale, localePath } = useLocale();
   const policyMap = useRecurrencePolicies();
   const [qty, setQty] = useState(item.quantity);
   const [updating, setUpdating] = useState(false);
@@ -28,6 +28,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
   const policyId = item.recurrenceInfo?.recurrencePolicy?.id;
   const intervalLabel = policyId ? (policyMap.get(policyId) || 'Subscribe & Save') : 'Subscribe & Save';
   const slug = item.productSlug?.['en-US'] || item.productKey || item.productId;
+  const sku = item.variant?.sku || item.productId;
 
   const handleQtyChange = async (newQty: number) => {
     if (newQty < 1) return;
@@ -51,7 +52,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
       {/* Details */}
       <div className="flex-1 min-w-0">
         <Link
-          href={`/products/${slug}`}
+          href={localePath(`/${slug}/p/${sku}`)}
           className="text-sm font-medium text-charcoal hover:text-terra line-clamp-2"
         >
           {name}

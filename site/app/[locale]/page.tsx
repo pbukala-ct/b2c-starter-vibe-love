@@ -120,7 +120,7 @@ export default async function HomePage() {
             Set up recurring deliveries on select products and save up to 20%. Pause or cancel anytime.
           </p>
           <Link
-            href={lp('/products/ben-pillow-cover')}
+            href={lp('/search?subscriptionEligible=true')}
             className="bg-sage text-white px-6 py-3 text-sm font-medium hover:bg-sage/90 transition-colors rounded-sm inline-block"
           >
             Shop Subscribe & Save

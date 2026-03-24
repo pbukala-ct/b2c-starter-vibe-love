@@ -120,7 +120,7 @@ export default function SubscriptionsPage() {
           <p className="text-sm text-charcoal-light mb-6">
             Subscribe to eligible products and save up to 20% on every order.
           </p>
-          <Link href={localePath('/products/ben-pillow-cover')} className="bg-sage text-white px-6 py-2.5 text-sm font-medium hover:bg-sage/90 transition-colors rounded-sm inline-block">
+          <Link href={localePath('/search?subscriptionEligible=true')} className="bg-sage text-white px-6 py-2.5 text-sm font-medium hover:bg-sage/90 transition-colors rounded-sm inline-block">
             Shop Subscribe &amp; Save
           </Link>
         </div>

@@ -177,7 +177,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
   return resp.json();
 }
 
-export async function getProductBySlug(slug: string, locale: string, currency: string, country: string): Promise<ProductProjection | null> {
+export async function getProductBySku(sku: string, locale: string, currency: string, country: string): Promise<ProductProjection | null> {
   const token = await getAdminToken();
 
   const resp = await fetch(`${apiUrl}/${projectKey}/products/search`, {
@@ -185,8 +185,8 @@ export async function getProductBySlug(slug: string, locale: string, currency: s
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       limit: 1,
-      query: { exact: { field: 'slug', value: slug, language: locale } },
-      productProjectionParameters: { priceCurrency: currency, priceCountry: country },
+      query: { exact: { field: 'variants.sku', value: sku } },
+      productProjectionParameters: { priceCurrency: currency, priceCountry: country, localeProjection: [locale] },
     }),
     next: { revalidate: 60 },
   });
