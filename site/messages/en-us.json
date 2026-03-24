@@ -24,6 +24,7 @@
     "logout": "Sign Out",
     "cart": "Cart",
     "search": "Search",
+    "selectCountry": "Select country",
     "profile": "Profile",
     "orders": "Orders",
     "subscriptions": "Subscriptions",
@@ -103,6 +104,8 @@
     "shippingCalculated": "Shipping calculated at checkout",
     "remove": "Remove",
     "removeItem": "Remove item",
+    "decreaseQuantity": "Decrease quantity",
+    "increaseQuantity": "Increase quantity",
     "closeCart": "Close cart"
   },
   "checkout": {
@@ -328,6 +331,7 @@
   },
   "search": {
     "placeholder": "Search products...",
+    "submit": "Submit search",
     "sortBy": "Sort By",
     "sortNewest": "Newest",
     "sortPriceLow": "Price: Low to High",

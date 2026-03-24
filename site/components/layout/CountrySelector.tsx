@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { useLocale } from '@/context/LocaleContext';
 import { COUNTRY_CONFIG } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 export default function CountrySelector() {
   const { country, setCountry } = useLocale();
   const [open, setOpen] = useState(false);
+  const t = useTranslations('nav');
 
   const countries = Object.entries(COUNTRY_CONFIG);
   const current = COUNTRY_CONFIG[country];
@@ -16,7 +18,7 @@ export default function CountrySelector() {
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center gap-1.5 text-sm text-charcoal-light hover:text-charcoal transition-colors"
-        aria-label="Select country"
+        aria-label={t('selectCountry')}
       >
         <span className="text-base">{current?.flag}</span>
         <span className="hidden sm:block text-xs">{current?.name || country}</span>

@@ -24,6 +24,7 @@
     "logout": "Abmelden",
     "cart": "Warenkorb",
     "search": "Suchen",
+    "selectCountry": "Land auswählen",
     "profile": "Profil",
     "orders": "Bestellungen",
     "subscriptions": "Abonnements",
@@ -103,6 +104,8 @@
     "shippingCalculated": "Versandkosten werden an der Kasse berechnet",
     "remove": "Entfernen",
     "removeItem": "Artikel entfernen",
+    "decreaseQuantity": "Menge verringern",
+    "increaseQuantity": "Menge erhöhen",
     "closeCart": "Warenkorb schließen"
   },
   "checkout": {
@@ -328,6 +331,7 @@
   },
   "search": {
     "placeholder": "Produkte suchen...",
+    "submit": "Suche absenden",
     "sortBy": "Sortieren nach",
     "sortNewest": "Neueste",
     "sortPriceLow": "Preis: Aufsteigend",
