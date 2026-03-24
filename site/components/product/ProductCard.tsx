@@ -13,7 +13,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { locale, currency } = useLocale();
+  const { locale, currency, localePath } = useLocale();
   const { addToCartAndShow } = useCart();
   const [adding, setAdding] = useState(false);
 
@@ -45,7 +45,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link href={`/products/${slug}`} className="group block">
+    <Link href={localePath(`/products/${slug}`)} className="group block">
       <div className="bg-cream-dark rounded-sm overflow-hidden aspect-square relative mb-3">
         {image ? (
           <Image

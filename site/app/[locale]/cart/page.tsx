@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 
 export default function CartPage() {
   const { cart, setCart, isLoading, refreshCart } = useCart();
-  const { locale, currency, country } = useLocale();
+  const { locale, currency, country, localePath } = useLocale();
 
   useEffect(() => {
     refreshCart();
@@ -51,7 +51,7 @@ export default function CartPage() {
         </svg>
         <h1 className="text-2xl font-semibold text-charcoal mb-3">Your cart is empty</h1>
         <p className="text-charcoal-light mb-6">Discover our collection of premium home goods</p>
-        <Link href="/" className="bg-charcoal text-white px-6 py-3 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm inline-block">
+        <Link href={localePath('/')} className="bg-charcoal text-white px-6 py-3 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm inline-block">
           Continue Shopping
         </Link>
       </div>
@@ -118,13 +118,13 @@ export default function CartPage() {
             )}
 
             <Link
-              href="/checkout"
+              href={localePath('/checkout')}
               className="block w-full bg-charcoal text-white text-sm font-medium py-3.5 text-center hover:bg-charcoal/80 transition-colors rounded-sm"
             >
               Proceed to Checkout
             </Link>
             <Link
-              href="/"
+              href={localePath('/')}
               className="block w-full text-center text-sm text-charcoal-light hover:text-terra mt-3 transition-colors"
             >
               Continue Shopping

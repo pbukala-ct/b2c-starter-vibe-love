@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getOrderById } from '@/lib/ct/auth';
-import { getSession } from '@/lib/session';
-import { formatMoney, getLocalizedString } from '@/lib/utils';
+import { getSession, getLocale } from '@/lib/session';
+import { formatMoney, getLocalizedString, toUrlLocale } from '@/lib/utils';
 
 interface PageProps {
   params: Promise<{ orderId: string }>;
@@ -11,7 +11,8 @@ export const metadata = { title: 'Order Confirmed' };
 
 export default async function ConfirmationPage({ params }: PageProps) {
   const { orderId } = await params;
-  const session = await getSession();
+  const [session, localeData] = await Promise.all([getSession(), getLocale()]);
+  const lp = (p: string) => `/${toUrlLocale(localeData.country)}${p}`;
 
   let order = null;
   try {
@@ -91,11 +92,11 @@ export default async function ConfirmationPage({ params }: PageProps) {
           <p className="text-sm text-charcoal">
             ♻ Your subscription has been set up! You can manage it from{' '}
             {session.customerId ? (
-              <Link href="/account/subscriptions" className="text-terra hover:underline">
+              <Link href={lp('/account/subscriptions')} className="text-terra hover:underline">
                 My Subscriptions
               </Link>
             ) : (
-              <Link href="/login" className="text-terra hover:underline">your account</Link>
+              <Link href={lp('/login')} className="text-terra hover:underline">your account</Link>
             )}.
           </p>
         </div>
@@ -104,14 +105,14 @@ export default async function ConfirmationPage({ params }: PageProps) {
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         {session.customerId && (
           <Link
-            href="/account/orders"
+            href={lp('/account/orders')}
             className="bg-charcoal text-white px-6 py-3 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm"
           >
             View My Orders
           </Link>
         )}
         <Link
-          href="/"
+          href={lp('/')}
           className="border border-border text-charcoal px-6 py-3 text-sm font-medium hover:bg-cream transition-colors rounded-sm"
         >
           Continue Shopping

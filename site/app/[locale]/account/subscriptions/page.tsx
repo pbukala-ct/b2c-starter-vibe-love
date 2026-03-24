@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatMoney } from '@/lib/utils';
+import { useLocale } from '@/context/LocaleContext';
 
 interface RecurringOrder {
   id: string;
@@ -50,6 +51,7 @@ function isCurrentSchedule(sub: RecurringOrder, s: typeof SCHEDULES[0]) {
 }
 
 export default function SubscriptionsPage() {
+  const { localePath } = useLocale();
   const [subscriptions, setSubscriptions] = useState<RecurringOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -118,7 +120,7 @@ export default function SubscriptionsPage() {
           <p className="text-sm text-charcoal-light mb-6">
             Subscribe to eligible products and save up to 20% on every order.
           </p>
-          <Link href="/products/ben-pillow-cover" className="bg-sage text-white px-6 py-2.5 text-sm font-medium hover:bg-sage/90 transition-colors rounded-sm inline-block">
+          <Link href={localePath('/products/ben-pillow-cover')} className="bg-sage text-white px-6 py-2.5 text-sm font-medium hover:bg-sage/90 transition-colors rounded-sm inline-block">
             Shop Subscribe &amp; Save
           </Link>
         </div>

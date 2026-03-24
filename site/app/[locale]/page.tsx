@@ -3,12 +3,15 @@ import Image from 'next/image';
 import { searchProducts } from '@/lib/ct/search';
 import { getCategoryTree } from '@/lib/ct/categories';
 import ProductCard from '@/components/product/ProductCard';
-import { getLocalizedString } from '@/lib/utils';
+import { getLocalizedString, toUrlLocale } from '@/lib/utils';
+import { getLocale } from '@/lib/session';
 
 export default async function HomePage() {
+  const { country, currency, locale } = await getLocale();
+  const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
   const [newArrivals, featuredResult, categories] = await Promise.all([
-    searchProducts({ limit: 4, sort: 'createdAt', currency: 'USD', country: 'US', locale: 'en-US' }),
-    searchProducts({ limit: 8, currency: 'USD', country: 'US', locale: 'en-US' }),
+    searchProducts({ limit: 4, sort: 'createdAt', currency, country, locale }),
+    searchProducts({ limit: 8, currency, country, locale }),
     getCategoryTree(),
   ]);
 
@@ -39,13 +42,13 @@ export default async function HomePage() {
             </p>
             <div className="flex gap-4">
               <Link
-                href="/category/furniture"
+                href={lp('/category/furniture')}
                 className="bg-white text-charcoal px-6 py-3 text-sm font-medium hover:bg-cream transition-colors rounded-sm"
               >
                 Shop Furniture
               </Link>
               <Link
-                href="/category/home-decor"
+                href={lp('/category/home-decor')}
                 className="border border-white/40 text-white px-6 py-3 text-sm font-medium hover:bg-white/10 transition-colors rounded-sm"
               >
                 Home Decor
@@ -71,7 +74,7 @@ export default async function HomePage() {
             const img = catImages[slug] || '';
 
             return (
-              <Link key={cat.id} href={`/category/${slug}`} className="group relative rounded-sm overflow-hidden aspect-square bg-cream-dark">
+              <Link key={cat.id} href={lp(`/category/${slug}`)} className="group relative rounded-sm overflow-hidden aspect-square bg-cream-dark">
                 {img && (
                   <Image
                     src={img}
@@ -98,7 +101,7 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto px-4 lg:px-8 pb-16">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-semibold text-charcoal">New Arrivals</h2>
-          <Link href="/search?sort=createdAt" className="text-sm text-terra hover:underline">
+          <Link href={lp('/search?sort=createdAt')} className="text-sm text-terra hover:underline">
             View all →
           </Link>
         </div>
@@ -117,7 +120,7 @@ export default async function HomePage() {
             Set up recurring deliveries on select products and save up to 20%. Pause or cancel anytime.
           </p>
           <Link
-            href="/products/ben-pillow-cover"
+            href={lp('/products/ben-pillow-cover')}
             className="bg-sage text-white px-6 py-3 text-sm font-medium hover:bg-sage/90 transition-colors rounded-sm inline-block"
           >
             Shop Subscribe & Save
@@ -129,7 +132,7 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto px-4 lg:px-8 py-16">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-semibold text-charcoal">Featured Products</h2>
-          <Link href="/search" className="text-sm text-terra hover:underline">
+          <Link href={lp('/search')} className="text-sm text-terra hover:underline">
             View all →
           </Link>
         </div>

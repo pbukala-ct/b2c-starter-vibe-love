@@ -84,6 +84,9 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 
 ## Internationalization
 
+- Locale-prefixed URLs: `/en-us/...`, `/en-gb/...`, `/de-de/...`
+- Middleware auto-redirects non-locale paths based on `vibe-country` cookie (falls back to `en-us`)
+- Country selector navigates to locale-correct URL on switch
 - Country selector in header with flag emoji (US, GB, DE)
 - Currency switching (USD, GBP, EUR)
 - Locale-aware product and category names

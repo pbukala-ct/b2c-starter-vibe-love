@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession, createSessionToken, setSessionCookie } from '@/lib/session';
+import { getSession, getLocale, createSessionToken, setSessionCookie } from '@/lib/session';
 import { getCart, createCart } from '@/lib/ct/cart';
-import { COUNTRY_CONFIG } from '@/lib/utils';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const session = await getSession();
-  const country = req.cookies.get('vibe-country')?.value || 'US';
-  const config = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
 
   if (!session.cartId) {
     return NextResponse.json({ cart: null });
@@ -34,13 +31,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const session = await getSession();
-  const body = await req.json();
-  const country = req.cookies.get('vibe-country')?.value || body.country || 'US';
-  const config = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
+export async function POST(_req: NextRequest) {
+  const [session, { country, currency }] = await Promise.all([getSession(), getLocale()]);
 
-  const cart = await createCart(config.currency, country, session.customerId);
+  const cart = await createCart(currency, country, session.customerId);
 
   const newSession = { ...session, cartId: cart.id };
   const token = await createSessionToken(newSession);

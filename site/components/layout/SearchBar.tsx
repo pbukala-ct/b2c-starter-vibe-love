@@ -2,17 +2,19 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from '@/context/LocaleContext';
 
 export default function SearchBar() {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const router = useRouter();
+  const { localePath } = useLocale();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+      router.push(localePath(`/search?q=${encodeURIComponent(query.trim())}`));
       setQuery('');
       inputRef.current?.blur();
     }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatMoney } from '@/lib/utils';
+import { useLocale } from '@/context/LocaleContext';
 
 interface Order {
   id: string;
@@ -28,6 +29,7 @@ const STATE_COLORS: Record<string, string> = {
 };
 
 export default function OrdersPage() {
+  const { localePath } = useLocale();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -61,7 +63,7 @@ export default function OrdersPage() {
       {orders.length === 0 ? (
         <div className="bg-white border border-border rounded-sm p-12 text-center">
           <p className="text-charcoal-light mb-4">You haven&apos;t placed any orders yet.</p>
-          <Link href="/" className="bg-charcoal text-white px-6 py-2.5 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm inline-block">
+          <Link href={localePath('/')} className="bg-charcoal text-white px-6 py-2.5 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm inline-block">
             Start Shopping
           </Link>
         </div>
@@ -85,7 +87,7 @@ export default function OrdersPage() {
                   <p className="font-semibold text-charcoal text-sm">
                     {formatMoney(order.totalPrice.centAmount, order.totalPrice.currencyCode)}
                   </p>
-                  <Link href={`/account/orders/${order.id}`} className="text-xs text-terra hover:underline">
+                  <Link href={localePath(`/account/orders/${order.id}`)} className="text-xs text-terra hover:underline">
                     View details →
                   </Link>
                 </div>

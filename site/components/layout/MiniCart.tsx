@@ -8,7 +8,7 @@ import { formatMoney, getLocalizedString } from '@/lib/utils';
 import { useState } from 'react';
 import { useRecurrencePolicies } from '@/hooks/useRecurrencePolicies';
 
-function MiniCartFooter({ cart, country, onClose }: { cart: Cart; country: string; onClose: () => void }) {
+function MiniCartFooter({ cart, country, localePath, onClose }: { cart: Cart; country: string; localePath: (path: string) => string; onClose: () => void }) {
   const taxAmount = cart.taxedPrice
     ? cart.taxedPrice.totalGross.centAmount - cart.taxedPrice.totalNet.centAmount
     : country === 'US' ? Math.round(cart.totalPrice.centAmount * 0.1) : 0;
@@ -29,14 +29,14 @@ function MiniCartFooter({ cart, country, onClose }: { cart: Cart; country: strin
       </div>
       <p className="text-xs text-charcoal-light">Shipping calculated at checkout</p>
       <Link
-        href="/checkout"
+        href={localePath('/checkout')}
         onClick={onClose}
         className="block w-full bg-charcoal text-white text-sm font-medium py-3 text-center hover:bg-charcoal/80 transition-colors rounded-sm"
       >
         Checkout
       </Link>
       <Link
-        href="/cart"
+        href={localePath('/cart')}
         onClick={onClose}
         className="block w-full border border-border text-charcoal text-sm font-medium py-2.5 text-center hover:bg-cream transition-colors rounded-sm"
       >
@@ -48,7 +48,7 @@ function MiniCartFooter({ cart, country, onClose }: { cart: Cart; country: strin
 
 export default function MiniCart() {
   const { cart, showMiniCart, setShowMiniCart, itemCount, setCart } = useCart();
-  const { locale, currency, country } = useLocale();
+  const { locale, currency, country, localePath } = useLocale();
   const policyMap = useRecurrencePolicies();
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
@@ -121,7 +121,7 @@ export default function MiniCart() {
               </svg>
               <p className="text-charcoal-light">Your cart is empty</p>
               <Link
-                href="/"
+                href={localePath('/')}
                 onClick={() => setShowMiniCart(false)}
                 className="text-terra text-sm hover:underline"
               >
@@ -147,7 +147,7 @@ export default function MiniCart() {
                     )}
                     <div className="flex-1 min-w-0">
                       <Link
-                        href={`/products/${item.productSlug?.['en-US'] || item.productKey || item.productId}`}
+                        href={localePath(`/products/${item.productSlug?.['en-US'] || item.productKey || item.productId}`)}
                         onClick={() => setShowMiniCart(false)}
                         className="text-sm font-medium text-charcoal hover:text-terra line-clamp-2"
                       >
@@ -185,6 +185,7 @@ export default function MiniCart() {
           <MiniCartFooter
             cart={cart}
             country={country}
+            localePath={localePath}
             onClose={() => setShowMiniCart(false)}
           />
         )}

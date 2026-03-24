@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatMoney, getLocalizedString, formatStreetAddress } from '@/lib/utils';
+import { useLocale } from '@/context/LocaleContext';
 
 interface LineItem {
   id: string;
@@ -71,6 +72,7 @@ interface Order {
 
 export default function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
+  const { localePath } = useLocale();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -99,7 +101,7 @@ export default function OrderDetailPage() {
     return (
       <div>
         <h1 className="text-2xl font-semibold text-charcoal mb-6">Order Not Found</h1>
-        <Link href="/account/orders" className="text-terra hover:underline text-sm">← Back to orders</Link>
+        <Link href={localePath('/account/orders')} className="text-terra hover:underline text-sm">← Back to orders</Link>
       </div>
     );
   }
@@ -137,7 +139,7 @@ export default function OrderDetailPage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/account/orders" className="text-charcoal-light hover:text-charcoal text-sm">← Orders</Link>
+        <Link href={localePath('/account/orders')} className="text-charcoal-light hover:text-charcoal text-sm">← Orders</Link>
         <span className="text-border">/</span>
         <h1 className="text-2xl font-semibold text-charcoal">Order #{order.orderNumber}</h1>
       </div>

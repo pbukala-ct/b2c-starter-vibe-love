@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
 import { getCategoryBySlug, getCategoryTree } from '@/lib/ct/categories';
 import { searchProducts } from '@/lib/ct/search';
 import ProductGrid from '@/components/product/ProductGrid';
 import ProductFilters from '@/components/product/ProductFilters';
-import { getLocalizedString, COUNTRY_CONFIG } from '@/lib/utils';
+import { getLocalizedString, toUrlLocale } from '@/lib/utils';
+import { getLocale } from '@/lib/session';
 import { Suspense } from 'react';
 import Link from 'next/link';
 
@@ -30,9 +30,8 @@ export async function generateMetadata({ params }: PageProps) {
 export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const sp = await searchParams;
-  const cookieStore = await cookies();
-  const country = cookieStore.get('vibe-country')?.value || 'US';
-  const { currency, locale } = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
+  const { country, currency, locale } = await getLocale();
+  const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
 
   const [category, categoryTree] = await Promise.all([
     getCategoryBySlug(slug),
@@ -98,14 +97,14 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs text-charcoal-light mb-6">
-        <Link href="/" className="hover:text-terra">Home</Link>
+        <Link href={lp('/')} className="hover:text-terra">Home</Link>
         {breadcrumb.map((crumb, i) => (
           <span key={crumb.slug} className="flex items-center gap-2">
             <span>/</span>
             {i === breadcrumb.length - 1 ? (
               <span className="text-charcoal">{crumb.name}</span>
             ) : (
-              <Link href={`/category/${crumb.slug}`} className="hover:text-terra">{crumb.name}</Link>
+              <Link href={lp(`/category/${crumb.slug}`)} className="hover:text-terra">{crumb.name}</Link>
             )}
           </span>
         ))}
@@ -133,7 +132,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={`/category/${slug}`}
+                    href={lp(`/category/${slug}`)}
                     className="block text-sm text-charcoal hover:text-terra py-1 font-medium"
                   >
                     All {name}
@@ -145,7 +144,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                   return (
                     <li key={child.id}>
                       <Link
-                        href={`/category/${childSlug}`}
+                        href={lp(`/category/${childSlug}`)}
                         className="block text-sm text-charcoal-light hover:text-terra py-1"
                       >
                         {childName}

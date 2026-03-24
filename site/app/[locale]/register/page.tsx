@@ -4,15 +4,20 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useLocale } from '@/context/LocaleContext';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/account';
   const { user, setUser } = useAuth();
+  const { localePath } = useLocale();
+  const redirect = searchParams.get('redirect') || localePath('/account');
 
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -23,16 +28,24 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    if (password !== confirm) {
+      setError('Passwords do not match');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
     setIsLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ firstName, lastName, email, password }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Invalid email or password');
+        setError(data.error || 'Registration failed');
       } else {
         const c = data.customer || data;
         setUser({ id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName });
@@ -49,12 +62,45 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-charcoal">Welcome Back</h1>
-          <p className="text-charcoal-light mt-2">Sign in to your Vibe Home account</p>
+          <h1 className="text-3xl font-semibold text-charcoal">Create Account</h1>
+          <p className="text-charcoal-light mt-2">Join Vibe Home for a better shopping experience</p>
         </div>
 
         <div className="bg-white border border-border rounded-sm p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-charcoal mb-1.5">
+                  First name
+                </label>
+                <input
+                  id="firstName"
+                  type="text"
+                  value={firstName}
+                  onChange={e => setFirstName(e.target.value)}
+                  required
+                  autoComplete="given-name"
+                  className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                  placeholder="Jane"
+                />
+              </div>
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-charcoal mb-1.5">
+                  Last name
+                </label>
+                <input
+                  id="lastName"
+                  type="text"
+                  value={lastName}
+                  onChange={e => setLastName(e.target.value)}
+                  required
+                  autoComplete="family-name"
+                  className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                  placeholder="Smith"
+                />
+              </div>
+            </div>
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-charcoal mb-1.5">
                 Email address
@@ -81,7 +127,23 @@ export default function LoginPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
-                autoComplete="current-password"
+                autoComplete="new-password"
+                className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                placeholder="Min. 6 characters"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirm" className="block text-sm font-medium text-charcoal mb-1.5">
+                Confirm password
+              </label>
+              <input
+                id="confirm"
+                type="password"
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                required
+                autoComplete="new-password"
                 className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
                 placeholder="••••••••"
               />
@@ -98,27 +160,17 @@ export default function LoginPage() {
               disabled={isLoading}
               className="w-full bg-charcoal text-white py-3 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Signing in…' : 'Sign In'}
+              {isLoading ? 'Creating account…' : 'Create Account'}
             </button>
           </form>
 
           <div className="mt-6 pt-6 border-t border-border text-center">
             <p className="text-sm text-charcoal-light">
-              Don&apos;t have an account?{' '}
-              <Link href={`/register${redirect !== '/account' ? `?redirect=${redirect}` : ''}`} className="text-terra hover:underline font-medium">
-                Create one
+              Already have an account?{' '}
+              <Link href={`${localePath('/login')}${redirect !== localePath('/account') ? `?redirect=${redirect}` : ''}`} className="text-terra hover:underline font-medium">
+                Sign in
               </Link>
             </p>
-          </div>
-
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => { setEmail('jen@example.com'); setPassword('123'); }}
-              className="text-xs text-terra hover:underline font-medium"
-            >
-              Use test credentials
-            </button>
           </div>
         </div>
       </div>

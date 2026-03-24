@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getProductBySlug } from '@/lib/ct/search';
 import { getCategoryById } from '@/lib/ct/categories';
 import { getRecurrencePolicies } from '@/lib/ct/auth';
-import { formatMoney, getLocalizedString, COUNTRY_CONFIG } from '@/lib/utils';
+import { formatMoney, getLocalizedString, toUrlLocale } from '@/lib/utils';
+import { getLocale } from '@/lib/session';
 import SubscribeAndSave from '@/components/product/SubscribeAndSave';
 import AddToCartButton from '@/components/product/AddToCartButton';
 import type { Price } from '@/lib/ct/search';
@@ -16,16 +16,16 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug, 'en-US', 'USD', 'US');
+  const { currency, locale, country } = await getLocale();
+  const product = await getProductBySlug(slug, locale, currency, country);
   if (!product) return { title: 'Product Not Found' };
-  return { title: getLocalizedString(product.name, 'en-US') };
+  return { title: getLocalizedString(product.name, locale) };
 }
 
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
-  const cookieStore = await cookies();
-  const country = cookieStore.get('vibe-country')?.value || 'US';
-  const { currency, locale } = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
+  const { country, currency, locale } = await getLocale();
+  const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
   const [product, policiesResult] = await Promise.all([
     getProductBySlug(slug, locale, currency, country),
     getRecurrencePolicies(),
@@ -58,8 +58,8 @@ export default async function ProductPage({ params }: PageProps) {
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
       <nav className="flex items-center gap-2 text-xs text-charcoal-light mb-6">
-        <Link href="/" className="hover:text-terra">Home</Link>
-        {categorySlug && (<><span>/</span><Link href={`/category/${categorySlug}`} className="hover:text-terra">{categoryName}</Link></>)}
+        <Link href={lp('/')} className="hover:text-terra">Home</Link>
+        {categorySlug && (<><span>/</span><Link href={lp(`/category/${categorySlug}`)} className="hover:text-terra">{categoryName}</Link></>)}
         <span>/</span>
         <span className="text-charcoal line-clamp-1">{name}</span>
       </nav>

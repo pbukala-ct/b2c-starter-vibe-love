@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getShippingMethods } from '@/lib/ct/cart';
+import { getLocale } from '@/lib/session';
 
-export async function GET(req: NextRequest) {
-  const country = req.nextUrl.searchParams.get('country') || 'US';
-  const currency = req.nextUrl.searchParams.get('currency') || 'USD';
+export async function GET(_req: NextRequest) {
+  const { country, currency } = await getLocale();
 
   try {
     const result = await getShippingMethods();

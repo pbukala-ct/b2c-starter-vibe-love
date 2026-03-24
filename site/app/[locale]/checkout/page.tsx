@@ -51,7 +51,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { cart, setCart, refreshCart } = useCart();
   const { user, isLoggedIn } = useAuth();
-  const { currency, country, locale } = useLocale();
+  const { currency, country, locale, localePath } = useLocale();
   const [step, setStep] = useState<Step>('shipping');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -114,7 +114,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     refreshCart();
-    fetch(`/api/shipping-methods?country=${country}&currency=${currency}`)
+    fetch('/api/shipping-methods')
       .then(r => r.json())
       .then(data => {
         if (data.shippingMethods?.length) {
@@ -288,7 +288,7 @@ export default function CheckoutPage() {
 
       const data = await resp.json();
       setCart(null);
-      router.push(`/checkout/confirmation/${data.orderId}`);
+      router.push(localePath(`/checkout/confirmation/${data.orderId}`));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Checkout failed');
     } finally {
@@ -299,7 +299,7 @@ export default function CheckoutPage() {
   if (!cart || cart.lineItems.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <p className="text-charcoal-light">Your cart is empty. <a href="/" className="text-terra hover:underline">Continue shopping</a></p>
+        <p className="text-charcoal-light">Your cart is empty. <a href={localePath('/')} className="text-terra hover:underline">Continue shopping</a></p>
       </div>
     );
   }
@@ -318,7 +318,7 @@ export default function CheckoutPage() {
           {!isLoggedIn && (
             <div className="bg-cream border border-border rounded-sm p-4 text-sm">
               <span className="text-charcoal-light">Have an account? </span>
-              <a href="/login?redirect=/checkout" className="text-terra hover:underline">Sign in</a>
+              <a href={localePath('/login') + '?redirect=' + localePath('/checkout')} className="text-terra hover:underline">Sign in</a>
               <span className="text-charcoal-light"> for faster checkout</span>
             </div>
           )}

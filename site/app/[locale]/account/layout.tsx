@@ -4,30 +4,32 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-
-const navItems = [
-  { href: '/account', label: 'Profile', exact: true },
-  { href: '/account/orders', label: 'Orders' },
-  { href: '/account/subscriptions', label: 'Subscriptions' },
-  { href: '/account/addresses', label: 'Addresses' },
-  { href: '/account/payments', label: 'Payment Methods' },
-];
+import { useLocale } from '@/context/LocaleContext';
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, setUser } = useAuth();
+  const { localePath } = useLocale();
+
+  const navItems = [
+    { path: '/account', label: 'Profile', exact: true },
+    { path: '/account/orders', label: 'Orders' },
+    { path: '/account/subscriptions', label: 'Subscriptions' },
+    { path: '/account/addresses', label: 'Addresses' },
+    { path: '/account/payments', label: 'Payment Methods' },
+  ];
 
   useEffect(() => {
     if (user === null) {
-      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+      router.replace(localePath('/login') + '?redirect=' + encodeURIComponent(pathname));
     }
   }, [user, router, pathname]);
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
-    router.push('/');
+    router.push(localePath('/'));
   }
 
   if (!user) return null;
@@ -44,11 +46,12 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
             </div>
             <nav className="py-2">
               {navItems.map(item => {
-                const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+                const href = localePath(item.path);
+                const isActive = item.exact ? pathname === href : pathname.startsWith(href);
                 return (
                   <Link
-                    key={item.href}
-                    href={item.href}
+                    key={item.path}
+                    href={href}
                     className={`block px-5 py-2.5 text-sm transition-colors ${
                       isActive
                         ? 'text-terra font-medium bg-terra/5'

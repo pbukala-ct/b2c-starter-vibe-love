@@ -11,7 +11,7 @@ interface MegaMenuProps {
 }
 
 export default function MegaMenu({ categories }: MegaMenuProps) {
-  const { locale } = useLocale();
+  const { locale, localePath } = useLocale();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const topLevel = categories.filter((c) => !c.parent);
@@ -31,7 +31,7 @@ export default function MegaMenu({ categories }: MegaMenuProps) {
             onMouseLeave={() => setActiveCategory(null)}
           >
             <Link
-              href={`/category/${slug}`}
+              href={localePath(`/category/${slug}`)}
               className="flex items-center gap-1 px-4 py-5 text-sm font-medium text-charcoal hover:text-terra transition-colors border-b-2 border-transparent hover:border-terra"
             >
               {name}
@@ -46,7 +46,7 @@ export default function MegaMenu({ categories }: MegaMenuProps) {
               <div className="absolute left-0 top-full bg-white border border-border shadow-xl z-50 mega-menu min-w-64">
                 <div className="p-6 grid grid-cols-1 gap-1">
                   <Link
-                    href={`/category/${slug}`}
+                    href={localePath(`/category/${slug}`)}
                     className="font-semibold text-charcoal text-sm py-1 hover:text-terra transition-colors"
                   >
                     All {name}
@@ -60,7 +60,7 @@ export default function MegaMenu({ categories }: MegaMenuProps) {
                     return (
                       <div key={child.id}>
                         <Link
-                          href={`/category/${childSlug}`}
+                          href={localePath(`/category/${childSlug}`)}
                           className="block py-1.5 text-sm text-charcoal-light hover:text-terra transition-colors font-medium"
                         >
                           {childName}
@@ -73,7 +73,7 @@ export default function MegaMenu({ categories }: MegaMenuProps) {
                               return (
                                 <Link
                                   key={gc.id}
-                                  href={`/category/${gcSlug}`}
+                                  href={localePath(`/category/${gcSlug}`)}
                                   className="block py-1 text-xs text-charcoal-light/80 hover:text-terra transition-colors"
                                 >
                                   {gcName}

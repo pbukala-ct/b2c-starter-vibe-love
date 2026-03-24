@@ -1,8 +1,8 @@
-import { cookies } from 'next/headers';
 import { searchProducts } from '@/lib/ct/search';
 import ProductGrid from '@/components/product/ProductGrid';
 import ProductFilters from '@/components/product/ProductFilters';
-import { COUNTRY_CONFIG } from '@/lib/utils';
+import { getLocale } from '@/lib/session';
+import { toUrlLocale } from '@/lib/utils';
 import { Suspense } from 'react';
 import Link from 'next/link';
 
@@ -21,9 +21,8 @@ export const metadata = { title: 'Search' };
 
 export default async function SearchPage({ searchParams }: PageProps) {
   const sp = await searchParams;
-  const cookieStore = await cookies();
-  const country = cookieStore.get('vibe-country')?.value || 'US';
-  const { currency, locale } = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
+  const { country, currency, locale } = await getLocale();
+  const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
   const offset = parseInt(sp.offset || '0');
   const limit = 24;
 
@@ -70,7 +69,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
       <nav className="flex items-center gap-2 text-xs text-charcoal-light mb-6">
-        <Link href="/" className="hover:text-terra">Home</Link>
+        <Link href={lp('/')} className="hover:text-terra">Home</Link>
         <span>/</span>
         <span className="text-charcoal">{title}</span>
       </nav>

@@ -18,13 +18,13 @@ interface HeaderProps {
 
 export default function Header({ categories }: HeaderProps) {
   const { user, isLoggedIn } = useAuth();
-  const { locale } = useLocale();
+  const { locale, localePath } = useLocale();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/');
+    router.push(localePath('/'));
     router.refresh();
   };
 
@@ -52,7 +52,7 @@ export default function Header({ categories }: HeaderProps) {
           </button>
 
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
+          <Link href={localePath('/')} className="flex-shrink-0">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 bg-charcoal rounded-sm flex items-center justify-center">
                 <span className="text-white text-xs font-bold tracking-wider">V</span>
@@ -79,7 +79,7 @@ export default function Header({ categories }: HeaderProps) {
             {/* Account */}
             <div className="relative group">
               <Link
-                href={isLoggedIn ? '/account' : '/login'}
+                href={isLoggedIn ? localePath('/account') : localePath('/login')}
                 className="flex items-center gap-1 text-charcoal hover:text-terra transition-colors"
                 aria-label={isLoggedIn ? `Account: ${user?.firstName}` : 'Login'}
               >
@@ -93,11 +93,11 @@ export default function Header({ categories }: HeaderProps) {
 
               {isLoggedIn && (
                 <div className="absolute right-0 top-full mt-1 bg-white border border-border shadow-lg rounded-sm w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
-                  <Link href="/account" className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Profile</Link>
-                  <Link href="/account/orders" className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Orders</Link>
-                  <Link href="/account/subscriptions" className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Subscriptions</Link>
-                  <Link href="/account/addresses" className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Addresses</Link>
-                  <Link href="/account/payments" className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Payment Methods</Link>
+                  <Link href={localePath('/account')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Profile</Link>
+                  <Link href={localePath('/account/orders')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Orders</Link>
+                  <Link href={localePath('/account/subscriptions')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Subscriptions</Link>
+                  <Link href={localePath('/account/addresses')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Addresses</Link>
+                  <Link href={localePath('/account/payments')} className="block px-4 py-2.5 text-sm text-charcoal hover:bg-cream">Payment Methods</Link>
                   <div className="border-t border-border" />
                   <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-charcoal-light hover:bg-cream hover:text-charcoal">
                     Sign Out
@@ -127,7 +127,7 @@ export default function Header({ categories }: HeaderProps) {
               return (
                 <div key={cat.id}>
                   <Link
-                    href={`/category/${slug}`}
+                    href={localePath(`/category/${slug}`)}
                     onClick={() => setMobileMenuOpen(false)}
                     className="block py-2.5 text-sm font-medium text-charcoal border-b border-border/50"
                   >
@@ -139,7 +139,7 @@ export default function Header({ categories }: HeaderProps) {
                     return (
                       <Link
                         key={child.id}
-                        href={`/category/${childSlug}`}
+                        href={localePath(`/category/${childSlug}`)}
                         onClick={() => setMobileMenuOpen(false)}
                         className="block py-2 pl-4 text-sm text-charcoal-light hover:text-charcoal border-b border-border/30"
                       >

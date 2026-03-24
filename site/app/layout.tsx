@@ -1,48 +1,12 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { LocaleProvider } from '@/context/LocaleContext';
-import { CartProvider } from '@/context/CartContext';
-import { AuthProvider } from '@/context/AuthContext';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import { getCategoryTree } from '@/lib/ct/categories';
-import { getSession } from '@/lib/session';
-import { getCart } from '@/lib/ct/cart';
 
 export const metadata: Metadata = {
   title: { template: '%s | Vibe Home', default: 'Vibe Home – Curated for Modern Living' },
   description: 'Premium furniture and home goods. Curated for modern living.',
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [categories, session] = await Promise.all([
-    getCategoryTree(),
-    getSession(),
-  ]);
-
-  let initialCart = null;
-  if (session.cartId) {
-    try {
-      const cart = await getCart(session.cartId);
-      // Only expose Active carts to the client. Ordered/Merged carts should
-      // not appear in the UI — GET /api/cart will clear the stale cartId.
-      if (cart.cartState === 'Active') {
-        initialCart = cart;
-      }
-    } catch {
-      // Cart not found — initialCart stays null
-    }
-  }
-
-  const initialUser = session.customerId
-    ? {
-        id: session.customerId,
-        email: session.customerEmail || '',
-        firstName: session.customerFirstName || '',
-        lastName: session.customerLastName || '',
-      }
-    : null;
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -53,17 +17,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           rel="stylesheet"
         />
       </head>
-      <body>
-        <LocaleProvider>
-          <AuthProvider initialUser={initialUser}>
-            <CartProvider initialCart={initialCart}>
-              <Header categories={categories} />
-              <main className="min-h-screen">{children}</main>
-              <Footer />
-            </CartProvider>
-          </AuthProvider>
-        </LocaleProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

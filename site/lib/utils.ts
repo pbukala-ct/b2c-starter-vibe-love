@@ -60,6 +60,11 @@ export function parseStreetAddress(streetAddress: string): { streetNumber: strin
   return { streetNumber: '', streetName: trimmed };
 }
 
+export function toUrlLocale(country: string): string {
+  const map: Record<string, string> = { US: 'en-us', GB: 'en-gb', DE: 'de-de' };
+  return map[country] || 'en-us';
+}
+
 // Country to currency mapping (for all euro zone countries etc.)
 export function getCurrencyForCountry(country: string): string {
   const eurCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'FI', 'IE', 'LU', 'SK', 'SI', 'EE', 'LV', 'LT', 'CY', 'MT'];

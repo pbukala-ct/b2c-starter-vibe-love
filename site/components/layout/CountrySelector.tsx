@@ -32,7 +32,7 @@ export default function CountrySelector() {
             {countries.map(([code, cfg]) => (
               <button
                 key={code}
-                onClick={() => { setCountry(code); setOpen(false); window.location.reload(); }}
+                onClick={async () => { await setCountry(code); setOpen(false); }}
                 className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-cream text-left transition-colors ${code === country ? 'font-medium text-charcoal' : 'text-charcoal-light'}`}
               >
                 <span className="text-base">{cfg.flag}</span>
