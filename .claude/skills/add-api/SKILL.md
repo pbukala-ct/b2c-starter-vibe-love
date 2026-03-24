@@ -7,9 +7,29 @@ description: How to add a new backend API endpoint and wire it to a SWR hook tha
 
 How to add a new backend API endpoint and wire it to a SWR hook that client components can consume.
 
-## Rule
+## Rules
 
 **Never call `fetch('/api/*')` directly inside a client component.** All API calls belong in a hook in `site/hooks/`. Components call the hook.
+
+**Never import from `@/lib/ct/*` in a frontend component or hook.** The data flow is strictly one-way:
+
+```
+Frontend component → hook (site/hooks/) → fetch('/api/…') → API route (site/app/api/) → lib/ct/<namespace>.ts → commercetools
+```
+
+`lib/ct/` is server-only. It must never appear in any `'use client'` file.
+
+If a frontend component needs a **type** that originates in a CT module, import it from `@/lib/types` instead:
+
+```typescript
+// ✅ correct
+import type { Category, ProductProjection, Price } from '@/lib/types';
+
+// ❌ wrong — even for types
+import { Category } from '@/lib/ct/categories';
+```
+
+When adding a new shared type, add it to `site/lib/types.ts` as a re-export.
 
 ---
 
@@ -54,6 +74,38 @@ export async function GET() {
   return NextResponse.json({ widgets });
 }
 ```
+
+---
+
+## Step 2.1 — Add CT helper functions in the right namespace file
+
+All commercetools API calls live in `site/lib/ct/`. Each file owns one domain:
+
+| File | Owns |
+|---|---|
+| `lib/ct/auth.ts` | Customer auth: `signInCustomer`, `signUpCustomer`, `getCustomerById`, `updateCustomer` |
+| `lib/ct/orders.ts` | Orders: `getCustomerOrders`, `getOrderById`, `addOrderReturnInfo` |
+| `lib/ct/subscriptions.ts` | Recurring orders & recurrence policies |
+| `lib/ct/wishlist.ts` | Shopping lists (CT wishlist) |
+| `lib/ct/custom-objects.ts` | CT custom objects |
+| `lib/ct/cart.ts` | Cart operations |
+
+All files import the shared `ct()` helper from `lib/ct/request.ts`:
+
+```typescript
+// lib/ct/widgets.ts
+import { ct } from './request';
+
+export async function getWidgets(customerId: string) {
+  return ct('GET', `/widgets?where=${encodeURIComponent(`customerId = "${customerId}"`)}`);
+}
+
+export async function createWidget(data: Record<string, unknown>) {
+  return ct('POST', '/widgets', data);
+}
+```
+
+**Rule**: never add CT calls directly to an API route. Put them in the matching `lib/ct/<namespace>.ts` file and import from there.
 
 ---
 
@@ -189,6 +241,7 @@ export default function WidgetsPage() {
 | `hooks/useShippingMethods.ts` | `useShippingMethods` | `keyShippingMethods(country, currency)` |
 | `hooks/useAccount.ts` | `useAccount` | `KEY_ACCOUNT` |
 | `hooks/useRecurrencePolicies.ts` | `useRecurrencePolicies`, `useRecurrencePoliciesList` | `KEY_RECURRENCE_POLICIES` |
+| `hooks/useWishlist.ts` | `useWishlist`, `useWishlistMutations` | `KEY_WISHLIST` |
 
 ---
 

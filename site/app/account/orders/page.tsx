@@ -18,6 +18,26 @@ const STATE_COLORS: Record<string, string> = {
   Cancelled: 'bg-red-50 text-red-700 border-red-200',
 };
 
+const SHIPMENT_LABELS: Record<string, string> = {
+  Pending: 'Pending',
+  Ready: 'Ready to Ship',
+  Shipped: 'Shipped',
+  Delivered: 'Delivered',
+  Partial: 'Partially Shipped',
+  Backorder: 'On Backorder',
+  Delayed: 'Delayed',
+};
+
+const SHIPMENT_COLORS: Record<string, string> = {
+  Pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  Ready: 'bg-blue-50 text-blue-700 border-blue-200',
+  Shipped: 'bg-teal-50 text-teal-700 border-teal-200',
+  Delivered: 'bg-green-50 text-green-700 border-green-200',
+  Partial: 'bg-orange-50 text-orange-700 border-orange-200',
+  Backorder: 'bg-red-50 text-red-700 border-red-200',
+  Delayed: 'bg-orange-50 text-orange-700 border-orange-200',
+};
+
 export default function OrdersPage() {
   const { formatMoney, getLocalizedString, formatDate } = useFormatters();
   const { data: orders = [], isLoading } = useOrders();
@@ -52,11 +72,16 @@ export default function OrdersPage() {
             <div key={order.id} className="bg-white border border-border rounded-sm p-5">
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <div className="flex items-center gap-3 mb-1">
+                  <div className="flex items-center gap-3 mb-1 flex-wrap">
                     <p className="font-semibold text-charcoal text-sm">Order #{order.orderNumber}</p>
                     <span className={`text-xs border px-2 py-0.5 rounded-full ${STATE_COLORS[order.orderState] || 'bg-cream text-charcoal-light border-border'}`}>
                       {STATE_LABELS[order.orderState] || order.orderState}
                     </span>
+                    {order.shipmentState && SHIPMENT_LABELS[order.shipmentState] && (
+                      <span className={`text-xs border px-2 py-0.5 rounded-full ${SHIPMENT_COLORS[order.shipmentState]}`}>
+                        {SHIPMENT_LABELS[order.shipmentState]}
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-charcoal-light">
                     {formatDate(order.createdAt)}

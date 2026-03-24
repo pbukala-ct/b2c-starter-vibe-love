@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Category } from '@/lib/ct/categories';
+import type { Category } from '@/lib/types';
 import { useFormatters } from '@/hooks/useFormatters';
 
 interface MegaMenuProps {

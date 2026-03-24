@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
-import { getOrderById, getCustomerById } from '@/lib/ct/auth';
+import { getOrderById } from '@/lib/ct/orders';
 
 export async function GET(
   _req: Request,

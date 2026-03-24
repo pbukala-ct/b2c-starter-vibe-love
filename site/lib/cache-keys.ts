@@ -5,6 +5,7 @@ export const KEY_SUBSCRIPTIONS = 'subscriptions';
 export const KEY_RECURRENCE_POLICIES = 'recurrence-policies';
 export const KEY_ADDRESSES = 'addresses';
 export const KEY_PAYMENTS = 'payments';
+export const KEY_WISHLIST = 'wishlist';
 
 export function keyOrder(orderId: string) {
   return `order-${orderId}`;

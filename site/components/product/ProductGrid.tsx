@@ -1,5 +1,5 @@
 import ProductCard from './ProductCard';
-import { ProductProjection } from '@/lib/ct/search';
+import type { ProductProjection } from '@/lib/types';
 
 interface ProductGridProps {
   products: ProductProjection[];

@@ -11,6 +11,7 @@ const navItems = [
   { href: '/account', label: 'Profile', exact: true },
   { href: '/account/orders', label: 'Orders' },
   { href: '/account/subscriptions', label: 'Subscriptions' },
+  { href: '/account/wishlist', label: 'Wishlist' },
   { href: '/account/addresses', label: 'Addresses' },
   { href: '/account/payments', label: 'Payment Methods' },
   { href: '/account/security', label: 'Security' },

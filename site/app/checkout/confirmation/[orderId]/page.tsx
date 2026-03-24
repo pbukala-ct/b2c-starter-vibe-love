@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getOrderById } from '@/lib/ct/auth';
+import { getOrderById } from '@/lib/ct/orders';
 import { getSession } from '@/lib/session';
 import { formatMoney, getLocalizedString } from '@/lib/utils';
 import { getLocale } from '@/lib/locale';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Price } from '@/lib/ct/search';
+import type { Price } from '@/lib/types';
 import { useCart } from '@/context/CartContext';
 import { useLocale } from '@/context/LocaleContext';
 import Button from '@/components/ui/Button';

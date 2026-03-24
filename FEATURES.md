@@ -54,11 +54,27 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - Edit first name, last name, and email
 - Success/error feedback on save
 
+## My Account — Wishlist
+
+- Wishlist page at `/account/wishlist` showing all saved items in a product grid
+- Add to wishlist via heart icon button on every product detail page (visible when logged in)
+- Filled heart indicates the item is already in the wishlist; clicking again removes it
+- "Add to Cart" button on each wishlist card moves the item to the cart
+- Remove button (×) on each wishlist card deletes the item from the wishlist
+- Item count shown in page heading
+- Empty state with "Start Shopping" link
+- Wishlist is persisted in commercetools Shopping Lists (survives logout/login)
+
 ## My Account — Orders
 
 - Order list with status badges (Processing, Confirmed, Delivered, Cancelled)
+- Shipment state badge on each order card (Pending, Ready to Ship, Shipped, Delivered, Partially Shipped, On Backorder, Delayed)
 - Order detail with line items, shipping/billing addresses, and price breakdowns
 - Subscription and split shipment indicators on order detail
+- Shipment status timeline on order detail: Ordered → Shipped → Delivered with filled/hollow step indicators
+- Backorder/Delayed banner on order detail when applicable
+- Return request form on eligible orders (Complete or Confirmed state) — select items and quantities
+- Existing returns shown with tracking ID, return date, and item list
 
 ## My Account — Subscriptions
 
@@ -117,6 +133,9 @@ All commercetools calls go through server-side Next.js API routes. The browser n
 | `/api/account/profile` | GET, PUT | View/edit profile |
 | `/api/account/orders` | GET | List orders |
 | `/api/account/orders/[orderId]` | GET | Order detail |
+| `/api/account/orders/[orderId]/returns` | POST | Submit return request |
+| `/api/account/wishlist` | GET, POST | Get wishlist / add item |
+| `/api/account/wishlist/items/[itemId]` | PUT, DELETE | Update quantity / remove item |
 | `/api/account/subscriptions` | GET | List subscriptions |
 | `/api/account/subscriptions/[id]` | PUT | Pause/resume/cancel/skip/reschedule |
 | `/api/account/addresses` | GET, POST, PUT, DELETE, PATCH | Address CRUD + set defaults |

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getRecurrencePolicies } from '@/lib/ct/auth';
+import { getRecurrencePolicies } from '@/lib/ct/subscriptions';
 
 export async function GET() {
   try {

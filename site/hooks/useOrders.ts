@@ -5,9 +5,11 @@ import { KEY_ORDERS, keyOrder } from '@/lib/cache-keys';
 
 export interface Order {
   id: string;
+  version: number;
   orderNumber: string;
   createdAt: string;
   orderState: string;
+  shipmentState?: string;
   totalPrice: { centAmount: number; currencyCode: string };
   taxedPrice?: {
     totalNet: { centAmount: number; currencyCode: string };
@@ -62,6 +64,17 @@ export interface Order {
     state?: string;
     postalCode: string;
     country: string;
+  }>;
+  returnInfo?: Array<{
+    items: Array<{
+      id: string;
+      lineItemId: string;
+      quantity: number;
+      shipmentState: string;
+      comment?: string;
+    }>;
+    returnDate?: string;
+    returnTrackingId?: string;
   }>;
 }
 

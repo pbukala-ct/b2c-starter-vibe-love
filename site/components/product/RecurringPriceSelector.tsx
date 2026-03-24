@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useFormatters } from '@/hooks/useFormatters';
-import { Price } from '@/lib/ct/search';
+import type { Price } from '@/lib/types';
 
 interface RecurrencePolicy {
   id: string;

@@ -7,6 +7,7 @@ import { formatMoney, getLocalizedString } from '@/lib/utils';
 import { getLocale } from '@/lib/locale';
 import SubscribeAndSave from '@/components/product/SubscribeAndSave';
 import AddToCartButton from '@/components/product/AddToCartButton';
+import AddToWishlistButton from '@/components/product/AddToWishlistButton';
 import type { Price } from '@/lib/ct/search';
 
 interface PageProps {
@@ -94,16 +95,21 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
 
           {regularPrice && (
-            recurringPrices.length > 0 ? (
-              <SubscribeAndSave
-                productId={product.id}
-                variantId={product.masterVariant.id}
-                regularPrice={regularPrice}
-                recurringPrices={recurringPrices}
-              />
-            ) : (
-              <AddToCartButton productId={product.id} variantId={product.masterVariant.id} />
-            )
+            <div className="flex gap-3 items-start">
+              <div className="flex-1">
+                {recurringPrices.length > 0 ? (
+                  <SubscribeAndSave
+                    productId={product.id}
+                    variantId={product.masterVariant.id}
+                    regularPrice={regularPrice}
+                    recurringPrices={recurringPrices}
+                  />
+                ) : (
+                  <AddToCartButton productId={product.id} variantId={product.masterVariant.id} />
+                )}
+              </div>
+              <AddToWishlistButton productId={product.id} sku={product.masterVariant.sku || ''} />
+            </div>
           )}
 
           {description && (

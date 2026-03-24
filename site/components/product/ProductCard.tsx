@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ProductProjection } from '@/lib/ct/search';
+import type { ProductProjection } from '@/lib/types';
 import { useFormatters } from '@/hooks/useFormatters';
 import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
