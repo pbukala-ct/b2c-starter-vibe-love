@@ -5,19 +5,21 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
+import { useTranslations } from 'next-intl';
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, setUser } = useAuth();
   const { localePath } = useLocale();
+  const t = useTranslations('nav');
 
   const navItems = [
-    { path: '/account', label: 'Profile', exact: true },
-    { path: '/account/orders', label: 'Orders' },
-    { path: '/account/subscriptions', label: 'Subscriptions' },
-    { path: '/account/addresses', label: 'Addresses' },
-    { path: '/account/payments', label: 'Payment Methods' },
+    { path: '/account', label: t('profile'), exact: true },
+    { path: '/account/orders', label: t('orders') },
+    { path: '/account/subscriptions', label: t('subscriptions') },
+    { path: '/account/addresses', label: t('addresses') },
+    { path: '/account/payments', label: t('paymentMethods') },
   ];
 
   useEffect(() => {
@@ -66,7 +68,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                 onClick={handleLogout}
                 className="w-full text-left px-5 py-2.5 text-sm text-charcoal-light hover:text-charcoal hover:bg-cream transition-colors border-t border-border mt-2"
               >
-                Sign Out
+                {t('logout')}
               </button>
             </nav>
           </div>
