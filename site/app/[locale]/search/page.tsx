@@ -1,4 +1,4 @@
-import { searchProducts } from '@/lib/ct/search';
+import { searchProducts, parseSortParam } from '@/lib/ct/search';
 import ProductGrid from '@/components/product/ProductGrid';
 import ProductFilters from '@/components/product/ProductFilters';
 import { getLocale } from '@/lib/session';
@@ -34,7 +34,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
       finish: sp.finish,
       newArrival: sp.newArrival === 'true',
     },
-    sort: sp.sort || 'createdAt',
+    sort: sp.sort ? parseSortParam(sp.sort) : [{ field: 'createdAt', order: 'desc' as const }],
     locale,
     currency,
     country,
@@ -109,7 +109,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
             <ProductFilters
               currentColor={sp.color}
               currentFinish={sp.finish}
-              currentSort={sp.sort}
+              currentSort={sp.sort ? parseSortParam(sp.sort) : undefined}
               availableColors={availableColors}
               availableFinishes={availableFinishes}
             />

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getCategoryBySlug, getCategoryTree } from '@/lib/ct/categories';
-import { searchProducts } from '@/lib/ct/search';
+import { searchProducts, parseSortParam } from '@/lib/ct/search';
 import ProductGrid from '@/components/product/ProductGrid';
 import ProductFilters from '@/components/product/ProductFilters';
 import { getLocalizedString, toUrlLocale } from '@/lib/utils';
@@ -49,7 +49,9 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       color: sp.color,
       finish: sp.finish,
     },
-    sort: sp.sort || 'createdAt',
+    sort: sp.sort
+      ? parseSortParam(sp.sort)
+      : [{ field: `categoryOrderHints.${category.id}`, order: 'asc' as const }],
     locale,
     currency,
     country,
@@ -145,7 +147,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             <ProductFilters
               currentColor={sp.color}
               currentFinish={sp.finish}
-              currentSort={sp.sort}
+              currentSort={sp.sort ? parseSortParam(sp.sort) : undefined}
               availableColors={availableColors}
               availableFinishes={availableFinishes}
             />

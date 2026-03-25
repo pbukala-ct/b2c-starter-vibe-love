@@ -8,6 +8,8 @@ export interface SearchFilters {
   maxPrice?: number;
 }
 
+export type SortValues = Array<{ field: string; order: 'asc' | 'desc'; language?: string }>;
+
 export interface SearchParams {
   query?: string;
   categoryId?: string;
@@ -18,7 +20,7 @@ export interface SearchParams {
   country?: string;
   limit?: number;
   offset?: number;
-  sort?: string;
+  sort?: SortValues;
 }
 
 interface SearchResult {
@@ -83,6 +85,18 @@ async function getAdminToken(): Promise<string> {
   return data.access_token;
 }
 
+
+const SORT_FIELD_MAP: Record<string, string> = {
+  price: 'variants.prices.centAmount',
+};
+
+export function parseSortParam(sort: string): SortValues {
+  return sort.split(',').map((s) => {
+    const [field, order] = s.split(':');
+    return { field: SORT_FIELD_MAP[field] ?? field, order: order as 'asc' | 'desc' };
+  });
+}
+
 export async function searchProducts(params: SearchParams): Promise<SearchResult> {
   const token = await getAdminToken();
   const {
@@ -95,7 +109,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
     country = 'US',
     limit = 24,
     offset = 0,
-    sort = 'createdAt',
+    sort = [{ field: 'createdAt', order: 'desc' as const }],
   } = params;
 
   const queryParts: unknown[] = [];
@@ -150,12 +164,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
         ? queryParts[0]
         : { and: queryParts };
 
-  const sortParam =
-    sort === 'price-asc' || sort === 'price-desc'
-      ? [{ field: 'variants.prices.centAmount', order: sort === 'price-asc' ? 'asc' : 'desc' }]
-      : sort === 'name'
-        ? [{ field: 'name', locale, order: 'asc' }]
-        : [{ field: 'createdAt', order: 'desc' as const }];
+  const sortParam = sort.map((s) => (s.field === 'name' ? { ...s, language: locale } : s));
 
   const body: Record<string, unknown> = {
     limit,
@@ -169,16 +178,29 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
 
   if (searchQuery) body.query = searchQuery;
 
-  const resp = await fetch(`${apiUrl}/${projectKey}/products/search`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    next: { revalidate: 60 },
-  });
+  const doSearch = (b: Record<string, unknown>) =>
+    fetch(`${apiUrl}/${projectKey}/products/search`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(b),
+      next: { revalidate: 60 },
+    });
 
+  let resp = await doSearch(body);
+
+  // If the sort field has no data in the index (e.g. categoryOrderHints not set in Merchant Center),
+  // CT returns a query_shard_exception. Retry without the custom sort so the page still loads.
   if (!resp.ok) {
     const err = await resp.json();
-    throw new Error(`Product search failed: ${err.message}`);
+    if (
+      err.message?.includes('query_shard_exception') ||
+      err.message?.includes('No mapping found')
+    ) {
+      resp = await doSearch({ ...body, sort: [{ field: 'createdAt', order: 'desc' }] });
+    }
+    if (!resp.ok) {
+      throw new Error(`Product search failed: ${err.message}`);
+    }
   }
 
   return resp.json();

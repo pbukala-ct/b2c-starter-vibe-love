@@ -333,6 +333,7 @@
     "placeholder": "Search products...",
     "submit": "Submit search",
     "sortBy": "Sort By",
+    "relevance": "Relevance",
     "sortNewest": "Newest",
     "sortPriceLow": "Price: Low to High",
     "sortPriceHigh": "Price: High to Low",
@@ -340,7 +341,17 @@
     "color": "Color",
     "finish": "Finish",
     "clear": "Clear",
-    "clearAllFilters": "Clear all filters"
+    "clearAllFilters": "Clear all filters",
+    "colors": {
+      "black": "Black", "gray": "Gray", "white": "White", "blue": "Blue",
+      "brown": "Brown", "green": "Green", "red": "Red", "purple": "Purple",
+      "pink": "Pink", "yellow": "Yellow", "gold": "Gold", "silver": "Silver",
+      "multicolored": "Multi"
+    },
+    "finishes": {
+      "black": "Black", "white": "White", "gold": "Gold", "silver": "Silver",
+      "brown": "Brown", "gray": "Gray", "glass": "Glass", "transparent": "Clear"
+    }
   },
   "home": {
     "curatedForModernLiving": "Curated for Modern Living",

@@ -13,7 +13,7 @@ export default async function HomePage() {
   const t = await getTranslations('home');
   const tCommon = await getTranslations('common');
   const [newArrivals, featuredResult, categories] = await Promise.all([
-    searchProducts({ limit: 4, sort: 'createdAt', currency, country, locale }),
+    searchProducts({ limit: 4, sort: [{ field: 'createdAt', order: 'desc' }], currency, country, locale }),
     searchProducts({ limit: 8, currency, country, locale }),
     getCategoryTree(),
   ]);

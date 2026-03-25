@@ -7,7 +7,12 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - Full-text product search via commercetools Product Search API
 - Category browsing with nested 3-level hierarchy
 - Mega menu with full category tree
-- Faceted filtering (color, finish, sort)
+- Faceted filtering by color (swatch), finish (pill), and sort order
+- Sort options: Relevance, Newest, Price Low→High, Price High→Low, Name A–Z
+- Sort and filter state encoded in URL query params (`sort`, `color`, `finish`) for shareable/bookmarkable URLs
+- Sort field aliases (`price`, `name`, `score`) mapped to commercetools internals server-side — CT field names never exposed in URLs
+- Category pages default to `categoryOrderHints` sort (Merchant Center ordering) with graceful fallback on missing index data
+- Localized sort and filter labels via `next-intl` (all three locales)
 - Paginated results (24 items per page)
 
 ## Product Detail Pages
