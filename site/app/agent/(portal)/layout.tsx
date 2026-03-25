@@ -5,7 +5,14 @@ import AgentNav from '@/components/agent/AgentNav';
 export const metadata = { title: 'Agent Portal' };
 
 export default async function AgentPortalLayout({ children }: { children: React.ReactNode }) {
-  const [session, sessionExp] = await Promise.all([getAgentSession(), getAgentSessionExp()]);
+  let session: Awaited<ReturnType<typeof getAgentSession>> = null;
+  let sessionExp: Awaited<ReturnType<typeof getAgentSessionExp>> = null;
+  try {
+    [session, sessionExp] = await Promise.all([getAgentSession(), getAgentSessionExp()]);
+  } catch {
+    // AGENT_SESSION_SECRET missing or JWT failure — treat as unauthenticated
+    redirect('/agent/login');
+  }
   if (!session) {
     redirect('/agent/login');
   }
