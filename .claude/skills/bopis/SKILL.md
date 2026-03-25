@@ -512,7 +512,7 @@ async function handleAddToCart() {
 
 ## Step 11 — Translations (i18n)
 
-Add keys to your `messages/en.json` (or equivalent):
+Add keys to all three message files (`messages/en-us.json`, `messages/en-gb.json`, `messages/de-de.json`):
 
 ```json
 {

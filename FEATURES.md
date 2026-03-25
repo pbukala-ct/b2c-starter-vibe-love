@@ -44,6 +44,7 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - Full cart page with quantity editing and item removal
 - Subscription items labeled with recurrence interval
 - Order summary with subtotal, estimated tax, and shipping
+- Discount code / coupon input on cart page
 
 ## Checkout
 
@@ -96,6 +97,7 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - Pause, resume, and cancel actions
 - Skip next order
 - Change delivery schedule
+- Subscription detail page at `/account/subscriptions/[id]`
 
 ## My Account — Addresses
 
@@ -110,6 +112,11 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - Add and remove cards (last 4 digits stored, demo tokenization)
 - Set default payment method
 
+## My Account — Security
+
+- Change password form at `/account/security`
+- Current password verification before accepting new password
+
 ## Internationalization
 
 - Locale-prefixed URLs: `/en-us/...`, `/en-gb/...`, `/de-de/...`
@@ -122,7 +129,7 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - Country preference persisted in cookie
 - Full UI translations via `next-intl` covering all three locales (en-US, en-GB, de-DE)
 - ICU plural format for item counts and skip messages
-- Translation keys organized in JSON message files under `site/messages/` by namespace (common, nav, header, footer, product, cart, checkout, confirmation, account, orders, addresses, payments, subscriptions, auth, search, home)
+- Translation keys organized in JSON message files under `site/messages/` (`en-us.json`, `en-gb.json`, `de-de.json`) by namespace (common, nav, header, footer, product, cart, checkout, confirmation, account, orders, addresses, payments, subscriptions, auth, search, home)
 - Server components use `getTranslations()`, client components use `useTranslations()` hook
 
 ## Authentication & Sessions
@@ -130,6 +137,9 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - JWT-based sessions using `jose`, stored in HTTP-only cookie
 - Login with email and password
 - Registration with name, email, and password
+- Forgot password flow: request reset email at `/forgot-password`, set new password at `/reset-password`
+- Email confirmation via token (`/api/auth/confirm`)
+- Change password from account security page
 - Test credential button (jen@example.com / 123)
 - Logout clears cart reference from session
 - Anonymous cart merged to customer on login
@@ -137,7 +147,7 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 
 ## API Routes (BFF)
 
-All commercetools calls go through server-side Next.js API routes. The browser never contacts commercetools directly.
+All commercetools calls go through server-side Next.js API routes. The browser never contacts commercetools directly. Client components fetch data via SWR hooks in `site/hooks/` — never via direct `fetch('/api/*')` calls in components.
 
 | Route | Methods | Purpose |
 |---|---|---|
@@ -145,9 +155,14 @@ All commercetools calls go through server-side Next.js API routes. The browser n
 | `/api/auth/register` | POST | Create account |
 | `/api/auth/logout` | POST | Clear session |
 | `/api/auth/me` | GET | Current user |
+| `/api/auth/request-reset` | POST | Request password reset email |
+| `/api/auth/reset` | POST | Reset password with token |
+| `/api/auth/confirm` | POST | Confirm email with token |
+| `/api/auth/change-password` | POST | Change password (authenticated) |
 | `/api/cart` | GET, POST | Get or create cart |
 | `/api/cart/items` | POST | Add item |
 | `/api/cart/items/[itemId]` | PUT, DELETE | Update quantity, remove item |
+| `/api/cart/discount` | POST, DELETE | Apply / remove discount code |
 | `/api/checkout` | POST | Place order |
 | `/api/account/profile` | GET, PUT | View/edit profile |
 | `/api/account/orders` | GET | List orders |
