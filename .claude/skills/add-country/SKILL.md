@@ -31,13 +31,13 @@ export const COUNTRY_CONFIG = {
 
 ### 1. `site/messages/` — add translations
 
-If the new locale uses a new language, add a message file:
+Message files are named after the URL locale (lowercase, hyphenated). If the new locale uses a new language, add a message file:
 
 ```
-site/messages/fr.json   ← copy from en.json, translate values
+site/messages/fr-fr.json   ← copy from en-us.json, translate values
 ```
 
-Then register the language in `site/i18n/request.ts` — the `availableLangs` check derives from `COUNTRY_CONFIG` so no change needed there, but the **file must exist** or the dynamic import will fall back to `en`.
+The file name must match the URL locale format used in `site/app/[locale]/` routes and in `site/i18n/request.ts`, which loads `../messages/${locale}.json` where `locale` is e.g. `fr-fr`. The file **must exist** or the dynamic import will fail at runtime.
 
 
 ### 2. `site/lib/utils.ts` — `useCombinedStreetField`
@@ -62,6 +62,6 @@ No code changes needed — the API routes read currency/country from `getLocale(
 
 - [ ] Add entry to `COUNTRY_CONFIG` in `site/lib/utils.ts`
 - [ ] Add `site/messages/<lang>.json` if it's a new language
-- [ ] Add `<option>` to country selects in `site/app/checkout/page.tsx`
+- [ ] Add `<option>` to country selects in `site/app/[locale]/checkout/page.tsx`
 - [ ] Verify CT has prices and shipping methods for the new currency/country
 - [ ] Smoke-test: select the new country via the `CountrySelector`, add a product to cart, check currency displays correctly, go through checkout

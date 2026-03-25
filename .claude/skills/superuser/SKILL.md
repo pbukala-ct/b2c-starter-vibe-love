@@ -24,7 +24,7 @@ This feature lets an authorised Customer Service Representative (CSR) log in wit
 ## Architecture
 
 ```
-Login page (two-step form)
+app/[locale]/login/page.tsx (two-step form)
   └─ POST /api/auth/login                 ← step 1: detect CSR group → { requiresCsrEmail: true }
   └─ POST /api/auth/csr-login             ← step 2: impersonate customer, set dual session
 
@@ -281,13 +281,13 @@ export function useSuperUser() {
 }
 ```
 
-Add `<SuperUserProvider>` to `app/layout.tsx` (wrapping or alongside existing providers).
+Add `<SuperUserProvider>` to `app/[locale]/layout.tsx` (wrapping or alongside existing providers).
 
 ---
 
 ## Step 6 — Login form (two-step UI)
 
-The login form (`app/(auth)/login/page.tsx` or whichever file renders the sign-in form) needs to handle the `requiresCsrEmail` response from step 1.
+The login form (`app/[locale]/login/page.tsx`) needs to handle the `requiresCsrEmail` response from step 1.
 
 ```typescript
 const [csrPending, setCsrPending] = useState<{
@@ -479,7 +479,7 @@ const { changeItemPrice } = useCartMutations();
 - [ ] `GET /api/auth/superuser` exposes CSR session state
 - [ ] `PUT /api/cart/items/[itemId]/price` accepts CSR price override
 - [ ] `SuperUserProvider` + `useSuperUser` hook in `context/SuperUserContext.tsx`
-- [ ] `<SuperUserProvider>` added to `app/layout.tsx`
+- [ ] `<SuperUserProvider>` added to `app/[locale]/layout.tsx`
 - [ ] Login form handles two-step CSR flow
 - [ ] Yellow CSR banner rendered in `Header.tsx`
 - [ ] `PriceOverrideInput` created in `components/ui/`
