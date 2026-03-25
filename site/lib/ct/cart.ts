@@ -243,10 +243,12 @@ export async function createOrderFromCart(cartId: string, cartVersion: number) {
 }
 
 export async function applyDiscountCode(cartId: string, cartVersion: number, code: string) {
-  return ct('POST', `/carts/${cartId}`, {
-    version: cartVersion,
-    actions: [{ action: 'addDiscountCode', code }],
-  });
+  const { body } = await apiRoot
+    .carts()
+    .withId({ ID: cartId })
+    .post({ body: { version: cartVersion, actions: [{ action: 'addDiscountCode', code }] } })
+    .execute();
+  return body;
 }
 
 export async function removeDiscountCode(
@@ -254,15 +256,22 @@ export async function removeDiscountCode(
   cartVersion: number,
   discountCodeId: string
 ) {
-  return ct('POST', `/carts/${cartId}`, {
-    version: cartVersion,
-    actions: [
-      {
-        action: 'removeDiscountCode',
-        discountCode: { typeId: 'discount-code', id: discountCodeId },
+  const { body } = await apiRoot
+    .carts()
+    .withId({ ID: cartId })
+    .post({
+      body: {
+        version: cartVersion,
+        actions: [
+          {
+            action: 'removeDiscountCode',
+            discountCode: { typeId: 'discount-code', id: discountCodeId },
+          },
+        ],
       },
-    ],
-  });
+    })
+    .execute();
+  return body;
 }
 
 export async function createRecurringOrder(

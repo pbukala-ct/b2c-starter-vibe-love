@@ -1,14 +1,23 @@
-import { ct } from './request';
+import { apiRoot } from './client';
 
 export async function getCustomerOrders(customerId: string, limit = 20, offset = 0) {
-  return ct(
-    'GET',
-    `/orders?where=${encodeURIComponent(`customerId = "${customerId}"`)}&sort=createdAt+desc&limit=${limit}&offset=${offset}`
-  );
+  const { body } = await apiRoot
+    .orders()
+    .get({
+      queryArgs: {
+        where: `customerId = "${customerId}"`,
+        sort: 'createdAt desc',
+        limit,
+        offset,
+      },
+    })
+    .execute();
+  return body;
 }
 
 export async function getOrderById(orderId: string) {
-  return ct('GET', `/orders/${orderId}`);
+  const { body } = await apiRoot.orders().withId({ ID: orderId }).get().execute();
+  return body;
 }
 
 export async function addOrderReturnInfo(
@@ -19,20 +28,27 @@ export async function addOrderReturnInfo(
   returnDate: string,
   comment?: string
 ) {
-  return ct('POST', `/orders/${orderId}`, {
-    version,
-    actions: [
-      {
-        action: 'addReturnInfo',
-        returnDate,
-        returnTrackingId,
-        items: items.map((i) => ({
-          lineItemId: i.lineItemId,
-          quantity: i.quantity,
-          shipmentState: 'Returned',
-          ...(comment ? { comment } : {}),
-        })),
+  const { body } = await apiRoot
+    .orders()
+    .withId({ ID: orderId })
+    .post({
+      body: {
+        version,
+        actions: [
+          {
+            action: 'addReturnInfo',
+            returnDate,
+            returnTrackingId,
+            items: items.map((i) => ({
+              lineItemId: i.lineItemId,
+              quantity: i.quantity,
+              shipmentState: 'Returned' as const,
+              ...(comment ? { comment } : {}),
+            })),
+          },
+        ],
       },
-    ],
-  });
+    })
+    .execute();
+  return body;
 }

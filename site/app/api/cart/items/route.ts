@@ -29,9 +29,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // CT carts store currency at cart.currency OR cart.totalPrice.currencyCode.
-  // Always prefer totalPrice.currencyCode as the authoritative source.
-  const cartCurrency = cart?.currency || cart?.totalPrice?.currencyCode;
+  const cartCurrency = cart?.totalPrice?.currencyCode;
 
   // Create new cart if none exists, currency missing/mismatched, or country changed
   if (!cartId || !cart || !cartCurrency || cartCurrency !== currency) {

@@ -1,33 +1,25 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { getOrCreateWishlist, addWishlistItem } from '@/lib/ct/wishlist';
+import { ShoppingList } from '@commercetools/platform-sdk';
 
-function shapeWishlist(raw: Record<string, unknown>) {
-  const lineItems = (raw.lineItems as Array<Record<string, unknown>>) ?? [];
+export function shapeWishlist(raw: ShoppingList) {
+  const lineItems = raw.lineItems ?? [];
   return {
     id: raw.id,
     version: raw.version,
     items: lineItems.map((li) => {
-      const variant = (li.variant as Record<string, unknown>) ?? {};
-      const prices = (variant.prices as Array<Record<string, unknown>>) ?? [];
       return {
         id: li.id,
         productId: li.productId,
-        name: li.nameAllLocales
-          ? Object.fromEntries(
-              (li.nameAllLocales as Array<{ locale: string; value: string }>).map((n) => [
-                n.locale,
-                n.value,
-              ])
-            )
-          : (li.name ?? {}),
+        name: li.name,
         quantity: li.quantity ?? 1,
         productSlug: li.productSlug,
         variant: {
-          id: variant.id,
-          sku: variant.sku,
-          images: variant.images,
-          price: prices[0] ?? null,
+          id: li.variant?.id,
+          sku: li.variant?.sku,
+          images: li.variant?.images,
+          price: li.variant?.prices?.[0] ?? null,
         },
       };
     }),

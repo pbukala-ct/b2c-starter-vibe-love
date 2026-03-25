@@ -1,6 +1,7 @@
 import { apiRoot } from './client';
 import type { CustomerUpdateAction } from '@commercetools/platform-sdk';
 import type { RecurringOrderUpdateAction } from '@commercetools/platform-sdk/dist/declarations/src/generated/models/recurring-order';
+import { QueryParam } from '@commercetools/platform-sdk/dist/declarations/src/generated/shared/utils/common-types';
 
 export async function signInCustomer(email: string, password: string, anonymousCartId?: string) {
   const { body } = await apiRoot
@@ -78,8 +79,18 @@ export async function updateCustomer(
   return body;
 }
 
-export async function getRecurringOrderById(recurringOrderId: string) {
-  const { body } = await apiRoot.recurringOrders().withId({ ID: recurringOrderId }).get().execute();
+export async function getRecurringOrderById(
+  recurringOrderId: string,
+  queryArgs?: {
+    expand?: string | string[];
+    [key: string]: QueryParam;
+  }
+) {
+  const { body } = await apiRoot
+    .recurringOrders()
+    .withId({ ID: recurringOrderId })
+    .get({ queryArgs: queryArgs })
+    .execute();
   return body;
 }
 

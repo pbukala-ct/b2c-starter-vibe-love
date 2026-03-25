@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { getRecurringOrderById, updateRecurringOrder } from '@/lib/ct/auth';
+import { RecurringOrderUpdateAction } from '@commercetools/platform-sdk/dist/declarations/src/generated/models/recurring-order';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -9,16 +10,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
   try {
-    const sub = await getRecurringOrderById(id);
+    const sub = await getRecurringOrderById(id, { expand: 'originOrder' });
     // Normalise lineItems from origin order if needed
-
     const normalised = {
       ...sub,
-      lineItems: sub.lineItems?.length
-        ? sub.lineItems
-        : ((sub as { originOrder?: { obj?: { lineItems?: unknown[] } } }).originOrder?.obj
-            ?.lineItems ?? []),
-      nextOrderDate: sub.nextOrderDate ?? sub.nextOrderAt,
+      lineItems: sub.originOrder.obj?.lineItems,
+      nextOrderDate: sub.nextOrderAt,
     };
     return NextResponse.json({ subscription: normalised });
   } catch {
@@ -36,7 +33,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  let ctAction: { action: string; [key: string]: unknown };
+  let ctAction: RecurringOrderUpdateAction;
   if (action === 'pause') {
     ctAction = { action: 'setRecurringOrderState', recurringOrderState: { type: 'paused' } };
   } else if (action === 'resume') {
@@ -61,9 +58,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   try {
     const current = await getRecurringOrderById(id);
-    const result = await updateRecurringOrder(id, current.version, [
-      ctAction as { action: string; [key: string]: unknown },
-    ]);
+    const result = await updateRecurringOrder(id, current.version, [ctAction]);
     return NextResponse.json({ subscription: result });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Failed to update subscription';

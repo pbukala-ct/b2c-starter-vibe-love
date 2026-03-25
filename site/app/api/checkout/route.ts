@@ -15,6 +15,7 @@ import {
   setLineItemShippingDetails,
 } from '@/lib/ct/cart';
 import { createRecurringOrder } from '@/lib/ct/cart';
+import { getRecurrencePolicyById } from '@/lib/ct/subscriptions';
 import { COUNTRY_CONFIG } from '@/lib/utils';
 
 export async function POST(req: NextRequest) {
@@ -132,21 +133,19 @@ export async function POST(req: NextRequest) {
 
     if (subscriptionItems.length > 0 && session.customerId) {
       for (const item of subscriptionItems) {
-        const policyId = item.recurrenceInfo.recurrencePolicy.id;
-        const policiesResp = await fetch(
-          `${process.env.CTP_API_URL}/${process.env.CTP_PROJECT_KEY}/recurrence-policies/${policyId}`,
-          { headers: { Authorization: `Bearer ${await getAdminToken()}` } }
-        );
-        if (policiesResp.ok) {
-          const policy = await policiesResp.json();
-          try {
-            await createRecurringOrder(order.id, cart.id, session.customerId, {
-              value: policy.schedule.value,
-              intervalUnit: policy.schedule.intervalUnit,
-            });
-          } catch (e) {
-            console.error('Failed to create recurring order:', e);
+        const policyId = item.recurrenceInfo?.recurrencePolicy.id;
+        try {
+          if (policyId) {
+            const policy = await getRecurrencePolicyById(policyId);
+            if (policy.schedule.type === 'standard') {
+              await createRecurringOrder(order.id, cart.id, session.customerId, {
+                value: policy.schedule.value,
+                intervalUnit: policy.schedule.intervalUnit,
+              });
+            }
           }
+        } catch (e) {
+          console.error('Failed to create recurring order:', e);
         }
       }
     }
@@ -162,21 +161,4 @@ export async function POST(req: NextRequest) {
     const msg = e instanceof Error ? e.message : 'Checkout failed';
     return NextResponse.json({ error: msg }, { status: 500 });
   }
-}
-
-async function getAdminToken(): Promise<string> {
-  const authUrl = process.env.CTP_AUTH_URL!;
-  const creds = Buffer.from(
-    `${process.env.CTP_CLIENT_ID}:${process.env.CTP_CLIENT_SECRET}`
-  ).toString('base64');
-  const resp = await fetch(`${authUrl}/oauth/token`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${creds}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: `grant_type=client_credentials&scope=${encodeURIComponent(process.env.CTP_SCOPES!)}`,
-  });
-  const data = await resp.json();
-  return data.access_token;
 }

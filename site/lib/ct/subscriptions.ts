@@ -1,24 +1,47 @@
-import { ct } from './request';
+import { apiRoot } from './client';
+import type { RecurringOrderUpdateAction } from '@commercetools/platform-sdk/dist/declarations/src/generated/models/recurring-order';
 
 export async function getCustomerRecurringOrders(customerId: string) {
-  return ct(
-    'GET',
-    `/recurring-orders?where=${encodeURIComponent(`customer(id = "${customerId}")`)}&limit=50&expand=originOrder`
-  );
+  const { body } = await apiRoot
+    .recurringOrders()
+    .get({
+      queryArgs: {
+        where: `customer(id = "${customerId}")`,
+        limit: 50,
+        expand: ['originOrder'],
+      },
+    })
+    .execute();
+  return body;
 }
 
 export async function getRecurringOrderById(recurringOrderId: string) {
-  return ct('GET', `/recurring-orders/${recurringOrderId}`);
+  const { body } = await apiRoot.recurringOrders().withId({ ID: recurringOrderId }).get().execute();
+  return body;
 }
 
 export async function updateRecurringOrder(
   recurringOrderId: string,
   version: number,
-  actions: Array<{ action: string; [key: string]: unknown }>
+  actions: Array<RecurringOrderUpdateAction>
 ) {
-  return ct('POST', `/recurring-orders/${recurringOrderId}`, { version, actions });
+  const { body } = await apiRoot
+    .recurringOrders()
+    .withId({ ID: recurringOrderId })
+    .post({ body: { version, actions } })
+    .execute();
+  return body;
 }
 
 export async function getRecurrencePolicies() {
-  return ct('GET', '/recurrence-policies?limit=20');
+  const { body } = await apiRoot
+    .recurrencePolicies()
+    .get({ queryArgs: { limit: 20 } })
+    .execute();
+  return body;
+}
+
+export async function getRecurrencePolicyById(policyId: string) {
+  const { body } = await apiRoot.recurrencePolicies().withId({ ID: policyId }).get().execute();
+  return body;
 }
