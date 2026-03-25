@@ -390,7 +390,10 @@
     "finish": "Oberfläche",
     "clear": "Löschen",
     "price": "Preis",
-    "clearAllFilters": "Alle Filter löschen"
+    "clearAllFilters": "Alle Filter löschen",
+    "noProducts": "Keine Produkte gefunden",
+    "noProductsHint": "Versuchen Sie, Ihre Filter oder Suchbegriffe anzupassen",
+    "productCount": "{count, plural, one {# Produkt} other {# Produkte}}"
   },
   "home": {
     "curatedForModernLiving": "Kuratiert für modernes Wohnen",

@@ -390,7 +390,10 @@
     "finish": "Finish",
     "clear": "Clear",
     "price": "Price",
-    "clearAllFilters": "Clear all filters"
+    "clearAllFilters": "Clear all filters",
+    "noProducts": "No products found",
+    "noProductsHint": "Try adjusting your filters or search terms",
+    "productCount": "{count, plural, one {# product} other {# products}}"
   },
   "home": {
     "curatedForModernLiving": "Curated for Modern Living",

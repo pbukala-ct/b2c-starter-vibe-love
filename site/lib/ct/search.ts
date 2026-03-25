@@ -149,7 +149,44 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
   const queryParts: unknown[] = [];
 
   if (query) {
-    queryParts.push({ fullText: { field: 'name', value: query, language: locale } });
+    const wildcardValue = `*${query}*`;
+    queryParts.push({
+      or: [
+        {
+          wildcard: {
+            field: 'name',
+            language: locale,
+            value: wildcardValue,
+            caseInsensitive: true,
+          },
+        },
+        {
+          wildcard: {
+            field: 'description',
+            language: locale,
+            value: wildcardValue,
+            caseInsensitive: true,
+          },
+        },
+        {
+          wildcard: {
+            field: 'slug',
+            language: locale,
+            value: wildcardValue,
+            caseInsensitive: true,
+          },
+        },
+        {
+          wildcard: {
+            field: 'searchKeywords',
+            language: locale,
+            value: wildcardValue,
+            caseInsensitive: true,
+          },
+        },
+        { exact: { field: 'variants.sku', value: query, caseInsensitive: true } },
+      ],
+    });
   }
 
   if (categoryId) {
