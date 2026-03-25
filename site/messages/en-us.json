@@ -92,7 +92,12 @@
     "loading": "Loading cart...",
     "each": "each",
     "quantity": "Quantity",
-    "remove": "Remove"
+    "remove": "Remove",
+    "discountCode": "Discount code",
+    "discountCodePlaceholder": "Enter code",
+    "applyCode": "Apply",
+    "removeCode": "Remove",
+    "invalidCode": "Invalid or expired discount code"
   },
   "miniCart": {
     "title": "Shopping Cart",
@@ -164,7 +169,16 @@
     "countryUS": "United States",
     "countryGB": "United Kingdom",
     "countryDE": "Germany",
-    "shipTo": "Ship to: {name} —"
+    "shipTo": "Ship to: {name} —",
+    "signInPrompt": "Have an account?",
+    "signInLink": "Sign in",
+    "miniLoginTitle": "Sign in for faster checkout"
+  },
+  "pdp": {
+    "oneTimePurchase": "One-time purchase",
+    "subscribeAndSave": "Subscribe & Save",
+    "purchaseOption": "Purchase option",
+    "selectRecurrence": "Select frequency"
   },
   "confirmation": {
     "title": "Order Confirmed!",
@@ -192,7 +206,14 @@
     "saving": "Saving…",
     "profileUpdated": "Profile updated successfully",
     "updateFailed": "Failed to update profile",
-    "somethingWentWrong": "Something went wrong"
+    "somethingWentWrong": "Something went wrong",
+    "security": "Security",
+    "changePassword": "Change Password",
+    "changePasswordDescription": "Update your password to keep your account secure.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmNewPassword": "Confirm new password",
+    "passwordChanged": "Password changed successfully"
   },
   "orders": {
     "title": "Orders",
@@ -318,8 +339,10 @@
     "welcomeBack": "Welcome Back",
     "signInToAccount": "Sign in to your Vibe Home account",
     "emailAddress": "Email address",
+    "emailLabel": "Email address",
     "emailPlaceholder": "you@example.com",
     "password": "Password",
+    "passwordLabel": "Password",
     "passwordPlaceholder": "••••••••",
     "signingIn": "Signing in…",
     "signIn": "Sign In",

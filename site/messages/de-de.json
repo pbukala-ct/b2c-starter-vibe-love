@@ -92,7 +92,12 @@
     "loading": "Warenkorb wird geladen...",
     "each": "pro Stück",
     "quantity": "Menge",
-    "remove": "Entfernen"
+    "remove": "Entfernen",
+    "discountCode": "Rabattcode",
+    "discountCodePlaceholder": "Code eingeben",
+    "applyCode": "Einlösen",
+    "removeCode": "Entfernen",
+    "invalidCode": "Ungültiger oder abgelaufener Rabattcode"
   },
   "miniCart": {
     "title": "Warenkorb",
@@ -164,7 +169,16 @@
     "countryUS": "Vereinigte Staaten",
     "countryGB": "Vereinigtes Königreich",
     "countryDE": "Deutschland",
-    "shipTo": "Liefern an: {name} —"
+    "shipTo": "Liefern an: {name} —",
+    "signInPrompt": "Haben Sie ein Konto?",
+    "signInLink": "Anmelden",
+    "miniLoginTitle": "Anmelden für schnelleren Checkout"
+  },
+  "pdp": {
+    "oneTimePurchase": "Einmaliger Kauf",
+    "subscribeAndSave": "Abonnieren & Sparen",
+    "purchaseOption": "Kaufoption",
+    "selectRecurrence": "Häufigkeit wählen"
   },
   "confirmation": {
     "title": "Bestellung bestätigt!",
@@ -192,7 +206,14 @@
     "saving": "Wird gespeichert…",
     "profileUpdated": "Profil erfolgreich aktualisiert",
     "updateFailed": "Profil konnte nicht aktualisiert werden",
-    "somethingWentWrong": "Etwas ist schiefgelaufen"
+    "somethingWentWrong": "Etwas ist schiefgelaufen",
+    "security": "Sicherheit",
+    "changePassword": "Passwort ändern",
+    "changePasswordDescription": "Aktualisieren Sie Ihr Passwort, um Ihr Konto sicher zu halten.",
+    "currentPassword": "Aktuelles Passwort",
+    "newPassword": "Neues Passwort",
+    "confirmNewPassword": "Neues Passwort bestätigen",
+    "passwordChanged": "Passwort erfolgreich geändert"
   },
   "orders": {
     "title": "Bestellungen",
@@ -318,8 +339,10 @@
     "welcomeBack": "Willkommen zurück",
     "signInToAccount": "Melden Sie sich bei Ihrem Vibe Home-Konto an",
     "emailAddress": "E-Mail-Adresse",
+    "emailLabel": "E-Mail-Adresse",
     "emailPlaceholder": "ihre@email.de",
     "password": "Passwort",
+    "passwordLabel": "Passwort",
     "passwordPlaceholder": "••••••••",
     "signingIn": "Anmeldung läuft…",
     "signIn": "Anmelden",
