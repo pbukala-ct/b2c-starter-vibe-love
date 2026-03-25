@@ -57,8 +57,8 @@ export async function getSearchableAttributes(locale = 'en-US'): Promise<FacetDe
 
       const enumValues =
         isEnumType(attribute.type) &&
-        (attribute.type as AttributeEnumType | AttributeLocalizedEnumType).values.length > 0
-          ? (attribute.type as AttributeEnumType | AttributeLocalizedEnumType).values.map(
+        (attribute.type as AttributeEnumType | AttributeLocalizedEnumType)?.values?.length > 0
+          ? (attribute.type as AttributeEnumType | AttributeLocalizedEnumType)?.values?.map(
               (value) => ({
                 key: value.key,
                 label:
