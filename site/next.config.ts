@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'images.cdn.europe-west1.gcp.commercetools.com',
+        hostname: '**',
       },
     ],
   },
