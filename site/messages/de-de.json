@@ -30,7 +30,9 @@
     "subscriptions": "Abonnements",
     "addresses": "Adressen",
     "paymentMethods": "Zahlungsmethoden",
-    "menu": "Menü"
+    "menu": "Menü",
+    "security": "Sicherheit",
+    "wishlist": "Wunschliste"
   },
   "header": {
     "topBar": "Kostenloser Versand ab 500 € · Premium-Möbel und Wohnaccessoires",
@@ -299,7 +301,18 @@
     "scheduleMonthly": "Monatlich",
     "scheduleBiWeekly": "Zweiwöchentlich",
     "scheduleWeekly": "Wöchentlich",
-    "everyInterval": "Alle {value} {unit}"
+    "everyInterval": "Alle {value} {unit}",
+    "detailTitle": "Abonnement-Detail",
+    "notFound": "Abonnement nicht gefunden.",
+    "backToSubscriptions": "Zurück zu den Abonnements",
+    "subscriptionId": "Abonnement-ID",
+    "deliveryFrequency": "Lieferhäufigkeit",
+    "items": "Artikel",
+    "totalPerOrder": "Summe pro Bestellung",
+    "confirmCancelYes": "Ja, kündigen",
+    "confirmCancelNo": "Behalten",
+    "loading": "Abonnement wird geladen…",
+    "viewDetails": "Details anzeigen →"
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",
@@ -327,7 +340,19 @@
     "alreadyHaveAccount": "Bereits ein Konto?",
     "passwordsDoNotMatch": "Passwörter stimmen nicht überein",
     "passwordTooShort": "Das Passwort muss mindestens 6 Zeichen lang sein",
-    "registrationFailed": "Registrierung fehlgeschlagen"
+    "registrationFailed": "Registrierung fehlgeschlagen",
+    "forgotPassword": "Passwort vergessen?",
+    "requestResetTitle": "Passwort zurücksetzen",
+    "requestResetDescription": "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts.",
+    "requestResetSuccess": "Wenn ein Konto mit dieser E-Mail existiert, erhalten Sie in Kürze Anweisungen zum Zurücksetzen.",
+    "resetPasswordTitle": "Neues Passwort erstellen",
+    "resetPasswordDescription": "Geben Sie den Reset-Token aus Ihrer E-Mail ein und wählen Sie ein neues Passwort.",
+    "tokenLabel": "Reset-Token",
+    "tokenPlaceholder": "Reset-Token hier einfügen",
+    "newPasswordLabel": "Neues Passwort",
+    "submitReset": "Passwort zurücksetzen",
+    "loginInstead": "Zurück zur Anmeldung",
+    "passwordMismatch": "Passwörter stimmen nicht überein"
   },
   "search": {
     "placeholder": "Produkte suchen...",

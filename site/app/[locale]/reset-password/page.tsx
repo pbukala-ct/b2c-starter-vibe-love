@@ -1,14 +1,16 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 function ResetPasswordContent() {
   const t = useTranslations('auth');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { localePath } = useLocale();
   const [token, setToken] = useState(searchParams.get('token') ?? '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -35,7 +37,7 @@ function ResetPasswordContent() {
         const data = await res.json();
         setError(data.error || 'Failed to reset password. The token may be invalid or expired.');
       } else {
-        router.push('/login');
+        router.push(localePath('/login'));
       }
     } catch {
       setError('Something went wrong. Please try again.');
@@ -88,7 +90,7 @@ function ResetPasswordContent() {
 
             <div>
               <label htmlFor="confirm-password" className="block text-sm font-medium text-charcoal mb-1.5">
-                Confirm new password
+                {t('confirmPassword')}
               </label>
               <input
                 id="confirm-password"
@@ -118,7 +120,7 @@ function ResetPasswordContent() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link href="/login" className="text-sm text-terra hover:underline font-medium">
+            <Link href={localePath('/login')} className="text-sm text-terra hover:underline font-medium">
               {t('loginInstead')}
             </Link>
           </div>

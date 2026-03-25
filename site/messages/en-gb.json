@@ -30,7 +30,9 @@
     "subscriptions": "Subscriptions",
     "addresses": "Addresses",
     "paymentMethods": "Payment Methods",
-    "menu": "Menu"
+    "menu": "Menu",
+    "security": "Security",
+    "wishlist": "Wishlist"
   },
   "header": {
     "topBar": "Free delivery on orders over £500 · Premium home goods & furniture",
@@ -299,7 +301,18 @@
     "scheduleMonthly": "Monthly",
     "scheduleBiWeekly": "Bi-weekly",
     "scheduleWeekly": "Weekly",
-    "everyInterval": "Every {value} {unit}"
+    "everyInterval": "Every {value} {unit}",
+    "detailTitle": "Subscription Detail",
+    "notFound": "Subscription not found.",
+    "backToSubscriptions": "Back to subscriptions",
+    "subscriptionId": "Subscription ID",
+    "deliveryFrequency": "Delivery frequency",
+    "items": "Items",
+    "totalPerOrder": "Total per order",
+    "confirmCancelYes": "Yes, Cancel",
+    "confirmCancelNo": "Keep",
+    "loading": "Loading subscription…",
+    "viewDetails": "View details →"
   },
   "auth": {
     "welcomeBack": "Welcome Back",
@@ -327,7 +340,19 @@
     "alreadyHaveAccount": "Already have an account?",
     "passwordsDoNotMatch": "Passwords do not match",
     "passwordTooShort": "Password must be at least 6 characters",
-    "registrationFailed": "Registration failed"
+    "registrationFailed": "Registration failed",
+    "forgotPassword": "Forgot password?",
+    "requestResetTitle": "Reset your password",
+    "requestResetDescription": "Enter your email address and we'll send you a link to reset your password.",
+    "requestResetSuccess": "If an account exists with that email, you'll receive reset instructions shortly.",
+    "resetPasswordTitle": "Create new password",
+    "resetPasswordDescription": "Enter the reset token from your email and choose a new password.",
+    "tokenLabel": "Reset token",
+    "tokenPlaceholder": "Paste your reset token here",
+    "newPasswordLabel": "New password",
+    "submitReset": "Reset password",
+    "loginInstead": "Back to sign in",
+    "passwordMismatch": "Passwords do not match"
   },
   "search": {
     "placeholder": "Search products...",

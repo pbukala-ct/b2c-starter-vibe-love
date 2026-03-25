@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 export default function ForgotPasswordPage() {
   const t = useTranslations('auth');
+  const { localePath } = useLocale();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -45,7 +47,7 @@ export default function ForgotPasswordPage() {
           </div>
           <h1 className="text-2xl font-semibold text-charcoal mb-3">Check your email</h1>
           <p className="text-charcoal-light text-sm mb-6">{t('requestResetSuccess')}</p>
-          <Link href="/login" className="text-terra text-sm hover:underline font-medium">
+          <Link href={localePath('/login')} className="text-terra text-sm hover:underline font-medium">
             {t('loginInstead')}
           </Link>
         </div>
@@ -65,7 +67,7 @@ export default function ForgotPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-charcoal mb-1.5">
-                {t('emailLabel')}
+                {t('emailAddress')}
               </label>
               <input
                 id="email"
@@ -95,7 +97,7 @@ export default function ForgotPasswordPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link href="/login" className="text-sm text-terra hover:underline font-medium">
+            <Link href={localePath('/login')} className="text-sm text-terra hover:underline font-medium">
               {t('loginInstead')}
             </Link>
           </div>

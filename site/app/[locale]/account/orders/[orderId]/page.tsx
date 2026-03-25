@@ -1,96 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { formatMoney, getLocalizedString, formatStreetAddress } from '@/lib/utils';
+import { use } from 'react';
+import { useOrder } from '@/hooks/useOrders';
+import { useFormatters } from '@/hooks/useFormatters';
+import { formatStreetAddress } from '@/lib/utils';
 import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
+import type { Order } from '@/hooks/useOrders';
 
-interface LineItem {
-  id: string;
-  name: Record<string, string>;
-  quantity: number;
-  totalPrice: { centAmount: number; currencyCode: string };
-  recurrenceInfo?: { recurrencePolicy: { id: string } };
-  shippingDetails?: {
-    targets: Array<{ addressKey: string; quantity: number }>;
-    valid: boolean;
-  };
-}
+type LineItem = Order['lineItems'][number];
 
-interface Order {
-  id: string;
-  orderNumber: string;
-  createdAt: string;
-  orderState: string;
-  totalPrice: { centAmount: number; currencyCode: string };
-  taxedPrice?: {
-    totalNet: { centAmount: number; currencyCode: string };
-    totalGross: { centAmount: number; currencyCode: string };
-    taxPortions?: Array<{
-      name: string;
-      amount: { centAmount: number; currencyCode: string };
-      rate: number;
-    }>;
-  };
-  shippingInfo?: {
-    shippingMethodName: string;
-    price: { centAmount: number; currencyCode: string };
-  };
-  lineItems: LineItem[];
-  shippingAddress?: {
-    firstName: string;
-    lastName: string;
-    streetName: string;
-    streetNumber?: string;
-    additionalAddressInfo?: string;
-    city: string;
-    state?: string;
-    postalCode: string;
-    country: string;
-  };
-  billingAddress?: {
-    firstName: string;
-    lastName: string;
-    streetName: string;
-    streetNumber?: string;
-    additionalAddressInfo?: string;
-    city: string;
-    state?: string;
-    postalCode: string;
-    country: string;
-  };
-  itemShippingAddresses?: Array<{
-    key?: string;
-    firstName: string;
-    lastName: string;
-    streetName: string;
-    streetNumber?: string;
-    additionalAddressInfo?: string;
-    city: string;
-    state?: string;
-    postalCode: string;
-    country: string;
-  }>;
-}
-
-export default function OrderDetailPage() {
-  const { orderId } = useParams<{ orderId: string }>();
+export default function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
+  const { orderId } = use(params);
   const { localePath } = useLocale();
   const t = useTranslations('orderDetail');
-  const [order, setOrder] = useState<Order | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`/api/account/orders/${orderId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setOrder(data);
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
-  }, [orderId]);
+  const { formatMoney, getLocalizedString } = useFormatters();
+  const { data: order, isLoading } = useOrder(orderId);
 
   if (isLoading) {
     return (
@@ -128,10 +54,10 @@ export default function OrderDetailPage() {
   if (isSplitShipment) {
     for (const item of order.lineItems) {
       const targets = item.shippingDetails?.targets || [];
-      for (const t of targets) {
-        const key = t.addressKey;
+      for (const target of targets) {
+        const key = target.addressKey;
         if (!shipmentGroups.has(key)) shipmentGroups.set(key, []);
-        shipmentGroups.get(key)!.push({ item, qty: t.quantity });
+        shipmentGroups.get(key)!.push({ item, qty: target.quantity });
       }
     }
   }
@@ -202,7 +128,7 @@ export default function OrderDetailPage() {
                       <div key={item.id} className="flex justify-between text-sm">
                         <div>
                           <span className="text-charcoal">
-                            {getLocalizedString(item.name, 'en-US')}
+                            {getLocalizedString(item.name)}
                           </span>
                           <span className="text-charcoal-light ml-2">× {qty}</span>
                           {item.recurrenceInfo?.recurrencePolicy && (
@@ -280,7 +206,7 @@ export default function OrderDetailPage() {
               {order.lineItems.map((item) => (
                 <div key={item.id} className="flex justify-between text-sm">
                   <div>
-                    <span className="text-charcoal">{getLocalizedString(item.name, 'en-US')}</span>
+                    <span className="text-charcoal">{getLocalizedString(item.name)}</span>
                     <span className="text-charcoal-light ml-2">× {item.quantity}</span>
                     {item.recurrenceInfo?.recurrencePolicy && (
                       <span className="text-sage border-sage/30 ml-2 rounded-full border px-1.5 py-0.5 text-xs">

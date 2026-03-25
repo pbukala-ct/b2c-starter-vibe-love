@@ -3,14 +3,16 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useAccount } from '@/hooks/useAccount';
+import { mutate } from 'swr';
+import { KEY_ACCOUNT } from '@/lib/cache-keys';
 import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, setUser } = useAuth();
+  const { data: user } = useAccount();
   const { localePath } = useLocale();
   const t = useTranslations('nav');
 
@@ -20,6 +22,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     { path: '/account/subscriptions', label: t('subscriptions') },
     { path: '/account/addresses', label: t('addresses') },
     { path: '/account/payments', label: t('paymentMethods') },
+    { path: '/account/wishlist', label: t('wishlist') },
+    { path: '/account/security', label: t('security') },
   ];
 
   useEffect(() => {
@@ -30,7 +34,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
-    setUser(null);
+    mutate(KEY_ACCOUNT, null, { revalidate: false });
     router.push(localePath('/'));
   }
 

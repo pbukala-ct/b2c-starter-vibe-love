@@ -1,40 +1,24 @@
 'use client';
 
 import Link from 'next/link';
-import { useCart } from '@/context/CartContext';
+import { useCartSWR, useCartMutations } from '@/hooks/useCartSWR';
 import { useLocale } from '@/context/LocaleContext';
 import { formatMoney } from '@/lib/utils';
 import CartItem from '@/components/cart/CartItem';
-import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 
 export default function CartPage() {
-  const { cart, setCart, isLoading, refreshCart } = useCart();
+  const { data: cart, isLoading } = useCartSWR();
+  const { updateLineItem, removeLineItem } = useCartMutations();
   const { country, localePath } = useLocale();
   const t = useTranslations('cart');
 
-  useEffect(() => {
-    refreshCart();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   const handleUpdate = async (itemId: string, quantity: number) => {
-    const resp = await fetch(`/api/cart/items/${itemId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity }),
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      setCart(data.cart);
-    }
+    await updateLineItem(itemId, quantity);
   };
 
   const handleRemove = async (itemId: string) => {
-    const resp = await fetch(`/api/cart/items/${itemId}`, { method: 'DELETE' });
-    if (resp.ok) {
-      const data = await resp.json();
-      setCart(data.cart);
-    }
+    await removeLineItem(itemId);
   };
 
   if (isLoading) {

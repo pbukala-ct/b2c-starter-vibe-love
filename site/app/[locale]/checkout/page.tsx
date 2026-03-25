@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useCartSWR } from '@/hooks/useCartSWR';
 import { useCart } from '@/context/CartContext';
-import { useAuth } from '@/context/AuthContext';
+import { useAccount } from '@/hooks/useAccount';
+import { useShippingMethods } from '@/hooks/useShippingMethods';
 import { useLocale } from '@/context/LocaleContext';
 import {
   formatMoney,
@@ -54,9 +56,11 @@ interface ItemShipping {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, setCart, refreshCart } = useCart();
-  const { user, isLoggedIn } = useAuth();
+  const { data: cart, mutate: mutateCart } = useCartSWR();
+  const { data: user } = useAccount();
+  const isLoggedIn = !!user;
   const { currency, country, locale, localePath } = useLocale();
+  const { data: shippingMethodsData = [] } = useShippingMethods();
   const t = useTranslations('checkout');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -85,16 +89,8 @@ export default function CheckoutPage() {
   // Per-item shipping assignments
   const [itemShipping, setItemShipping] = useState<ItemShipping[]>([]);
 
-  // Shipping methods
-  const [shippingMethods, setShippingMethods] = useState<
-    Array<{
-      id: string;
-      name: string;
-      description?: string;
-      price: { centAmount: number; currencyCode: string } | null;
-      freeAbove: { centAmount: number } | null;
-    }>
-  >([]);
+  // Shipping methods from hook
+  const [shippingMethods, setShippingMethods] = useState(shippingMethodsData);
   const [selectedShippingMethodId, setSelectedShippingMethodId] = useState<string>('');
 
   // Billing address
@@ -121,17 +117,17 @@ export default function CheckoutPage() {
     cardCvc: '',
   });
 
+  // Update shipping methods when data arrives from hook
   useEffect(() => {
-    refreshCart();
-    fetch('/api/shipping-methods')
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.shippingMethods?.length) {
-          setShippingMethods(data.shippingMethods);
-          setSelectedShippingMethodId(data.shippingMethods[0].id);
-        }
-      })
-      .catch(() => {});
+    if (shippingMethodsData.length > 0) {
+      setShippingMethods(shippingMethodsData);
+      if (!selectedShippingMethodId) {
+        setSelectedShippingMethodId(shippingMethodsData[0].id);
+      }
+    }
+  }, [shippingMethodsData, selectedShippingMethodId]);
+
+  useEffect(() => {
     if (isLoggedIn) {
       fetch('/api/account/addresses')
         .then((r) => r.json())
@@ -294,7 +290,7 @@ export default function CheckoutPage() {
       }
 
       const data = await resp.json();
-      setCart(null);
+      mutateCart(null, { revalidate: false });
       router.push(localePath(`/checkout/confirmation/${data.orderId}`));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Checkout failed');

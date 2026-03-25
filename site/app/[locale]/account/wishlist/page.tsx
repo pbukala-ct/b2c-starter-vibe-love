@@ -1,30 +1,34 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { useState } from 'react';
 import { useWishlist, useWishlistMutations } from '@/hooks/useWishlist';
 import { useFormatters } from '@/hooks/useFormatters';
 import { useCart } from '@/context/CartContext';
+import { useLocale } from '@/context/LocaleContext';
+import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 import type { WishlistItem } from '@/hooks/useWishlist';
 
 function WishlistCard({
   item,
   onRemove,
   onMoveToCart,
+  productHref,
 }: {
   item: WishlistItem;
   onRemove: () => Promise<void>;
   onMoveToCart: () => Promise<void>;
+  productHref?: string;
 }) {
   const { formatMoney, getLocalizedString } = useFormatters();
+  const t = useTranslations('nav');
   const [removing, setRemoving] = useState(false);
   const [adding, setAdding] = useState(false);
 
   const image = item.variant.images?.[0]?.url;
   const name = getLocalizedString(item.name);
   const price = item.variant.price?.value;
-  const slug = item.productSlug ? getLocalizedString(item.productSlug as Record<string, string>) : undefined;
 
   return (
     <div className="bg-white border border-border rounded-sm overflow-hidden">
@@ -51,8 +55,8 @@ function WishlistCard({
       </div>
 
       <div className="p-3 space-y-2">
-        {slug ? (
-          <Link href={`/products/${slug}`} className="text-sm font-medium text-charcoal hover:text-terra line-clamp-2 block">
+        {productHref ? (
+          <Link href={productHref} className="text-sm font-medium text-charcoal hover:text-terra line-clamp-2 block">
             {name}
           </Link>
         ) : (
@@ -66,7 +70,7 @@ function WishlistCard({
           disabled={adding}
           className="w-full bg-charcoal text-white text-xs py-2 px-3 rounded-sm hover:bg-charcoal/80 transition-colors disabled:opacity-50"
         >
-          {adding ? 'Adding…' : 'Add to Cart'}
+          {adding ? '…' : t('cart')}
         </button>
       </div>
     </div>
@@ -77,6 +81,9 @@ export default function WishlistPage() {
   const { data: wishlist, isLoading } = useWishlist();
   const { removeItem } = useWishlistMutations();
   const { addToCartAndShow } = useCart();
+  const { localePath } = useLocale();
+  const { getLocalizedString } = useFormatters();
+  const t = useTranslations('nav');
 
   async function addToCart(item: WishlistItem) {
     if (!item.productId) return;
@@ -94,7 +101,7 @@ export default function WishlistPage() {
   if (isLoading) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold text-charcoal mb-6">Wishlist</h1>
+        <h1 className="text-2xl font-semibold text-charcoal mb-6">{t('wishlist')}</h1>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="aspect-square bg-cream-dark rounded-sm animate-pulse" />
@@ -104,14 +111,12 @@ export default function WishlistPage() {
     );
   }
 
-  console.log('wishlist', wishlist);
-
   const items = wishlist?.items ?? [];
 
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <h1 className="text-2xl font-semibold text-charcoal">Wishlist</h1>
+        <h1 className="text-2xl font-semibold text-charcoal">{t('wishlist')}</h1>
         {items.length > 0 && (
           <span className="text-sm text-charcoal-light">({items.length} {items.length === 1 ? 'item' : 'items'})</span>
         )}
@@ -123,20 +128,25 @@ export default function WishlistPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
           </svg>
           <p className="text-charcoal-light mb-4">Your wishlist is empty.</p>
-          <Link href="/" className="bg-charcoal text-white px-6 py-2.5 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm inline-block">
+          <Link href={localePath('/')} className="bg-charcoal text-white px-6 py-2.5 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm inline-block">
             Start Shopping
           </Link>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {items.map(item => (
-            <WishlistCard
-              key={item.id}
-              item={item}
-              onRemove={() => removeItem(item.id)}
-              onMoveToCart={() => addToCart(item)}
-            />
-          ))}
+          {items.map(item => {
+            const slug = item.productSlug ? getLocalizedString(item.productSlug as Record<string, string>) : undefined;
+            const productHref = slug ? localePath(`/products/${slug}`) : undefined;
+            return (
+              <WishlistCard
+                key={item.id}
+                item={item}
+                productHref={productHref}
+                onRemove={() => removeItem(item.id)}
+                onMoveToCart={() => addToCart(item)}
+              />
+            );
+          })}
         </div>
       )}
     </div>

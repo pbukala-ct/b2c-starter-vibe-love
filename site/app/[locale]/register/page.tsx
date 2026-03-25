@@ -3,14 +3,17 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useAccount } from '@/hooks/useAccount';
+import { useSWRConfig } from 'swr';
+import { KEY_ACCOUNT } from '@/lib/cache-keys';
 import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
 
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, setUser } = useAuth();
+  const { data: user } = useAccount();
+  const { mutate } = useSWRConfig();
   const { localePath } = useLocale();
   const t = useTranslations('auth');
   const redirect = searchParams.get('redirect') || localePath('/account');
@@ -50,7 +53,7 @@ export default function RegisterPage() {
         setError(data.error || t('registrationFailed'));
       } else {
         const c = data.customer || data;
-        setUser({ id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName });
+        mutate(KEY_ACCOUNT, { id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName }, { revalidate: false });
         router.push(redirect);
       }
     } catch {

@@ -1,21 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { formatMoney } from '@/lib/utils';
+import { useOrders } from '@/hooks/useOrders';
+import { useFormatters } from '@/hooks/useFormatters';
 import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
-
-interface Order {
-  id: string;
-  orderNumber: string;
-  createdAt: string;
-  totalPrice: { centAmount: number; currencyCode: string };
-  orderState: string;
-  lineItems: { id: string; name: Record<string, string>; quantity: number }[];
-}
-
-// STATE_LABELS now use translations, see component below
 
 const STATE_COLORS: Record<string, string> = {
   Open: 'bg-yellow-50 text-yellow-700 border-yellow-200',
@@ -27,8 +16,8 @@ const STATE_COLORS: Record<string, string> = {
 export default function OrdersPage() {
   const { localePath } = useLocale();
   const t = useTranslations('orders');
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { formatMoney } = useFormatters();
+  const { data: orders = [], isLoading } = useOrders();
 
   const STATE_LABELS: Record<string, string> = {
     Open: t('stateProcessing'),
@@ -36,16 +25,6 @@ export default function OrdersPage() {
     Complete: t('stateDelivered'),
     Cancelled: t('stateCancelled'),
   };
-
-  useEffect(() => {
-    fetch('/api/account/orders')
-      .then((r) => r.json())
-      .then((data) => {
-        setOrders(data.orders || []);
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
-  }, []);
 
   if (isLoading) {
     return (

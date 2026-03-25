@@ -173,7 +173,6 @@ export default async function ProductPage({ params }: PageProps) {
                 variantId={variant?.id || product.masterVariant.id}
                 regularPrice={regularPrice}
                 recurringPrices={recurringPrices}
-                recurrencePolicies={recurrencePolicies}
               />
             ) : (
               <AddToCartButton

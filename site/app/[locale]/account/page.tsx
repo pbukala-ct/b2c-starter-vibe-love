@@ -1,19 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAccount } from '@/hooks/useAccount';
+import { useSWRConfig } from 'swr';
+import { KEY_ACCOUNT } from '@/lib/cache-keys';
 import { useTranslations } from 'next-intl';
 
-interface Profile {
+interface ProfileForm {
   firstName: string;
   lastName: string;
   email: string;
 }
 
 export default function AccountProfilePage() {
-  const { user, setUser } = useAuth();
+  const { data: user } = useAccount();
+  const { mutate } = useSWRConfig();
   const t = useTranslations('account');
-  const [form, setForm] = useState<Profile>({ firstName: '', lastName: '', email: '' });
+  const [form, setForm] = useState<ProfileForm>({ firstName: '', lastName: '', email: '' });
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -43,12 +46,12 @@ export default function AccountProfilePage() {
       if (!res.ok) {
         setError(data.error || t('updateFailed'));
       } else {
-        setUser({
+        mutate(KEY_ACCOUNT, {
           ...user!,
           firstName: data.firstName,
           lastName: data.lastName,
           email: data.email,
-        });
+        }, { revalidate: false });
         setMessage(t('profileUpdated'));
       }
     } catch {
