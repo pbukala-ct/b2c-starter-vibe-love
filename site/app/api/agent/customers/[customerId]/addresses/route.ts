@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { BaseAddress } from '@commercetools/platform-sdk';
 import {
   requireAgentSession,
   requireOrderPlacementRole,
@@ -48,14 +49,14 @@ export async function POST(req: NextRequest, { params }: Params) {
   const scopeError = requireActiveCustomer(session, customerId);
   if (scopeError) return scopeError;
 
-  let body: Record<string, string>;
+  let body: BaseAddress;
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const required = ['firstName', 'lastName', 'streetName', 'city', 'postalCode', 'country'];
+  const required = ['firstName', 'lastName', 'streetName', 'city', 'postalCode', 'country'] as const;
   for (const field of required) {
     if (!body[field]) {
       return NextResponse.json({ error: `Missing required field: ${field}` }, { status: 400 });

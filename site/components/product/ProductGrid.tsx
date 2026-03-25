@@ -1,5 +1,6 @@
+import { getTranslations } from 'next-intl/server';
 import ProductCard from './ProductCard';
-import { ProductProjection } from '@/lib/ct/search';
+import type { ProductProjection } from '@/lib/types';
 
 interface ProductGridProps {
   products: ProductProjection[];
@@ -7,12 +8,14 @@ interface ProductGridProps {
   total?: number;
 }
 
-export default function ProductGrid({ products, title, total }: ProductGridProps) {
+export default async function ProductGrid({ products, title, total }: ProductGridProps) {
+  const t = await getTranslations('search');
+
   if (products.length === 0) {
     return (
-      <div className="text-center py-16 text-charcoal-light">
-        <p className="text-lg mb-2">No products found</p>
-        <p className="text-sm">Try adjusting your filters or search terms</p>
+      <div className="text-charcoal-light py-16 text-center">
+        <p className="mb-2 text-lg">{t('noProducts')}</p>
+        <p className="text-sm">{t('noProductsHint')}</p>
       </div>
     );
   }
@@ -20,14 +23,14 @@ export default function ProductGrid({ products, title, total }: ProductGridProps
   return (
     <div>
       {(title || total !== undefined) && (
-        <div className="flex items-center justify-between mb-6">
-          {title && <h1 className="text-2xl font-semibold text-charcoal">{title}</h1>}
+        <div className="mb-6 flex items-center justify-between">
+          {title && <h1 className="text-charcoal text-2xl font-semibold">{title}</h1>}
           {total !== undefined && (
-            <p className="text-sm text-charcoal-light">{total} products</p>
+            <p className="text-charcoal-light text-sm">{t('productCount', { count: total })}</p>
           )}
         </div>
       )}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-7">
+      <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:gap-7 xl:grid-cols-4">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

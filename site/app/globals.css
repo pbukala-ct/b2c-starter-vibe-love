@@ -1,21 +1,21 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-  --color-cream: #FAF7F4;
-  --color-cream-dark: #F0EBE3;
-  --color-charcoal: #1A1A1A;
-  --color-charcoal-light: #4A4A4A;
-  --color-terra: #B5724A;
-  --color-terra-dark: #9A5F3A;
-  --color-sage: #7D9B7A;
-  --color-border: #E5E0D8;
-  --color-border-dark: #D0C8BC;
+  --color-cream: #faf7f4;
+  --color-cream-dark: #f0ebe3;
+  --color-charcoal: #1a1a1a;
+  --color-charcoal-light: #4a4a4a;
+  --color-terra: #b5724a;
+  --color-terra-dark: #9a5f3a;
+  --color-sage: #7d9b7a;
+  --color-border: #e5e0d8;
+  --color-border-dark: #d0c8bc;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 :root {
-  --background: #FAF7F4;
-  --foreground: #1A1A1A;
+  --background: #faf7f4;
+  --foreground: #1a1a1a;
 }
 
 * {
@@ -30,7 +30,8 @@ body {
 }
 
 /* Smooth transitions */
-a, button {
+a,
+button {
   transition: all 0.15s ease;
 }
 
@@ -60,8 +61,14 @@ a, button {
 }
 
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Custom scrollbar */
@@ -69,9 +76,9 @@ a, button {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F0EBE3;
+  background: #f0ebe3;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D0C8BC;
+  background: #d0c8bc;
   border-radius: 3px;
 }

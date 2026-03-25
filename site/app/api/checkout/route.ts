@@ -15,16 +15,12 @@ import {
   setLineItemShippingDetails,
 } from '@/lib/ct/cart';
 import { createRecurringOrder } from '@/lib/ct/cart';
+import { getRecurrencePolicyById } from '@/lib/ct/subscriptions';
 import { COUNTRY_CONFIG } from '@/lib/utils';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const {
-    shippingAddresses,
-    billingAddress,
-    shippingMethodId,
-    lineItemShipping,
-  } = body;
+  const { shippingAddresses, billingAddress, shippingMethodId, lineItemShipping } = body;
 
   const session = await getSession();
   if (!session.cartId) {
@@ -43,7 +39,7 @@ export async function POST(req: NextRequest) {
       let newVersion = newCart.version;
       let migratedCart = newCart;
 
-      for (const item of (cart.lineItems || [])) {
+      for (const item of cart.lineItems || []) {
         const policyId = item.recurrenceInfo?.recurrencePolicy?.id;
         migratedCart = await addLineItem(
           migratedCart.id,
@@ -85,7 +81,10 @@ export async function POST(req: NextRequest) {
           if (lis.targets && lis.targets.length > 0) {
             try {
               cart = await setLineItemShippingDetails(
-                cart.id, version, lis.lineItemId, lis.targets
+                cart.id,
+                version,
+                lis.lineItemId,
+                lis.targets
               );
               version = cart.version;
             } catch (e) {
@@ -128,28 +127,25 @@ export async function POST(req: NextRequest) {
 
     // Create recurring orders for subscription line items
     const subscriptionItems = (order.lineItems || []).filter(
-      (item: { recurrenceInfo?: { recurrencePolicy: { id: string } } }) => item.recurrenceInfo?.recurrencePolicy
+      (item: { recurrenceInfo?: { recurrencePolicy: { id: string } } }) =>
+        item.recurrenceInfo?.recurrencePolicy
     );
 
     if (subscriptionItems.length > 0 && session.customerId) {
       for (const item of subscriptionItems) {
-        const policyId = item.recurrenceInfo.recurrencePolicy.id;
-        const policiesResp = await fetch(
-          `${process.env.CTP_API_URL}/${process.env.CTP_PROJECT_KEY}/recurrence-policies/${policyId}`,
-          { headers: { 'Authorization': `Bearer ${await getAdminToken()}` } }
-        );
-        if (policiesResp.ok) {
-          const policy = await policiesResp.json();
-          try {
-            await createRecurringOrder(
-              order.id,
-              cart.id,
-              session.customerId,
-              { value: policy.schedule.value, intervalUnit: policy.schedule.intervalUnit }
-            );
-          } catch (e) {
-            console.error('Failed to create recurring order:', e);
+        const policyId = item.recurrenceInfo?.recurrencePolicy.id;
+        try {
+          if (policyId) {
+            const policy = await getRecurrencePolicyById(policyId);
+            if (policy.schedule.type === 'standard') {
+              await createRecurringOrder(order.id, cart.id, session.customerId, {
+                value: policy.schedule.value,
+                intervalUnit: policy.schedule.intervalUnit,
+              });
+            }
           }
+        } catch (e) {
+          console.error('Failed to create recurring order:', e);
         }
       }
     }
@@ -165,16 +161,4 @@ export async function POST(req: NextRequest) {
     const msg = e instanceof Error ? e.message : 'Checkout failed';
     return NextResponse.json({ error: msg }, { status: 500 });
   }
-}
-
-async function getAdminToken(): Promise<string> {
-  const authUrl = process.env.CTP_AUTH_URL!;
-  const creds = Buffer.from(`${process.env.CTP_CLIENT_ID}:${process.env.CTP_CLIENT_SECRET}`).toString('base64');
-  const resp = await fetch(`${authUrl}/oauth/token`, {
-    method: 'POST',
-    headers: { 'Authorization': `Basic ${creds}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=client_credentials&scope=${encodeURIComponent(process.env.CTP_SCOPES!)}`,
-  });
-  const data = await resp.json();
-  return data.access_token;
 }

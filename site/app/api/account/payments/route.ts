@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
-import { getCustomObject, upsertCustomObject } from '@/lib/ct/auth';
+import { getCustomObject, upsertCustomObject } from '@/lib/ct/custom-objects';
 
 const CONTAINER = 'customer-payment-methods';
 
@@ -61,8 +61,8 @@ export async function DELETE(req: NextRequest) {
   if (!customerId) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   const { cardId } = await req.json();
   let cards = await loadCards(customerId);
-  cards = cards.filter(c => c.id !== cardId);
-  if (cards.length > 0 && !cards.some(c => c.isDefault)) {
+  cards = cards.filter((c) => c.id !== cardId);
+  if (cards.length > 0 && !cards.some((c) => c.isDefault)) {
     cards[0].isDefault = true;
   }
   await saveCards(customerId, cards);
@@ -73,7 +73,7 @@ export async function PATCH(req: NextRequest) {
   const customerId = await getCustomerId();
   if (!customerId) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   const { cardId } = await req.json();
-  const cards = (await loadCards(customerId)).map(c => ({ ...c, isDefault: c.id === cardId }));
+  const cards = (await loadCards(customerId)).map((c) => ({ ...c, isDefault: c.id === cardId }));
   await saveCards(customerId, cards);
   return NextResponse.json({ cards });
 }

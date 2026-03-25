@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession, createSessionToken, setSessionCookie } from '@/lib/session';
+import { getSession, getLocale, createSessionToken, setSessionCookie } from '@/lib/session';
 import { getCart, createCart, addLineItem } from '@/lib/ct/cart';
-import { COUNTRY_CONFIG } from '@/lib/utils';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -11,9 +10,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'productId required' }, { status: 400 });
   }
 
-  const session = await getSession();
-  const country = req.cookies.get('vibe-country')?.value || 'US';
-  const config = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
+  const [session, { country, currency }] = await Promise.all([getSession(), getLocale()]);
 
   let cart;
   let cartId = session.cartId;
@@ -32,17 +29,22 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // CT carts store currency at cart.currency OR cart.totalPrice.currencyCode.
-  // Always prefer totalPrice.currencyCode as the authoritative source.
-  const cartCurrency = cart?.currency || cart?.totalPrice?.currencyCode;
+  const cartCurrency = cart?.totalPrice?.currencyCode;
 
   // Create new cart if none exists, currency missing/mismatched, or country changed
-  if (!cartId || !cart || !cartCurrency || cartCurrency !== config.currency) {
-    cart = await createCart(config.currency, country, session.customerId);
+  if (!cartId || !cart || !cartCurrency || cartCurrency !== currency) {
+    cart = await createCart(currency, country, session.customerId);
     cartId = cart.id;
   }
 
-  const updatedCart = await addLineItem(cartId!, cart.version, productId, variantId, quantity, recurrencePolicyId);
+  const updatedCart = await addLineItem(
+    cartId!,
+    cart.version,
+    productId,
+    variantId,
+    quantity,
+    recurrencePolicyId
+  );
 
   const newSession = { ...session, cartId: updatedCart.id };
   const token = await createSessionToken(newSession);

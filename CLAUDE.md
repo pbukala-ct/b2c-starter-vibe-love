@@ -72,3 +72,14 @@ Tests live in `test/tests/`. They run against the live Netlify site by default (
 ## Tools Pattern
 All tools import from `tools/ct-admin.mjs` which reads `tools/.env`. To create a new tool, follow the existing pattern.
 
+# Using Skills
+## Features
+You have access to the following skills to implement specific features
+1. Superuser: customer impersonation [skill](./.claude/skills/superuser/SKILL.md)
+2. BOPIS: Buy Online, Pick Up In Store — channel API, supply-channel cart, per-store inventory, channel selector UI [skill](./.claude/skills/bopis/SKILL.md)
+3. Bundles: configurable product bundles — CT custom type setup, parent-child line item relationships, cascade cart updates, bundle PDP component [skill](./.claude/skills/bundles/SKILL.md)
+
+## Generic guideline skills
+1. Add API: Guidelines to follow when creating a new api call [skill](./.claude/skills/add-api/SKILL.md)
+2. Add new country: Guidelines to follow when adding a new country/locale/language [skill](./.claude/skills/add-country/SKILL.md)
+

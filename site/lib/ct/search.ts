@@ -1,31 +1,54 @@
-import { apiUrl, projectKey } from './client';
+import { getTranslations } from 'next-intl/server';
+import { apiRoot } from './client';
+import { DEFAULT_LOCALE } from '@/lib/utils';
+import type {
+  ProductSearchFacetResult,
+  ProductSearchRequest,
+  SearchSorting,
+} from '@commercetools/platform-sdk';
+import {
+  type FacetDefinition,
+  facetDefinitionsToFacetExpressions,
+  getSearchableAttributes,
+} from './facets';
+import { getExtraFacets, FACET_BLOCKLIST, FACET_RENDERER_MAP } from './facet-config';
+import { facetDefinitionToFacetValue } from './facets';
 
-export interface SearchFilters {
-  color?: string;
-  finish?: string;
-  newArrival?: boolean;
-  minPrice?: number;
-  maxPrice?: number;
-}
+export type { FacetDefinition } from './facets';
+
+export type SortValues = Array<{ field: string; order: 'asc' | 'desc'; language?: string }>;
 
 export interface SearchParams {
   query?: string;
   categoryId?: string;
   categorySubTree?: boolean;
-  filters?: SearchFilters;
+  /** Generic facet filters keyed by URL param (e.g. { color: 'red', 'new-arrival': 'true' }). */
+  facetFilters?: Record<string, string>;
   locale?: string;
   currency?: string;
   country?: string;
   limit?: number;
   offset?: number;
-  sort?: string;
+  sort?: SortValues;
+  /** Override the auto-fetched facet definitions entirely (skips facet-config.ts). */
+  facetDefinitions?: FacetDefinition[];
 }
 
-interface SearchResult {
+interface RawSearchResult {
   total: number;
   offset: number;
   limit: number;
   results: Array<{ id: string; productProjection: ProductProjection }>;
+  facets: ProductSearchFacetResult[];
+}
+
+export interface SearchResult {
+  total: number;
+  offset: number;
+  limit: number;
+  products: ProductProjection[];
+  facets: ProductSearchFacetResult[];
+  facetDefinitions: FacetDefinition[];
 }
 
 export interface ProductProjection {
@@ -65,38 +88,106 @@ export interface Image {
   dimensions?: { w: number; h: number };
 }
 
-async function getAdminToken(): Promise<string> {
-  const authUrl = process.env.CTP_AUTH_URL!;
-  const creds = Buffer.from(`${process.env.CTP_CLIENT_ID}:${process.env.CTP_CLIENT_SECRET}`).toString('base64');
-  const resp = await fetch(`${authUrl}/oauth/token`, {
-    method: 'POST',
-    headers: { 'Authorization': `Basic ${creds}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=client_credentials&scope=${encodeURIComponent(process.env.CTP_SCOPES!)}`,
-    next: { revalidate: 3500 },
+const SORT_FIELD_MAP: Record<string, string> = {
+  price: 'variants.prices.centAmount',
+};
+
+export function parseSortParam(sort: string): SortValues {
+  return sort.split(',').map((s) => {
+    const [field, order] = s.split(':');
+    return { field: SORT_FIELD_MAP[field] ?? field, order: order as 'asc' | 'desc' };
   });
-  const data = await resp.json();
-  return data.access_token;
+}
+
+/** Invert FACET_RENDERER_MAP: urlParam → attributeId */
+const URL_PARAM_TO_ATTRIBUTE_ID: Record<string, string> = Object.fromEntries(
+  Object.entries(FACET_RENDERER_MAP)
+    .filter(([, cfg]) => cfg.urlParam)
+    .map(([attributeId, cfg]) => [cfg.urlParam!, attributeId])
+);
+
+function buildFacetFilterQueryParts(
+  facetFilters: Record<string, string>,
+  facetDefinitions: FacetDefinition[],
+  locale: string
+): unknown[] {
+  return Object.entries(facetFilters).flatMap(([urlParam, value]) => {
+    if (!value) return [];
+    const attributeId = URL_PARAM_TO_ATTRIBUTE_ID[urlParam] ?? `variants.attributes.${urlParam}`;
+    const facetDef = facetDefinitions.find((f) => f.attributeId === attributeId);
+    if (!facetDef) return [];
+    const facetValue = facetDefinitionToFacetValue(facetDef, locale);
+    return [
+      {
+        exact: {
+          field: facetValue.field,
+          ...(facetValue.fieldType ? { fieldType: facetValue.fieldType } : {}),
+          ...('language' in facetValue && facetValue.language
+            ? { language: facetValue.language }
+            : {}),
+          value: facetDef.attributeType === 'boolean' ? value === 'true' : value,
+        },
+      },
+    ];
+  });
 }
 
 export async function searchProducts(params: SearchParams): Promise<SearchResult> {
-  const token = await getAdminToken();
   const {
     query,
     categoryId,
     categorySubTree = true,
-    filters = {},
-    locale = 'en-US',
-    currency = 'USD',
-    country = 'US',
+    facetFilters = {},
+    locale = DEFAULT_LOCALE.locale,
+    currency = DEFAULT_LOCALE.currency,
+    country = DEFAULT_LOCALE.country,
     limit = 24,
     offset = 0,
-    sort = 'createdAt',
+    sort = [{ field: 'createdAt', order: 'desc' as const }],
+    facetDefinitions,
   } = params;
 
   const queryParts: unknown[] = [];
 
   if (query) {
-    queryParts.push({ fullText: { field: 'name', value: query, language: locale } });
+    const wildcardValue = `*${query}*`;
+    queryParts.push({
+      or: [
+        {
+          wildcard: {
+            field: 'name',
+            language: locale,
+            value: wildcardValue,
+            caseInsensitive: true,
+          },
+        },
+        {
+          wildcard: {
+            field: 'description',
+            language: locale,
+            value: wildcardValue,
+            caseInsensitive: true,
+          },
+        },
+        {
+          wildcard: {
+            field: 'slug',
+            language: locale,
+            value: wildcardValue,
+            caseInsensitive: true,
+          },
+        },
+        {
+          wildcard: {
+            field: 'searchKeywords',
+            language: locale,
+            value: wildcardValue,
+            caseInsensitive: true,
+          },
+        },
+        { exact: { field: 'variants.sku', value: query, caseInsensitive: true } },
+      ],
+    });
   }
 
   if (categoryId) {
@@ -108,109 +199,122 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
     });
   }
 
-  if (filters.color) {
-    queryParts.push({
-      exact: {
-        field: 'variants.attributes.search-color.key',
-        fieldType: 'lenum',
-        value: filters.color,
-      },
-    });
-  }
+  const baseFacets = facetDefinitions ?? (await getSearchableAttributes(locale));
+  const resolvedFacetDefinitions = facetDefinitions
+    ? baseFacets
+    : [
+        ...baseFacets.filter((f) => !FACET_BLOCKLIST.includes(f.attributeId ?? '')),
+        ...getExtraFacets(
+          await getTranslations({ locale: locale.toLowerCase(), namespace: 'search' })
+        ),
+      ];
 
-  if (filters.finish) {
-    queryParts.push({
-      exact: {
-        field: 'variants.attributes.search-finish.key',
-        fieldType: 'lenum',
-        value: filters.finish,
-      },
-    });
-  }
+  queryParts.push(...buildFacetFilterQueryParts(facetFilters, resolvedFacetDefinitions, locale));
 
-  if (filters.newArrival) {
-    queryParts.push({
-      exact: {
-        field: 'variants.attributes.new-arrival',
-        fieldType: 'boolean',
-        value: true,
-      },
-    });
-  }
+  const searchQuery =
+    queryParts.length === 0
+      ? undefined
+      : queryParts.length === 1
+        ? queryParts[0]
+        : { and: queryParts };
 
-  const searchQuery = queryParts.length === 0
-    ? undefined
-    : queryParts.length === 1
-    ? queryParts[0]
-    : { and: queryParts };
+  const sortParam = sort.map(
+    (s) => (s.field === 'name' ? { ...s, language: locale } : s) as SearchSorting
+  );
 
-  const sortParam = sort === 'price-asc' || sort === 'price-desc'
-    ? [{ field: 'variants.prices.centAmount', order: sort === 'price-asc' ? 'asc' : 'desc' }]
-    : sort === 'name'
-    ? [{ field: 'name', locale, order: 'asc' }]
-    : [{ field: 'createdAt', order: 'desc' as const }];
+  const facets =
+    resolvedFacetDefinitions.length > 0
+      ? facetDefinitionsToFacetExpressions(resolvedFacetDefinitions, locale)
+      : undefined;
 
-  const body: Record<string, unknown> = {
+  const body: ProductSearchRequest = {
     limit,
     offset,
-    productProjectionParameters: {
-      priceCurrency: currency,
-      priceCountry: country,
-    },
+    productProjectionParameters: { priceCurrency: currency, priceCountry: country },
     sort: sortParam,
+    ...(searchQuery ? { query: searchQuery as ProductSearchRequest['query'] } : {}),
+    ...(facets ? { facets } : {}),
   };
 
-  if (searchQuery) body.query = searchQuery;
-
-  const resp = await fetch(`${apiUrl}/${projectKey}/products/search`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    next: { revalidate: 60 },
+  const toSearchResult = (raw: RawSearchResult): SearchResult => ({
+    total: raw.total,
+    offset: raw.offset,
+    limit: raw.limit,
+    products: raw.results.map((r) => r.productProjection),
+    facets: raw.facets ?? [],
+    facetDefinitions: resolvedFacetDefinitions,
   });
 
-  if (!resp.ok) {
-    const err = await resp.json();
-    throw new Error(`Product search failed: ${err.message}`);
+  // If the sort field has no data in the index (e.g. categoryOrderHints not set in Merchant Center),
+  // CT returns a query_shard_exception. Retry without the custom sort so the page still loads.
+  try {
+    const { body: result } = await apiRoot.products().search().post({ body: body }).execute();
+    return toSearchResult(result as unknown as RawSearchResult);
+  } catch (err: unknown) {
+    const msg =
+      (err as { body?: { message?: string } }).body?.message ??
+      (err as { message?: string }).message ??
+      '';
+    if (msg.includes('query_shard_exception')) {
+      const fallbackBody = { ...body, sort: [{ field: 'createdAt', order: 'desc' as const }] };
+      const { body: result } = await apiRoot
+        .products()
+        .search()
+        .post({ body: fallbackBody })
+        .execute();
+      return toSearchResult(result as unknown as RawSearchResult);
+    }
+    throw new Error(`Product search failed: ${msg}`, { cause: err });
   }
-
-  return resp.json();
 }
 
-export async function getProductBySlug(slug: string, locale: string, currency: string, country: string): Promise<ProductProjection | null> {
-  const token = await getAdminToken();
-
-  const resp = await fetch(`${apiUrl}/${projectKey}/products/search`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      limit: 1,
-      query: { exact: { field: 'slug', value: slug, language: locale } },
-      productProjectionParameters: { priceCurrency: currency, priceCountry: country },
-    }),
-    next: { revalidate: 60 },
-  });
-
-  if (!resp.ok) return null;
-  const data = await resp.json();
-  return data.results[0]?.productProjection || null;
+export async function getProductBySku(
+  sku: string,
+  locale: string,
+  currency: string,
+  country: string
+): Promise<ProductProjection | null> {
+  try {
+    const { body } = await apiRoot
+      .products()
+      .search()
+      .post({
+        body: {
+          limit: 1,
+          query: { exact: { field: 'variants.sku', value: sku } } as ProductSearchRequest['query'],
+          productProjectionParameters: {
+            priceCurrency: currency,
+            priceCountry: country,
+            localeProjection: [locale],
+          },
+        },
+      })
+      .execute();
+    return (body as unknown as RawSearchResult).results[0]?.productProjection ?? null;
+  } catch {
+    return null;
+  }
 }
 
-export async function getProductById(id: string, currency: string, country: string): Promise<ProductProjection | null> {
-  const token = await getAdminToken();
-
-  const resp = await fetch(`${apiUrl}/${projectKey}/products/search`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      limit: 1,
-      query: { exact: { field: 'id', value: id } },
-      productProjectionParameters: { priceCurrency: currency, priceCountry: country },
-    }),
-    next: { revalidate: 60 },
-  });
-
-  if (!resp.ok) return null;
-  const data = await resp.json();
-  return data.results[0]?.productProjection || null;
+export async function getProductById(
+  id: string,
+  currency: string,
+  country: string
+): Promise<ProductProjection | null> {
+  try {
+    const { body } = await apiRoot
+      .products()
+      .search()
+      .post({
+        body: {
+          limit: 1,
+          query: { exact: { field: 'id', value: id } } as ProductSearchRequest['query'],
+          productProjectionParameters: { priceCurrency: currency, priceCountry: country },
+        },
+      })
+      .execute();
+    return (body as unknown as RawSearchResult).results[0]?.productProjection ?? null;
+  } catch {
+    return null;
+  }
 }

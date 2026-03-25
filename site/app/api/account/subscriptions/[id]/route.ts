@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { getRecurringOrderById, updateRecurringOrder } from '@/lib/ct/auth';
+import { RecurringOrderUpdateAction } from '@commercetools/platform-sdk/dist/declarations/src/generated/models/recurring-order';
+
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const session = await getSession();
+  if (!session.customerId) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+  try {
+    const sub = await getRecurringOrderById(id, { expand: 'originOrder' });
+    // Normalise lineItems from origin order if needed
+    const normalised = {
+      ...sub,
+      lineItems: sub.originOrder.obj?.lineItems,
+      nextOrderDate: sub.nextOrderAt,
+    };
+    return NextResponse.json({ subscription: normalised });
+  } catch {
+    return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
+  }
+}
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -12,25 +33,30 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  let ctAction: Record<string, unknown>;
+  let ctAction: RecurringOrderUpdateAction;
   if (action === 'pause') {
-    ctAction = { action: 'setRecurringOrderState', recurringOrderState: 'Paused' };
+    ctAction = { action: 'setRecurringOrderState', recurringOrderState: { type: 'paused' } };
   } else if (action === 'resume') {
-    ctAction = { action: 'setRecurringOrderState', recurringOrderState: 'Active' };
+    ctAction = { action: 'setRecurringOrderState', recurringOrderState: { type: 'active' } };
   } else if (action === 'cancel') {
-    ctAction = { action: 'setRecurringOrderState', recurringOrderState: 'Cancelled' };
+    ctAction = { action: 'setRecurringOrderState', recurringOrderState: { type: 'canceled' } };
   } else if (action === 'skip') {
     const totalToSkip = (body.totalToSkip as number) || 1;
-    ctAction = { action: 'setOrderSkipConfiguration', skipConfigurationInputDraft: { Counter: { totalToSkip } } };
+    ctAction = {
+      action: 'setOrderSkipConfiguration',
+      skipConfigurationInputDraft: { type: 'Counter', totalToSkip: totalToSkip },
+    };
   } else if (action === 'setSchedule') {
-    const { schedule } = body;
-    ctAction = { action: 'setSchedule', schedule };
+    const { recurrencePolicyId, schedule } = body;
+    ctAction = {
+      action: 'setSchedule',
+      recurrencePolicy: recurrencePolicyId ? { id: recurrencePolicyId } : schedule,
+    };
   } else {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
 
   try {
-    // Fetch current version to satisfy CT's optimistic concurrency check
     const current = await getRecurringOrderById(id);
     const result = await updateRecurringOrder(id, current.version, [ctAction]);
     return NextResponse.json({ subscription: result });

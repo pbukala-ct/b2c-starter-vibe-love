@@ -100,7 +100,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     currentCart = await setBillingAddress(
       currentCart.id,
       version,
-      currentCart.shippingAddress as unknown as Record<string, string>
+      currentCart.shippingAddress!
     );
     version = currentCart.version;
 

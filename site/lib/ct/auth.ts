@@ -1,37 +1,25 @@
-import { apiUrl, projectKey } from './client';
-
-async function getAdminToken(): Promise<string> {
-  const authUrl = process.env.CTP_AUTH_URL!;
-  const creds = Buffer.from(`${process.env.CTP_CLIENT_ID}:${process.env.CTP_CLIENT_SECRET}`).toString('base64');
-  const resp = await fetch(`${authUrl}/oauth/token`, {
-    method: 'POST',
-    headers: { 'Authorization': `Basic ${creds}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=client_credentials&scope=${encodeURIComponent(process.env.CTP_SCOPES!)}`,
-  });
-  const data = await resp.json();
-  return data.access_token;
-}
-
-async function ct(method: string, path: string, body?: unknown) {
-  const token = await getAdminToken();
-  const resp = await fetch(`${apiUrl}/${projectKey}${path}`, {
-    method,
-    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await resp.json();
-  if (!resp.ok) throw new Error(`CT ${method} ${path}: ${data.message || resp.status}`);
-  return data;
-}
+import { apiRoot } from './client';
+import type { CustomerUpdateAction } from '@commercetools/platform-sdk';
+import type { RecurringOrderUpdateAction } from '@commercetools/platform-sdk/dist/declarations/src/generated/models/recurring-order';
+import { QueryParam } from '@commercetools/platform-sdk/dist/declarations/src/generated/shared/utils/common-types';
 
 export async function signInCustomer(email: string, password: string, anonymousCartId?: string) {
-  const body: Record<string, unknown> = { email, password };
-  if (anonymousCartId) {
-    body.anonymousCartId = anonymousCartId;
-    body.anonymousCartSignInMode = 'MergeWithExistingCustomerCart';
-  }
-  // CT customer sign-in endpoint
-  return ct('POST', '/login', body);
+  const { body } = await apiRoot
+    .login()
+    .post({
+      body: {
+        email,
+        password,
+        ...(anonymousCartId
+          ? {
+              anonymousCartId,
+              anonymousCartSignInMode: 'MergeWithExistingCustomerCart',
+            }
+          : {}),
+      },
+    })
+    .execute();
+  return body;
 }
 
 export async function signUpCustomer(data: {
@@ -40,25 +28,42 @@ export async function signUpCustomer(data: {
   firstName: string;
   lastName: string;
 }) {
-  return ct('POST', '/customers', data);
+  const { body } = await apiRoot.customers().post({ body: data }).execute();
+  return body;
 }
 
 export async function getCustomerById(customerId: string) {
-  return ct('GET', `/customers/${customerId}`);
+  const { body } = await apiRoot.customers().withId({ ID: customerId }).get().execute();
+  return body;
 }
 
 export async function getCustomerOrders(customerId: string, limit = 20, offset = 0) {
-  return ct(
-    'GET',
-    `/orders?where=${encodeURIComponent(`customerId = "${customerId}"`)}&sort=createdAt+desc&limit=${limit}&offset=${offset}`
-  );
+  const { body } = await apiRoot
+    .orders()
+    .get({
+      queryArgs: {
+        where: `customerId = "${customerId}"`,
+        sort: 'createdAt desc',
+        limit,
+        offset,
+      },
+    })
+    .execute();
+  return body;
 }
 
 export async function getCustomerRecurringOrders(customerId: string) {
-  return ct(
-    'GET',
-    `/recurring-orders?where=${encodeURIComponent(`customer(id = "${customerId}")`)}&limit=50&expand=originOrder`
-  );
+  const { body } = await apiRoot
+    .recurringOrders()
+    .get({
+      queryArgs: {
+        where: `customer(id = "${customerId}")`,
+        limit: 50,
+        expand: ['originOrder'],
+      },
+    })
+    .execute();
+  return body;
 }
 
 export async function updateCustomer(
@@ -66,28 +71,58 @@ export async function updateCustomer(
   version: number,
   actions: Array<{ action: string; [key: string]: unknown }>
 ) {
-  return ct('POST', `/customers/${customerId}`, { version, actions });
+  const { body } = await apiRoot
+    .customers()
+    .withId({ ID: customerId })
+    .post({ body: { version, actions: actions as CustomerUpdateAction[] } })
+    .execute();
+  return body;
 }
 
-export async function getRecurringOrderById(recurringOrderId: string) {
-  return ct('GET', `/recurring-orders/${recurringOrderId}`);
+export async function getRecurringOrderById(
+  recurringOrderId: string,
+  queryArgs?: {
+    expand?: string | string[];
+    [key: string]: QueryParam;
+  }
+) {
+  const { body } = await apiRoot
+    .recurringOrders()
+    .withId({ ID: recurringOrderId })
+    .get({ queryArgs: queryArgs })
+    .execute();
+  return body;
 }
 
 export async function updateRecurringOrder(
   recurringOrderId: string,
   version: number,
-  actions: Array<{ action: string; [key: string]: unknown }>
+  actions: Array<RecurringOrderUpdateAction>
 ) {
-  return ct('POST', `/recurring-orders/${recurringOrderId}`, { version, actions });
+  const { body } = await apiRoot
+    .recurringOrders()
+    .withId({ ID: recurringOrderId })
+    .post({ body: { version, actions } })
+    .execute();
+  return body;
 }
 
 export async function getRecurrencePolicies() {
-  return ct('GET', '/recurrence-policies?limit=20');
+  const { body } = await apiRoot
+    .recurrencePolicies()
+    .get({ queryArgs: { limit: 20 } })
+    .execute();
+  return body;
 }
 
 export async function getCustomObject(container: string, key: string) {
   try {
-    return await ct('GET', `/custom-objects/${container}/${key}`);
+    const { body } = await apiRoot
+      .customObjects()
+      .withContainerAndKey({ container, key })
+      .get()
+      .execute();
+    return body;
   } catch (e) {
     if ((e as Error).message.includes('404') || (e as Error).message.includes('ResourceNotFound')) {
       return null;
@@ -97,9 +132,14 @@ export async function getCustomObject(container: string, key: string) {
 }
 
 export async function upsertCustomObject(container: string, key: string, value: unknown) {
-  return ct('POST', '/custom-objects', { container, key, value });
+  const { body } = await apiRoot
+    .customObjects()
+    .post({ body: { container, key, value } })
+    .execute();
+  return body;
 }
 
 export async function getOrderById(orderId: string) {
-  return ct('GET', `/orders/${orderId}`);
+  const { body } = await apiRoot.orders().withId({ ID: orderId }).get().execute();
+  return body;
 }

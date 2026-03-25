@@ -1,0 +1,188 @@
+import { notFound } from 'next/navigation';
+import { getCategoryBySlug, getCategoryTree } from '@/lib/ct/categories';
+import { searchProducts, parseSortParam } from '@/lib/ct/search';
+import ProductGrid from '@/components/product/ProductGrid';
+import ProductFilters from '@/components/product/ProductFilters';
+import { getLocalizedString, toUrlLocale } from '@/lib/utils';
+import { getLocale } from '@/lib/session';
+import { Suspense } from 'react';
+import Link from 'next/link';
+import { Metadata } from 'next';
+
+interface PageProps {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const category = await getCategoryBySlug(slug);
+  if (!category) return { title: 'Category Not Found' };
+  const name = getLocalizedString(category.name);
+  return { title: name };
+}
+
+export default async function CategoryPage({ params, searchParams }: PageProps) {
+  const { slug } = await params;
+  const sp = await searchParams;
+  const { country, currency, locale } = await getLocale();
+  const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
+
+  const [category, categoryTree] = await Promise.all([getCategoryBySlug(slug), getCategoryTree()]);
+
+  if (!category) notFound();
+
+  const name = getLocalizedString(category.name, locale);
+  const limit = 24;
+
+  const { sort: sortParam, offset: offsetParam, ...rawFacetFilters } = sp;
+  const offset = parseInt(offsetParam || '0');
+  const facetFilters = Object.fromEntries(
+    Object.entries(rawFacetFilters).filter(([, v]) => v !== undefined)
+  ) as Record<string, string>;
+
+  const result = await searchProducts({
+    categoryId: category.id,
+    categorySubTree: true,
+    facetFilters,
+    sort: sortParam
+      ? parseSortParam(sortParam)
+      : [
+          { field: `score`, order: 'asc' },
+          { field: `id`, order: 'asc' },
+        ],
+    locale,
+    currency,
+    country,
+    limit,
+    offset,
+  });
+
+  const { products } = result;
+
+  // Build breadcrumb
+  const breadcrumb: Array<{ name: string; slug: string }> = [];
+  let current = category;
+  while (current.parent) {
+    const parent = categoryTree.flat().find((c) => c.id === current.parent?.id);
+    if (parent) {
+      breadcrumb.unshift({
+        name: getLocalizedString(parent.name, locale),
+        slug: getLocalizedString(parent.slug, locale),
+      });
+      current = parent;
+    } else break;
+  }
+  breadcrumb.push({ name, slug });
+
+  const totalPages = Math.ceil(result.total / limit);
+  const currentPage = Math.floor(offset / limit) + 1;
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+      {/* Breadcrumb */}
+      <nav className="text-charcoal-light mb-6 flex items-center gap-2 text-xs">
+        <Link href={lp('/')} className="hover:text-terra">
+          Home
+        </Link>
+        {breadcrumb.map((crumb, i) => (
+          <span key={crumb.slug} className="flex items-center gap-2">
+            <span>/</span>
+            {i === breadcrumb.length - 1 ? (
+              <span className="text-charcoal">{crumb.name}</span>
+            ) : (
+              <Link href={lp(`/category/${crumb.slug}`)} className="hover:text-terra">
+                {crumb.name}
+              </Link>
+            )}
+          </span>
+        ))}
+      </nav>
+
+      <div className="flex gap-8">
+        {/* Filters sidebar */}
+        <aside className="hidden w-52 flex-shrink-0 md:block">
+          <Suspense>
+            <ProductFilters
+              currentSort={sortParam ? parseSortParam(sortParam) : undefined}
+              facets={result.facets}
+              facetDefinitions={result.facetDefinitions}
+            />
+          </Suspense>
+
+          {/* Subcategory links */}
+          {category.children && category.children.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-charcoal mb-3 text-xs font-semibold tracking-wider uppercase">
+                Subcategories
+              </h3>
+              <ul className="space-y-1">
+                <li>
+                  <Link
+                    href={lp(`/category/${slug}`)}
+                    className="text-charcoal hover:text-terra block py-1 text-sm font-medium"
+                  >
+                    All {name}
+                  </Link>
+                </li>
+                {category.children.map((child) => {
+                  const childName = getLocalizedString(child.name, locale);
+                  const childSlug = getLocalizedString(child.slug, locale);
+                  return (
+                    <li key={child.id}>
+                      <Link
+                        href={lp(`/category/${childSlug}`)}
+                        className="text-charcoal-light hover:text-terra block py-1 text-sm"
+                      >
+                        {childName}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+        </aside>
+
+        {/* Products */}
+        <div className="min-w-0 flex-1">
+          <ProductGrid products={products} title={name} total={result.total} />
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-10 flex items-center justify-center gap-2">
+              {currentPage > 1 && (
+                <Link
+                  href={`?${new URLSearchParams({ ...sp, offset: String((currentPage - 2) * limit) })}`}
+                  className="border-border hover:bg-cream rounded-sm border px-4 py-2 text-sm transition-colors"
+                >
+                  ← Prev
+                </Link>
+              )}
+              {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
+                const page = i + 1;
+                return (
+                  <Link
+                    key={page}
+                    href={`?${new URLSearchParams({ ...sp, offset: String((page - 1) * limit) })}`}
+                    className={`flex h-9 w-9 items-center justify-center rounded-sm border text-sm transition-colors ${page === currentPage ? 'bg-charcoal border-charcoal text-white' : 'border-border hover:bg-cream'}`}
+                  >
+                    {page}
+                  </Link>
+                );
+              })}
+              {currentPage < totalPages && (
+                <Link
+                  href={`?${new URLSearchParams({ ...sp, offset: String(currentPage * limit) })}`}
+                  className="border-border hover:bg-cream rounded-sm border px-4 py-2 text-sm transition-colors"
+                >
+                  Next →
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
