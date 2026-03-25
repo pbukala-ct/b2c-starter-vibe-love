@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { DEFAULT_LOCALE } from '@/lib/utils';
 
-const LOCALES = ['en-us', 'en-gb', 'de-de'];
-const DEFAULT_LOCALE = process.env.DEFAULT_LOCALE || 'en-us';
 const COUNTRY_TO_LOCALE: Record<string, string> = {
   US: 'en-us',
   GB: 'en-gb',
   DE: 'de-de',
 };
+const LOCALES = Object.values(COUNTRY_TO_LOCALE);
+const DEFAULT_URL_LOCALE = COUNTRY_TO_LOCALE[DEFAULT_LOCALE.country];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -31,7 +32,7 @@ export function proxy(request: NextRequest) {
 
   // Derive locale from vibe-country cookie, fall back to DEFAULT_LOCALE
   const country = request.cookies.get('vibe-country')?.value || 'US';
-  const locale = COUNTRY_TO_LOCALE[country] || DEFAULT_LOCALE;
+  const locale = COUNTRY_TO_LOCALE[country] || DEFAULT_URL_LOCALE;
 
   const url = request.nextUrl.clone();
   url.pathname = `/${locale}${pathname === '/' ? '' : pathname}`;

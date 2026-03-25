@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { COUNTRY_CONFIG } from '@/lib/utils';
+import { COUNTRY_CONFIG, DEFAULT_LOCALE } from '@/lib/utils';
 
 const SECRET = new TextEncoder().encode(
   process.env.SESSION_SECRET || 'vibe-home-fallback-secret-key-2024'
@@ -34,12 +34,7 @@ export async function getSession(): Promise<Session> {
   }
 }
 
-const URL_LOCALE_TO_COUNTRY: Record<string, string> = {
-  'en-us': 'US',
-  'en-gb': 'GB',
-  'de-de': 'DE',
-};
-const DEFAULT_COUNTRY = URL_LOCALE_TO_COUNTRY[process.env.DEFAULT_LOCALE || 'en-us'] || 'US';
+const DEFAULT_COUNTRY = DEFAULT_LOCALE.country;
 
 export async function getLocale(): Promise<{ country: string; currency: string; locale: string }> {
   const session = await getSession();
