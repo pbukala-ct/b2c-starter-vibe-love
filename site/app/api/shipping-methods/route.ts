@@ -43,10 +43,7 @@ export async function GET(_req: NextRequest) {
           return {
             id: sm.id,
             name: sm.name,
-            description:
-              getLocalizedString(sm.localizedDescription) ||
-              sm.localizedDescription?.['en-US'] ||
-              sm.localizedDescription?.['en-GB'],
+            description: getLocalizedString(sm.localizedDescription),
             price: matchingRate?.price || null,
             freeAbove: matchingRate?.freeAbove || null,
           };

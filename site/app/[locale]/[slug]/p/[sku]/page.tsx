@@ -11,6 +11,7 @@ import SubscribeAndSave from '@/components/product/SubscribeAndSave';
 import AddToCartButton from '@/components/product/AddToCartButton';
 import type { Price } from '@/lib/ct/search';
 import { Metadata } from 'next';
+import { useLocale } from '@/context/LocaleContext';
 
 interface PageProps {
   params: Promise<{ slug: string; sku: string }>;
@@ -71,8 +72,8 @@ export default async function ProductPage({ params }: PageProps) {
   if (product.categories?.[0]) {
     const cat = await getCategoryById(product.categories[0].id);
     if (cat) {
-      categoryName = getLocalizedString(cat.name, 'en-US');
-      categorySlug = cat.slug['en-US'] || Object.values(cat.slug)[0];
+      categoryName = getLocalizedString(cat.name, locale);
+      categorySlug = getLocalizedString(cat.slug, locale);
     }
   }
 

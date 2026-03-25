@@ -71,8 +71,8 @@ export default async function HomePage() {
         <h2 className="text-charcoal mb-8 text-2xl font-semibold">{t('shopByCategory')}</h2>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {topCategories.map((cat) => {
-            const name = getLocalizedString(cat.name, 'en-US');
-            const slug = cat.slug['en-US'] || Object.values(cat.slug)[0];
+            const name = getLocalizedString(cat.name, locale);
+            const slug = getLocalizedString(cat.slug, locale);
             const catImages: Record<string, string> = {
               furniture:
                 'https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Art_Deco_Coffee_Table-1.1.jpeg',

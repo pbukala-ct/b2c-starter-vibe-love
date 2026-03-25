@@ -126,8 +126,8 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                   </Link>
                 </li>
                 {category.children.map((child) => {
-                  const childName = getLocalizedString(child.name, 'en-US');
-                  const childSlug = child.slug['en-US'] || Object.values(child.slug)[0];
+                  const childName = getLocalizedString(child.name, locale);
+                  const childSlug = getLocalizedString(child.slug, locale);
                   return (
                     <li key={child.id}>
                       <Link

@@ -15,7 +15,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   const { orderId } = use(params);
   const { localePath } = useLocale();
   const t = useTranslations('orderDetail');
-  const { formatMoney, getLocalizedString } = useFormatters();
+  const { formatMoney, getLocalizedString, formatDate } = useFormatters();
   const { data: order, isLoading } = useOrder(orderId);
 
   if (isLoading) {
@@ -89,11 +89,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
 
       <div className="mb-6 flex items-center gap-3">
         <p className="text-charcoal-light text-sm">
-          {new Date(order.createdAt).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
+          {formatDate(order.createdAt, { year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
         <span className="bg-sage/10 text-sage border-sage/20 rounded-full border px-2 py-0.5 text-xs">
           {order.orderState}

@@ -12,6 +12,7 @@ interface PageProps {
 export const metadata: Metadata = { title: 'Order Confirmed' };
 
 export default async function ConfirmationPage({ params }: PageProps) {
+  const { locale } = await getLocale();
   const { orderId } = await params;
   const [session, localeData, t] = await Promise.all([
     getSession(),
@@ -57,7 +58,7 @@ export default async function ConfirmationPage({ params }: PageProps) {
               }) => (
                 <div key={item.id} className="flex justify-between text-sm">
                   <div>
-                    <span className="text-charcoal">{getLocalizedString(item.name, 'en-US')}</span>
+                    <span className="text-charcoal">{getLocalizedString(item.name, locale)}</span>
                     <span className="text-charcoal-light ml-2">× {item.quantity}</span>
                     {item.recurrenceInfo?.recurrencePolicy && (
                       <span className="text-sage ml-2 text-xs">{t('subscription')}</span>

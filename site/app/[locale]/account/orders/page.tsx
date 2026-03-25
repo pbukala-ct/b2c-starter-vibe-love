@@ -16,7 +16,7 @@ const STATE_COLORS: Record<string, string> = {
 export default function OrdersPage() {
   const { localePath } = useLocale();
   const t = useTranslations('orders');
-  const { formatMoney } = useFormatters();
+  const { formatMoney, getLocalizedString, formatDate } = useFormatters();
   const { data: orders = [], isLoading } = useOrders();
 
   const STATE_LABELS: Record<string, string> = {
@@ -70,7 +70,7 @@ export default function OrdersPage() {
                     </span>
                   </div>
                   <p className="text-charcoal-light text-xs">
-                    {new Date(order.createdAt).toLocaleDateString('en-US', {
+                    {formatDate(order.createdAt, {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',
@@ -92,7 +92,7 @@ export default function OrdersPage() {
               <div className="text-charcoal-light text-xs">
                 {order.lineItems.slice(0, 3).map((item) => (
                   <span key={item.id}>
-                    {item.name['en-US'] || Object.values(item.name)[0]} × {item.quantity}
+                    {getLocalizedString(item.name)} × {item.quantity}
                     {order.lineItems.indexOf(item) < Math.min(order.lineItems.length, 3) - 1
                       ? ', '
                       : ''}

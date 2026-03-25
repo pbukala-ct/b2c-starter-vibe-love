@@ -2,6 +2,7 @@
 
 import useSWR from 'swr';
 import { KEY_RECURRENCE_POLICIES } from '@/lib/cache-keys';
+import { getLocalizedString } from '@/lib/utils';
 
 interface RecurrencePolicy {
   id: string;
@@ -27,7 +28,7 @@ async function policiesFetcher() {
   const policies: RecurrencePolicy[] = data.policies || [];
   const policyMap = new Map<string, string>();
   for (const p of policies) {
-    const label = p.schedule ? formatInterval(p.schedule) : p.name?.['en-US'] || p.key;
+    const label = p.schedule ? formatInterval(p.schedule) : getLocalizedString(p.name) || p.key;
     policyMap.set(p.id, label);
   }
   return { policies, policyMap };
