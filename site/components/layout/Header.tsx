@@ -2,15 +2,18 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAccount } from '@/hooks/useAccount';
+import { mutate } from 'swr';
+import { KEY_ACCOUNT } from '@/lib/cache-keys';
 import { useRouter } from 'next/navigation';
 import MegaMenu from './MegaMenu';
 import MiniCart from './MiniCart';
 import CountrySelector from './CountrySelector';
 import SearchBar from './SearchBar';
-import { Category } from '@/lib/ct/categories';
+import type { Category } from '@/lib/ct/categories';
 import { useLocale } from '@/context/LocaleContext';
-import { getLocalizedString } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
+import { useWishlist } from '@/hooks/useWishlist';
 import { useTranslations } from 'next-intl';
 
 interface HeaderProps {
@@ -18,8 +21,11 @@ interface HeaderProps {
 }
 
 export default function Header({ categories }: HeaderProps) {
-  const { user, isLoggedIn } = useAuth();
-  const { locale, localePath } = useLocale();
+  const { data: user } = useAccount();
+  const { data: wishlist } = useWishlist();
+  const isLoggedIn = !!user;
+  const { getLocalizedString } = useFormatters();
+  const { localePath } = useLocale();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const t = useTranslations('header');
@@ -27,6 +33,7 @@ export default function Header({ categories }: HeaderProps) {
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
+    mutate(KEY_ACCOUNT, null, { revalidate: false });
     router.push(localePath('/'));
     router.refresh();
   };
@@ -145,6 +152,24 @@ export default function Header({ categories }: HeaderProps) {
               )}
             </div>
 
+            {/* Wishlist */}
+            {wishlist !== undefined && (
+              <Link
+                href="/account/wishlist"
+                aria-label="Wishlist"
+                className="relative text-charcoal hover:text-terra transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+                {wishlist?.items?.length && wishlist?.items?.length > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-terra text-white text-[10px] font-medium rounded-full flex items-center justify-center leading-none">
+                    {wishlist?.items?.length > 9 ? '9+' : wishlist?.items?.length}
+                  </span>
+                )}
+              </Link>
+            )}
+
             {/* Cart */}
             <MiniCart />
           </div>
@@ -161,8 +186,8 @@ export default function Header({ categories }: HeaderProps) {
           {/* Mobile nav */}
           <nav className="px-4 pb-4">
             {topLevel.map((cat) => {
-              const name = getLocalizedString(cat.name, locale);
-              const slug = cat.slug['en-US'] || Object.values(cat.slug)[0];
+              const name = getLocalizedString(cat.name);
+              const slug = getLocalizedString(cat.slug);
               return (
                 <div key={cat.id}>
                   <Link
@@ -173,8 +198,8 @@ export default function Header({ categories }: HeaderProps) {
                     {name}
                   </Link>
                   {cat.children?.map((child) => {
-                    const childName = getLocalizedString(child.name, locale);
-                    const childSlug = child.slug['en-US'] || Object.values(child.slug)[0];
+                    const childName = getLocalizedString(child.name);
+                    const childSlug = getLocalizedString(child.slug);
                     return (
                       <Link
                         key={child.id}

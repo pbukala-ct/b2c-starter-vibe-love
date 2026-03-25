@@ -1,17 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { useLocale } from '@/context/LocaleContext';
-import { COUNTRY_CONFIG } from '@/lib/utils';
+import { useLocale, useCountryConfig } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
 
 export default function CountrySelector() {
   const { country, setCountry } = useLocale();
+  const countryConfig = useCountryConfig();
   const [open, setOpen] = useState(false);
   const t = useTranslations('nav');
 
-  const countries = Object.entries(COUNTRY_CONFIG);
-  const current = COUNTRY_CONFIG[country];
+  const countries = Object.entries(countryConfig);
+  const current = countryConfig[country];
 
   return (
     <div className="relative">

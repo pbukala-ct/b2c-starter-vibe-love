@@ -1,6 +1,8 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { mutate as swrMutate } from 'swr';
+import { KEY_CART } from '@/lib/cache-keys';
 
 export interface CartLineItem {
   id: string;
@@ -38,72 +40,28 @@ export interface Cart {
 }
 
 interface CartContextType {
-  cart: Cart | null;
-  isLoading: boolean;
   showMiniCart: boolean;
-  setCart: (cart: Cart | null) => void;
   setShowMiniCart: (show: boolean) => void;
-  itemCount: number;
   addToCartAndShow: (cart: Cart) => void;
-  refreshCart: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType>({
-  cart: null,
-  isLoading: false,
   showMiniCart: false,
-  setCart: () => {},
   setShowMiniCart: () => {},
-  itemCount: 0,
   addToCartAndShow: () => {},
-  refreshCart: async () => {},
 });
 
-export function CartProvider({
-  initialCart,
-  children,
-}: {
-  initialCart: Cart | null;
-  children: ReactNode;
-}) {
-  const [cart, setCart] = useState<Cart | null>(initialCart);
-  const [isLoading, setIsLoading] = useState(false);
+export function CartProvider({ children }: { children: ReactNode }) {
   const [showMiniCart, setShowMiniCart] = useState(false);
 
-  const itemCount = cart?.lineItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
-
   const addToCartAndShow = useCallback((newCart: Cart) => {
-    setCart(newCart);
+    swrMutate(KEY_CART, newCart, { revalidate: false });
     setShowMiniCart(true);
     setTimeout(() => setShowMiniCart(false), 4000);
   }, []);
 
-  const refreshCart = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const resp = await fetch('/api/cart');
-      if (resp.ok) {
-        const data = await resp.json();
-        setCart(data.cart);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   return (
-    <CartContext.Provider
-      value={{
-        cart,
-        isLoading,
-        showMiniCart,
-        setCart,
-        setShowMiniCart,
-        itemCount,
-        addToCartAndShow,
-        refreshCart,
-      }}
-    >
+    <CartContext.Provider value={{ showMiniCart, setShowMiniCart, addToCartAndShow }}>
       {children}
     </CartContext.Provider>
   );

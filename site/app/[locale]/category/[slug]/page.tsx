@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const category = await getCategoryBySlug(slug);
   if (!category) return { title: 'Category Not Found' };
-  const name = getLocalizedString(category.name, 'en-US');
+  const name = getLocalizedString(category.name);
   return { title: name };
 }
 

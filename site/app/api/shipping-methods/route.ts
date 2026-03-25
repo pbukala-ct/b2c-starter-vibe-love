@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getShippingMethods } from '@/lib/ct/cart';
 import { getLocale } from '@/lib/session';
+import { getLocalizedString } from '@/lib/utils';
 
 export async function GET(_req: NextRequest) {
   const { currency } = await getLocale();
@@ -42,7 +43,7 @@ export async function GET(_req: NextRequest) {
           return {
             id: sm.id,
             name: sm.name,
-            description: sm.localizedDescription?.['en-US'] || sm.localizedDescription?.['en-GB'],
+            description: getLocalizedString(sm.localizedDescription) || sm.localizedDescription?.['en-US'] || sm.localizedDescription?.['en-GB'],
             price: matchingRate?.price || null,
             freeAbove: matchingRate?.freeAbove || null,
           };

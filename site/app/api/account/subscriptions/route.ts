@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
-import { getCustomerRecurringOrders } from '@/lib/ct/auth';
+import { getCustomerRecurringOrders } from '@/lib/ct/subscriptions';
 
 export async function GET() {
   const session = await getSession();

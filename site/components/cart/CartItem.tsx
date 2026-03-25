@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { CartLineItem } from '@/context/CartContext';
-import { formatMoney, getLocalizedString } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 import { useLocale } from '@/context/LocaleContext';
 import { useState } from 'react';
 import { useRecurrencePolicies } from '@/hooks/useRecurrencePolicies';
@@ -17,12 +17,13 @@ interface CartItemProps {
 
 export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
   const { locale, localePath } = useLocale();
+  const { formatMoney, getLocalizedString } = useFormatters();
   const policyMap = useRecurrencePolicies();
   const [qty, setQty] = useState(item.quantity);
   const [updating, setUpdating] = useState(false);
   const t = useTranslations('cart');
 
-  const name = getLocalizedString(item.name, locale);
+  const name = getLocalizedString(item.name);
   const image = item.variant?.images?.[0]?.url;
   const unitPrice = formatMoney(
     item.price?.value?.centAmount || 0,
@@ -37,7 +38,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
   const intervalLabel = policyId
     ? policyMap.get(policyId) || 'Subscribe & Save'
     : 'Subscribe & Save';
-  const slug = item.productSlug?.['en-US'] || item.productKey || item.productId;
+  const slug = getLocalizedString(item.productSlug) || item.productKey || item.productId;
   const sku = item.variant?.sku || item.productId;
 
   const handleQtyChange = async (newQty: number) => {

@@ -1,7 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { COUNTRY_CONFIG } from '@/lib/utils';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { COUNTRY_CONFIG, DEFAULT_LOCALE } from '@/lib/utils';
 
 const COUNTRY_TO_URL_LOCALE: Record<string, string> = {
   US: 'en-us',
@@ -19,32 +19,26 @@ interface LocaleContextType {
 }
 
 const LocaleContext = createContext<LocaleContextType>({
-  country: 'US',
-  currency: 'USD',
-  locale: 'en-US',
+  country: DEFAULT_LOCALE.country,
+  currency: DEFAULT_LOCALE.currency,
+  locale: DEFAULT_LOCALE.locale,
   urlLocale: 'en-us',
   localePath: (path) => `/en-us${path}`,
   setCountry: async () => {},
 });
 
-export function LocaleProvider({
-  children,
-  initialCountry,
-}: {
-  children: ReactNode;
-  initialCountry?: string;
-}) {
-  const [country, setCountryState] = useState(() => {
-    if (initialCountry) return initialCountry;
-    if (typeof window !== 'undefined') {
-      const saved = document.cookie
-        .split('; ')
-        .find((r) => r.startsWith('vibe-country='))
-        ?.split('=')[1];
-      if (saved && COUNTRY_CONFIG[saved]) return saved;
+export function LocaleProvider({ children }: { children: ReactNode }) {
+  const [country, setCountryState] = useState<string>(DEFAULT_LOCALE.country);
+
+  useEffect(() => {
+    const saved = document.cookie
+      .split('; ')
+      .find((r) => r.startsWith('vibe-country='))
+      ?.split('=')[1];
+    if (saved && COUNTRY_CONFIG[saved]) {
+      setCountryState(saved);
     }
-    return 'US';
-  });
+  }, []);
 
   const setCountry = async (newCountry: string) => {
     if (!COUNTRY_CONFIG[newCountry]) return;
@@ -62,7 +56,7 @@ export function LocaleProvider({
     window.location.href = `/${newUrlLocale}${pathWithoutLocale === '/' ? '' : pathWithoutLocale}`;
   };
 
-  const config = COUNTRY_CONFIG[country] || COUNTRY_CONFIG['US'];
+  const config = COUNTRY_CONFIG[country] || COUNTRY_CONFIG[DEFAULT_LOCALE.country];
   const urlLocale = COUNTRY_TO_URL_LOCALE[country] || 'en-us';
   const localePath = (path: string) => `/${urlLocale}${path.startsWith('/') ? path : `/${path}`}`;
 
@@ -84,4 +78,9 @@ export function LocaleProvider({
 
 export function useLocale() {
   return useContext(LocaleContext);
+}
+
+/** Returns the full COUNTRY_CONFIG lookup table for use in client components. */
+export function useCountryConfig() {
+  return COUNTRY_CONFIG;
 }

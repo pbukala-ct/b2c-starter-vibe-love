@@ -1,3 +1,9 @@
+export const DEFAULT_LOCALE = {
+  country: 'US',
+  currency: 'USD',
+  locale: 'en-US',
+} as const;
+
 export const COUNTRY_CONFIG: Record<
   string,
   { currency: string; locale: string; name: string; flag: string }
@@ -7,20 +13,22 @@ export const COUNTRY_CONFIG: Record<
   DE: { currency: 'EUR', locale: 'de-DE', name: 'Germany', flag: '🇩🇪' },
 };
 
+const CURRENCY_LOCALE: Record<string, string> = Object.fromEntries(
+  Object.values(COUNTRY_CONFIG).map((c) => [c.currency, c.locale])
+);
+
 export function formatMoney(centAmount: number, currency: string): string {
   const amount = centAmount / 100;
-  return new Intl.NumberFormat(
-    currency === 'USD' ? 'en-US' : currency === 'GBP' ? 'en-GB' : 'de-DE',
-    { style: 'currency', currency }
-  ).format(amount);
+  const locale = CURRENCY_LOCALE[currency] ?? DEFAULT_LOCALE.locale;
+  return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
 }
 
 export function getLocalizedString(
   obj: Record<string, string> | undefined,
-  locale: string
+  locale?: string
 ): string {
   if (!obj) return '';
-  return obj[locale] || obj['en-US'] || obj['en-GB'] || Object.values(obj)[0] || '';
+  return obj[locale ?? DEFAULT_LOCALE.locale] || obj[DEFAULT_LOCALE.locale] || Object.values(obj)[0] || '';
 }
 
 export function slugify(str: string): string {

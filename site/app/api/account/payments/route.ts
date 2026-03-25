@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
-import { getCustomObject, upsertCustomObject } from '@/lib/ct/auth';
+import { getCustomObject, upsertCustomObject } from '@/lib/ct/custom-objects';
 
 const CONTAINER = 'customer-payment-methods';
 

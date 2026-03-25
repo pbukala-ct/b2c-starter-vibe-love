@@ -2,16 +2,17 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Category } from '@/lib/ct/categories';
+import type { Category } from '@/lib/ct/categories';
+import { useFormatters } from '@/hooks/useFormatters';
 import { useLocale } from '@/context/LocaleContext';
-import { getLocalizedString } from '@/lib/utils';
 
 interface MegaMenuProps {
   categories: Category[];
 }
 
 export default function MegaMenu({ categories }: MegaMenuProps) {
-  const { locale, localePath } = useLocale();
+  const { localePath } = useLocale();
+  const { getLocalizedString } = useFormatters();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const topLevel = categories.filter((c) => !c.parent);
@@ -19,8 +20,8 @@ export default function MegaMenu({ categories }: MegaMenuProps) {
   return (
     <nav className="hidden items-center gap-0 lg:flex">
       {topLevel.map((cat) => {
-        const name = getLocalizedString(cat.name, locale);
-        const slug = cat.slug['en-US'] || Object.values(cat.slug)[0];
+        const name = getLocalizedString(cat.name);
+        const slug = getLocalizedString(cat.slug);
         const hasChildren = (cat.children?.length || 0) > 0;
 
         return (
@@ -58,8 +59,8 @@ export default function MegaMenu({ categories }: MegaMenuProps) {
                   </Link>
                   <div className="border-border my-2 border-t" />
                   {cat.children?.map((child) => {
-                    const childName = getLocalizedString(child.name, locale);
-                    const childSlug = child.slug['en-US'] || Object.values(child.slug)[0];
+                    const childName = getLocalizedString(child.name);
+                    const childSlug = getLocalizedString(child.slug);
                     const hasGrandchildren = (child.children?.length || 0) > 0;
 
                     return (
@@ -73,8 +74,8 @@ export default function MegaMenu({ categories }: MegaMenuProps) {
                         {hasGrandchildren && (
                           <div className="mt-0.5 ml-3">
                             {child.children?.map((gc) => {
-                              const gcName = getLocalizedString(gc.name, locale);
-                              const gcSlug = gc.slug['en-US'] || Object.values(gc.slug)[0];
+                              const gcName = getLocalizedString(gc.name);
+                              const gcSlug = getLocalizedString(gc.slug);
                               return (
                                 <Link
                                   key={gc.id}

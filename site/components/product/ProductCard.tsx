@@ -2,8 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ProductProjection } from '@/lib/ct/search';
-import { formatMoney, getLocalizedString } from '@/lib/utils';
+import type { ProductProjection } from '@/lib/types';
+import { useFormatters } from '@/hooks/useFormatters';
 import { useLocale } from '@/context/LocaleContext';
 import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
@@ -14,13 +14,14 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { locale, localePath } = useLocale();
+  const { localePath } = useLocale();
+  const { formatMoney, getLocalizedString } = useFormatters();
   const { addToCartAndShow } = useCart();
   const [adding, setAdding] = useState(false);
   const t = useTranslations('product');
 
-  const name = getLocalizedString(product.name, locale);
-  const slug = product.slug?.['en-US'] || product.slug?.['en-GB'] || product.key || product.id;
+  const name = getLocalizedString(product.name);
+  const slug = getLocalizedString(product.slug) || product.key || product.id;
   const sku = product.masterVariant?.sku || product.id;
   const image = product.masterVariant?.images?.[0]?.url;
   const price = product.masterVariant?.price;
