@@ -8,14 +8,7 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 
 interface PageProps {
-  searchParams: Promise<{
-    q?: string;
-    color?: string;
-    finish?: string;
-    sort?: string;
-    offset?: string;
-    newArrival?: string;
-  }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }
 
 export const metadata: Metadata = { title: 'Search' };
@@ -24,17 +17,18 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const sp = await searchParams;
   const { country, currency, locale } = await getLocale();
   const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
-  const offset = parseInt(sp.offset || '0');
   const limit = 24;
 
+  const { q, sort, offset: offsetParam, ...rawFacetFilters } = sp;
+  const offset = parseInt(offsetParam || '0');
+  const facetFilters = Object.fromEntries(
+    Object.entries(rawFacetFilters).filter(([, v]) => v !== undefined)
+  ) as Record<string, string>;
+
   const result = await searchProducts({
-    query: sp.q,
-    filters: {
-      color: sp.color,
-      finish: sp.finish,
-      newArrival: sp.newArrival === 'true',
-    },
-    sort: sp.sort ? parseSortParam(sp.sort) : [{ field: 'createdAt', order: 'desc' as const }],
+    query: q,
+    facetFilters,
+    sort: sort ? parseSortParam(sort) : [{ field: 'createdAt', order: 'desc' as const }],
     locale,
     currency,
     country,
@@ -42,54 +36,14 @@ export default async function SearchPage({ searchParams }: PageProps) {
     offset,
   });
 
-  const products = result.results.map((r) => r.productProjection);
-
-  // Extract available filter options from results
-  const availableColors = [
-    ...new Set(
-      products.flatMap((p) =>
-        [
-          ...(p.masterVariant?.attributes || []),
-          ...(p.variants?.flatMap(
-            (v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []
-          ) || []),
-        ]
-          .filter((a: { name: string }) => a.name === 'search-color')
-          .map((a: { name: string; value: unknown }) =>
-            typeof a.value === 'object' && a.value !== null
-              ? (a.value as { key?: string }).key || ''
-              : String(a.value)
-          )
-          .filter(Boolean)
-      )
-    ),
-  ];
-  const availableFinishes = [
-    ...new Set(
-      products.flatMap((p) =>
-        [
-          ...(p.masterVariant?.attributes || []),
-          ...(p.variants?.flatMap(
-            (v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []
-          ) || []),
-        ]
-          .filter((a: { name: string }) => a.name === 'search-finish')
-          .map((a: { name: string; value: unknown }) =>
-            typeof a.value === 'object' && a.value !== null
-              ? (a.value as { key?: string }).key || ''
-              : String(a.value)
-          )
-          .filter(Boolean)
-      )
-    ),
-  ];
+  const { products } = result;
 
   const totalPages = Math.ceil(result.total / limit);
   const currentPage = Math.floor(offset / limit) + 1;
 
-  const title = sp.q
-    ? `Search results for "${sp.q}"`
-    : sp.newArrival === 'true'
+  const title = q
+    ? `Search results for "${q}"`
+    : facetFilters['new-arrival'] === 'true'
       ? 'New Arrivals'
       : 'All Products';
 
@@ -107,11 +61,9 @@ export default async function SearchPage({ searchParams }: PageProps) {
         <aside className="hidden w-52 flex-shrink-0 md:block">
           <Suspense>
             <ProductFilters
-              currentColor={sp.color}
-              currentFinish={sp.finish}
-              currentSort={sp.sort ? parseSortParam(sp.sort) : undefined}
-              availableColors={availableColors}
-              availableFinishes={availableFinishes}
+              currentSort={sort ? parseSortParam(sort) : undefined}
+              facets={result.facets}
+              facetDefinitions={result.facetDefinitions}
             />
           </Suspense>
         </aside>

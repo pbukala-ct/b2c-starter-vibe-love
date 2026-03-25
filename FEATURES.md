@@ -7,12 +7,19 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - Full-text product search via commercetools Product Search API
 - Category browsing with nested 3-level hierarchy
 - Mega menu with full category tree
-- Faceted filtering by color (swatch), finish (pill), and sort order
+- Dynamic faceted filtering driven by commercetools Product Search facets API
+- Facet definitions auto-fetched from product type attributes (60s module-level cache), filtered by `FACET_BLOCKLIST` and extended with `getExtraFacets(t)` in `facet-config.ts`
+- Per-facet render config in `FACET_RENDERER_MAP`: `'color'` (swatches) or `'pill'` (pills with counts); defaults to `'pill'` for unmapped facets
+- Color facet (`search-color`) and finish facet (`search-finish`) rendered as swatches via `ColorFacet`
+- Color swatch labels resolved from CT localized enum (`attributeValues`) — no next-intl translations for color names
+- Extra facets (e.g. price) labeled via `next-intl` `search.price` key (all three locales)
+- Facet section headers resolved from CT product type `attributeLabel` (localized); falls back to derived label for unmapped facets
+- Facet filters passed as generic `facetFilters: Record<string, string>` — URL param keys mapped server-side to CT attribute fields/types via `buildFacetFilterQueryParts`; CT field names never exposed in URLs
 - Sort options: Relevance, Newest, Price Low→High, Price High→Low, Name A–Z
-- Sort and filter state encoded in URL query params (`sort`, `color`, `finish`) for shareable/bookmarkable URLs
-- Sort field aliases (`price`, `name`, `score`) mapped to commercetools internals server-side — CT field names never exposed in URLs
-- Category pages default to `categoryOrderHints` sort (Merchant Center ordering) with graceful fallback on missing index data
-- Localized sort and filter labels via `next-intl` (all three locales)
+- Sort and filter state encoded in URL query params for shareable/bookmarkable URLs
+- Sort field aliases (`price`, `name`, `score`) mapped to commercetools internals server-side
+- Category pages default to `categoryOrderHints` sort (Merchant Center ordering) with graceful fallback to `createdAt:desc` on missing index data
+- Sort labels localized via `next-intl` (all three locales)
 - Paginated results (24 items per page)
 
 ## Product Detail Pages

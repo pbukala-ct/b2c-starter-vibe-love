@@ -1,13 +1,19 @@
+import { getTranslations } from 'next-intl/server';
 import { apiRoot } from './client';
-import type { ProductSearchRequest, SearchSorting } from '@commercetools/platform-sdk';
+import type {
+  ProductSearchFacetResult,
+  ProductSearchRequest,
+  SearchSorting,
+} from '@commercetools/platform-sdk';
+import {
+  type FacetDefinition,
+  facetDefinitionsToFacetExpressions,
+  getSearchableAttributes,
+} from './facets';
+import { getExtraFacets, FACET_BLOCKLIST, FACET_RENDERER_MAP } from './facet-config';
+import { facetDefinitionToFacetValue } from './facets';
 
-export interface SearchFilters {
-  color?: string;
-  finish?: string;
-  newArrival?: boolean;
-  minPrice?: number;
-  maxPrice?: number;
-}
+export type { FacetDefinition } from './facets';
 
 export type SortValues = Array<{ field: string; order: 'asc' | 'desc'; language?: string }>;
 
@@ -15,20 +21,33 @@ export interface SearchParams {
   query?: string;
   categoryId?: string;
   categorySubTree?: boolean;
-  filters?: SearchFilters;
+  /** Generic facet filters keyed by URL param (e.g. { color: 'red', 'new-arrival': 'true' }). */
+  facetFilters?: Record<string, string>;
   locale?: string;
   currency?: string;
   country?: string;
   limit?: number;
   offset?: number;
   sort?: SortValues;
+  /** Override the auto-fetched facet definitions entirely (skips facet-config.ts). */
+  facetDefinitions?: FacetDefinition[];
 }
 
-interface SearchResult {
+interface RawSearchResult {
   total: number;
   offset: number;
   limit: number;
   results: Array<{ id: string; productProjection: ProductProjection }>;
+  facets: ProductSearchFacetResult[];
+}
+
+export interface SearchResult {
+  total: number;
+  offset: number;
+  limit: number;
+  products: ProductProjection[];
+  facets: ProductSearchFacetResult[];
+  facetDefinitions: FacetDefinition[];
 }
 
 export interface ProductProjection {
@@ -79,18 +98,52 @@ export function parseSortParam(sort: string): SortValues {
   });
 }
 
+/** Invert FACET_RENDERER_MAP: urlParam → attributeId */
+const URL_PARAM_TO_ATTRIBUTE_ID: Record<string, string> = Object.fromEntries(
+  Object.entries(FACET_RENDERER_MAP)
+    .filter(([, cfg]) => cfg.urlParam)
+    .map(([attributeId, cfg]) => [cfg.urlParam!, attributeId])
+);
+
+function buildFacetFilterQueryParts(
+  facetFilters: Record<string, string>,
+  facetDefinitions: FacetDefinition[],
+  locale: string
+): unknown[] {
+  return Object.entries(facetFilters).flatMap(([urlParam, value]) => {
+    if (!value) return [];
+    const attributeId = URL_PARAM_TO_ATTRIBUTE_ID[urlParam] ?? `variants.attributes.${urlParam}`;
+    const facetDef = facetDefinitions.find((f) => f.attributeId === attributeId);
+    if (!facetDef) return [];
+    const facetValue = facetDefinitionToFacetValue(facetDef, locale);
+    return [
+      {
+        exact: {
+          field: facetValue.field,
+          ...(facetValue.fieldType ? { fieldType: facetValue.fieldType } : {}),
+          ...('language' in facetValue && facetValue.language
+            ? { language: facetValue.language }
+            : {}),
+          value: facetDef.attributeType === 'boolean' ? value === 'true' : value,
+        },
+      },
+    ];
+  });
+}
+
 export async function searchProducts(params: SearchParams): Promise<SearchResult> {
   const {
     query,
     categoryId,
     categorySubTree = true,
-    filters = {},
+    facetFilters = {},
     locale = 'en-US',
     currency = 'USD',
     country = 'US',
     limit = 24,
     offset = 0,
     sort = [{ field: 'createdAt', order: 'desc' as const }],
+    facetDefinitions,
   } = params;
 
   const queryParts: unknown[] = [];
@@ -108,35 +161,15 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
     });
   }
 
-  if (filters.color) {
-    queryParts.push({
-      exact: {
-        field: 'variants.attributes.search-color.key',
-        fieldType: 'lenum',
-        value: filters.color,
-      },
-    });
-  }
+  const baseFacets = facetDefinitions ?? (await getSearchableAttributes(locale));
+  const resolvedFacetDefinitions = facetDefinitions
+    ? baseFacets
+    : [
+        ...baseFacets.filter((f) => !FACET_BLOCKLIST.includes(f.attributeId ?? '')),
+        ...getExtraFacets(await getTranslations({ locale: locale.toLowerCase(), namespace: 'search' })),
+      ];
 
-  if (filters.finish) {
-    queryParts.push({
-      exact: {
-        field: 'variants.attributes.search-finish.key',
-        fieldType: 'lenum',
-        value: filters.finish,
-      },
-    });
-  }
-
-  if (filters.newArrival) {
-    queryParts.push({
-      exact: {
-        field: 'variants.attributes.new-arrival',
-        fieldType: 'boolean',
-        value: true,
-      },
-    });
-  }
+  queryParts.push(...buildFacetFilterQueryParts(facetFilters, resolvedFacetDefinitions, locale));
 
   const searchQuery =
     queryParts.length === 0
@@ -149,24 +182,48 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
     (s) => (s.field === 'name' ? { ...s, language: locale } : s) as SearchSorting
   );
 
+  const facets =
+    resolvedFacetDefinitions.length > 0
+      ? facetDefinitionsToFacetExpressions(resolvedFacetDefinitions, locale)
+      : undefined;
+
   const body: ProductSearchRequest = {
     limit,
     offset,
     productProjectionParameters: { priceCurrency: currency, priceCountry: country },
     sort: sortParam,
     ...(searchQuery ? { query: searchQuery as ProductSearchRequest['query'] } : {}),
+    ...(facets ? { facets } : {}),
   };
+
+  const toSearchResult = (raw: RawSearchResult): SearchResult => ({
+    total: raw.total,
+    offset: raw.offset,
+    limit: raw.limit,
+    products: raw.results.map((r) => r.productProjection),
+    facets: raw.facets ?? [],
+    facetDefinitions: resolvedFacetDefinitions,
+  });
 
   // If the sort field has no data in the index (e.g. categoryOrderHints not set in Merchant Center),
   // CT returns a query_shard_exception. Retry without the custom sort so the page still loads.
   try {
     const { body: result } = await apiRoot.products().search().post({ body: body }).execute();
-    return result as unknown as SearchResult;
+    return toSearchResult(result as unknown as RawSearchResult);
   } catch (err: unknown) {
     const msg =
       (err as { body?: { message?: string } }).body?.message ??
       (err as { message?: string }).message ??
       '';
+    if (msg.includes('query_shard_exception')) {
+      const fallbackBody = { ...body, sort: [{ field: 'createdAt', order: 'desc' as const }] };
+      const { body: result } = await apiRoot
+        .products()
+        .search()
+        .post({ body: fallbackBody })
+        .execute();
+      return toSearchResult(result as unknown as RawSearchResult);
+    }
     throw new Error(`Product search failed: ${msg}`, { cause: err });
   }
 }
@@ -193,7 +250,7 @@ export async function getProductBySku(
         },
       })
       .execute();
-    return (body as unknown as SearchResult).results[0]?.productProjection ?? null;
+    return (body as unknown as RawSearchResult).results[0]?.productProjection ?? null;
   } catch {
     return null;
   }
@@ -216,7 +273,7 @@ export async function getProductById(
         },
       })
       .execute();
-    return (body as unknown as SearchResult).results[0]?.productProjection ?? null;
+    return (body as unknown as RawSearchResult).results[0]?.productProjection ?? null;
   } catch {
     return null;
   }

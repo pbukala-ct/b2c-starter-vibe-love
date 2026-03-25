@@ -116,8 +116,8 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
-          {newArrivals.results.map((r) => (
-            <ProductCard key={r.id} product={r.productProjection} />
+          {newArrivals.products.map((p) => (
+            <ProductCard key={p.id} product={p} />
           ))}
         </div>
       </section>
@@ -149,8 +149,8 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
-          {featuredResult.results.map((r) => (
-            <ProductCard key={r.id} product={r.productProjection} />
+          {featuredResult.products.map((p) => (
+            <ProductCard key={p.id} product={p} />
           ))}
         </div>
       </section>

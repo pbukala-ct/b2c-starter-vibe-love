@@ -341,17 +341,8 @@
     "color": "Farbe",
     "finish": "Oberfläche",
     "clear": "Löschen",
-    "clearAllFilters": "Alle Filter löschen",
-    "colors": {
-      "black": "Schwarz", "gray": "Grau", "white": "Weiß", "blue": "Blau",
-      "brown": "Braun", "green": "Grün", "red": "Rot", "purple": "Lila",
-      "pink": "Rosa", "yellow": "Gelb", "gold": "Gold", "silver": "Silber",
-      "multicolored": "Mehrfarbig"
-    },
-    "finishes": {
-      "black": "Schwarz", "white": "Weiß", "gold": "Gold", "silver": "Silber",
-      "brown": "Braun", "gray": "Grau", "glass": "Glas", "transparent": "Transparent"
-    }
+    "price": "Preis",
+    "clearAllFilters": "Alle Filter löschen"
   },
   "home": {
     "curatedForModernLiving": "Kuratiert für modernes Wohnen",

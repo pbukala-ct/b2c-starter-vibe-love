@@ -3,46 +3,23 @@
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import type { SortValues } from '@/lib/ct/search';
-
-const COLORS = [
-  { key: 'black', hex: '#1A1A1A' },
-  { key: 'gray', hex: '#9CA3AF' },
-  { key: 'white', hex: '#F9FAFB' },
-  { key: 'blue', hex: '#3B82F6' },
-  { key: 'brown', hex: '#92400E' },
-  { key: 'green', hex: '#22C55E' },
-  { key: 'red', hex: '#EF4444' },
-  { key: 'purple', hex: '#A855F7' },
-  { key: 'pink', hex: '#EC4899' },
-  { key: 'yellow', hex: '#EAB308' },
-  { key: 'gold', hex: '#D97706' },
-  { key: 'silver', hex: '#C0C0C0' },
-  { key: 'multicolored', hex: 'linear-gradient(135deg, #3B82F6, #EC4899, #22C55E)' },
-];
-
-const FINISHES = ['black', 'white', 'gold', 'silver', 'brown', 'gray', 'glass', 'transparent'];
+import type { ProductSearchFacetResult } from '@commercetools/platform-sdk';
+import type { FacetDefinition, SortValues } from '@/lib/ct/search';
+import { FACET_RENDERER_MAP } from '@/lib/ct/facet-config';
+import ColorFacet from './facets/ColorFacet';
+import PillFacet from './facets/PillFacet';
 
 const SORT_OPTIONS: Array<{ value: SortValues; translationKey: string }> = [
   {
     value: [
       { field: 'score', order: 'desc' },
-      {
-        order: 'desc',
-        field: 'id',
-      },
+      { order: 'desc', field: 'id' },
     ],
     translationKey: 'relevance',
   },
   { value: [{ field: 'createdAt', order: 'desc' }], translationKey: 'sortNewest' },
-  {
-    value: [{ field: 'price', order: 'asc' }],
-    translationKey: 'sortPriceLow',
-  },
-  {
-    value: [{ field: 'price', order: 'desc' }],
-    translationKey: 'sortPriceHigh',
-  },
+  { value: [{ field: 'price', order: 'asc' }], translationKey: 'sortPriceLow' },
+  { value: [{ field: 'price', order: 'desc' }], translationKey: 'sortPriceHigh' },
   { value: [{ field: 'name', order: 'asc' }], translationKey: 'sortNameAZ' },
 ];
 
@@ -52,22 +29,32 @@ function encodeSortValues(sort: SortValues): string {
   return sort.map((s) => `${s.field}:${s.order}`).join(',');
 }
 
+function facetParamKey(name: string): string {
+  return name.replace('variants.attributes.', '');
+}
+
+function formatFacetLabel(name: string): string {
+  return facetParamKey(name)
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+type BucketFacet = { name: string; buckets: { key: string; count: number }[] };
+
+function isBucketFacet(f: ProductSearchFacetResult): f is BucketFacet {
+  return 'buckets' in f;
+}
+
 interface ProductFiltersProps {
-  currentColor?: string;
-  currentFinish?: string;
   currentSort?: SortValues;
-  showFinish?: boolean;
-  availableColors?: string[];
-  availableFinishes?: string[];
+  facets?: ProductSearchFacetResult[];
+  facetDefinitions?: FacetDefinition[];
 }
 
 export default function ProductFilters({
-  currentColor,
-  currentFinish,
   currentSort = DEFAULT_SORT,
-  showFinish = true,
-  availableColors,
-  availableFinishes,
+  facets = [],
+  facetDefinitions = [],
 }: ProductFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -82,7 +69,7 @@ export default function ProductFilters({
       } else {
         params.delete(key);
       }
-      params.delete('offset'); // Reset pagination
+      params.delete('offset');
       router.push(`${pathname}?${params.toString()}`);
     },
     [router, pathname, searchParams]
@@ -98,15 +85,21 @@ export default function ProductFilters({
     [router, pathname, searchParams]
   );
 
+  const bucketFacets = facets.filter(isBucketFacet).filter((f) => f.buckets.length > 0);
+
+  const activeFacetParams = bucketFacets.map((f) => {
+    const config = FACET_RENDERER_MAP[f.name];
+    return config?.urlParam ?? facetParamKey(f.name);
+  });
+
   const clearFilters = () => {
     const params = new URLSearchParams(searchParams.toString());
-    params.delete('color');
-    params.delete('finish');
+    activeFacetParams.forEach((key) => params.delete(key));
     params.delete('offset');
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const hasFilters = currentColor || currentFinish;
+  const hasFilters = activeFacetParams.some((key) => searchParams.has(key));
 
   return (
     <div className="space-y-6">
@@ -134,84 +127,49 @@ export default function ProductFilters({
         </select>
       </div>
 
-      {/* Color filter */}
-      <div>
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-charcoal text-xs font-semibold tracking-wider uppercase">
-            {t('color')}
-          </h3>
-          {currentColor && (
-            <button
-              onClick={() => updateFilter('color', null)}
-              className="text-terra text-xs hover:underline"
-            >
-              {t('clear')}
-            </button>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {COLORS.filter((c) => !availableColors || availableColors.includes(c.key)).map(
-            (color) => {
-              const label = t(`colors.${color.key}`);
-              return (
-                <button
-                  key={color.key}
-                  onClick={() =>
-                    updateFilter('color', currentColor === color.key ? null : color.key)
-                  }
-                  title={label}
-                  aria-label={label}
-                  className={`h-7 w-7 rounded-full border-2 transition-all ${
-                    currentColor === color.key
-                      ? 'border-charcoal scale-110'
-                      : 'border-border hover:border-charcoal-light'
-                  }`}
-                  style={{
-                    background: color.hex,
-                    boxShadow: color.key === 'white' ? 'inset 0 0 0 1px #E5E0D8' : undefined,
-                  }}
-                />
-              );
-            }
-          )}
-        </div>
-      </div>
+      {/* Dynamic facets */}
+      {bucketFacets.map((facet) => {
+        const config = FACET_RENDERER_MAP[facet.name];
+        const renderer = config?.renderer ?? 'pill';
+        const paramKey = config?.urlParam ?? facetParamKey(facet.name);
+        const currentValue = searchParams.get(paramKey);
 
-      {/* Finish filter */}
-      {showFinish && (
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-charcoal text-xs font-semibold tracking-wider uppercase">
-              {t('finish')}
-            </h3>
-            {currentFinish && (
-              <button
-                onClick={() => updateFilter('finish', null)}
-                className="text-terra text-xs hover:underline"
-              >
-                {t('clear')}
-              </button>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {FINISHES.filter((f) => !availableFinishes || availableFinishes.includes(f)).map(
-              (finish) => (
+        return (
+          <div key={facet.name}>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-charcoal text-xs font-semibold tracking-wider uppercase">
+                {facetDefinitions.find((d) => d.attributeId === facet.name)?.attributeLabel ??
+                  formatFacetLabel(facet.name)}
+              </h3>
+              {currentValue && (
                 <button
-                  key={finish}
-                  onClick={() => updateFilter('finish', currentFinish === finish ? null : finish)}
-                  className={`rounded-sm border px-3 py-1 text-xs transition-all ${
-                    currentFinish === finish
-                      ? 'bg-charcoal border-charcoal text-white'
-                      : 'border-border text-charcoal-light hover:border-charcoal hover:text-charcoal'
-                  }`}
+                  onClick={() => updateFilter(paramKey, null)}
+                  className="text-terra text-xs hover:underline"
                 >
-                  {t(`finishes.${finish}`)}
+                  {t('clear')}
                 </button>
-              )
+              )}
+            </div>
+
+            {renderer === 'color' && (
+              <ColorFacet
+                buckets={facet.buckets}
+                attributeValues={facetDefinitions.find((d) => d.attributeId === facet.name)?.attributeValues}
+                currentValue={currentValue}
+                onSelect={(key) => updateFilter(paramKey, key)}
+              />
+            )}
+
+            {renderer === 'pill' && (
+              <PillFacet
+                buckets={facet.buckets}
+                currentValue={currentValue}
+                onSelect={(key) => updateFilter(paramKey, key)}
+              />
             )}
           </div>
-        </div>
-      )}
+        );
+      })}
 
       {/* Clear all */}
       {hasFilters && (

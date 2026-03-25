@@ -11,13 +11,7 @@ import { Metadata } from 'next';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{
-    color?: string;
-    finish?: string;
-    sort?: string;
-    offset?: string;
-    page?: string;
-  }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -39,19 +33,24 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   if (!category) notFound();
 
   const name = getLocalizedString(category.name, locale);
-  const offset = parseInt(sp.offset || '0');
   const limit = 24;
+
+  const { sort: sortParam, offset: offsetParam, page, ...rawFacetFilters } = sp;
+  const offset = parseInt(offsetParam || '0');
+  const facetFilters = Object.fromEntries(
+    Object.entries(rawFacetFilters).filter(([, v]) => v !== undefined)
+  ) as Record<string, string>;
 
   const result = await searchProducts({
     categoryId: category.id,
     categorySubTree: true,
-    filters: {
-      color: sp.color,
-      finish: sp.finish,
-    },
-    sort: sp.sort
-      ? parseSortParam(sp.sort)
-      : [{ field: `categoryOrderHints.${category.id}`, order: 'asc' as const }],
+    facetFilters,
+    sort: sortParam
+      ? parseSortParam(sortParam)
+      : [
+          { field: `score`, order: 'asc' },
+          { field: `id`, order: 'asc' },
+        ],
     locale,
     currency,
     country,
@@ -59,47 +58,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     offset,
   });
 
-  const products = result.results.map((r) => r.productProjection);
-
-  // Extract available filter options from results
-  const availableColors = [
-    ...new Set(
-      products.flatMap((p) =>
-        [
-          ...(p.masterVariant?.attributes || []),
-          ...(p.variants?.flatMap(
-            (v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []
-          ) || []),
-        ]
-          .filter((a: { name: string }) => a.name === 'search-color')
-          .map((a: { name: string; value: unknown }) =>
-            typeof a.value === 'object' && a.value !== null
-              ? (a.value as { key?: string }).key || ''
-              : String(a.value)
-          )
-          .filter(Boolean)
-      )
-    ),
-  ];
-  const availableFinishes = [
-    ...new Set(
-      products.flatMap((p) =>
-        [
-          ...(p.masterVariant?.attributes || []),
-          ...(p.variants?.flatMap(
-            (v: { attributes?: Array<{ name: string; value: unknown }> }) => v.attributes || []
-          ) || []),
-        ]
-          .filter((a: { name: string }) => a.name === 'search-finish')
-          .map((a: { name: string; value: unknown }) =>
-            typeof a.value === 'object' && a.value !== null
-              ? (a.value as { key?: string }).key || ''
-              : String(a.value)
-          )
-          .filter(Boolean)
-      )
-    ),
-  ];
+  const { products } = result;
 
   // Build breadcrumb
   const breadcrumb: Array<{ name: string; slug: string }> = [];
@@ -108,8 +67,8 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     const parent = categoryTree.flat().find((c) => c.id === current.parent?.id);
     if (parent) {
       breadcrumb.unshift({
-        name: getLocalizedString(parent.name, 'en-US'),
-        slug: parent.slug['en-US'] || Object.values(parent.slug)[0],
+        name: getLocalizedString(parent.name, locale),
+        slug: getLocalizedString(parent.slug, locale),
       });
       current = parent;
     } else break;
@@ -145,11 +104,9 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         <aside className="hidden w-52 flex-shrink-0 md:block">
           <Suspense>
             <ProductFilters
-              currentColor={sp.color}
-              currentFinish={sp.finish}
-              currentSort={sp.sort ? parseSortParam(sp.sort) : undefined}
-              availableColors={availableColors}
-              availableFinishes={availableFinishes}
+              currentSort={sortParam ? parseSortParam(sortParam) : undefined}
+              facets={result.facets}
+              facetDefinitions={result.facetDefinitions}
             />
           </Suspense>
 

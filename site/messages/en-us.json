@@ -341,17 +341,8 @@
     "color": "Color",
     "finish": "Finish",
     "clear": "Clear",
-    "clearAllFilters": "Clear all filters",
-    "colors": {
-      "black": "Black", "gray": "Gray", "white": "White", "blue": "Blue",
-      "brown": "Brown", "green": "Green", "red": "Red", "purple": "Purple",
-      "pink": "Pink", "yellow": "Yellow", "gold": "Gold", "silver": "Silver",
-      "multicolored": "Multi"
-    },
-    "finishes": {
-      "black": "Black", "white": "White", "gold": "Gold", "silver": "Silver",
-      "brown": "Brown", "gray": "Gray", "glass": "Glass", "transparent": "Clear"
-    }
+    "price": "Price",
+    "clearAllFilters": "Clear all filters"
   },
   "home": {
     "curatedForModernLiving": "Curated for Modern Living",
