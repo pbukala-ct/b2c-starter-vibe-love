@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartSWR } from '@/hooks/useCartSWR';
-import { useCart } from '@/context/CartContext';
 import { useAccount } from '@/hooks/useAccount';
 import { useShippingMethods } from '@/hooks/useShippingMethods';
 import { useLocale } from '@/context/LocaleContext';

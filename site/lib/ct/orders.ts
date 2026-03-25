@@ -21,16 +21,18 @@ export async function addOrderReturnInfo(
 ) {
   return ct('POST', `/orders/${orderId}`, {
     version,
-    actions: [{
-      action: 'addReturnInfo',
-      returnDate,
-      returnTrackingId,
-      items: items.map(i => ({
-        lineItemId: i.lineItemId,
-        quantity: i.quantity,
-        shipmentState: 'Returned',
-        ...(comment ? { comment } : {}),
-      })),
-    }],
+    actions: [
+      {
+        action: 'addReturnInfo',
+        returnDate,
+        returnTrackingId,
+        items: items.map((i) => ({
+          lineItemId: i.lineItemId,
+          quantity: i.quantity,
+          shipmentState: 'Returned',
+          ...(comment ? { comment } : {}),
+        })),
+      },
+    ],
   });
 }

@@ -38,16 +38,29 @@ export default function ForgotPasswordPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12">
+      <div className="flex min-h-screen items-center justify-center px-4 py-12">
         <div className="w-full max-w-md text-center">
-          <div className="w-14 h-14 bg-sage/10 rounded-full flex items-center justify-center mx-auto mb-5">
-            <svg className="w-7 h-7 text-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          <div className="bg-sage/10 mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full">
+            <svg
+              className="text-sage h-7 w-7"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold text-charcoal mb-3">Check your email</h1>
-          <p className="text-charcoal-light text-sm mb-6">{t('requestResetSuccess')}</p>
-          <Link href={localePath('/login')} className="text-terra text-sm hover:underline font-medium">
+          <h1 className="text-charcoal mb-3 text-2xl font-semibold">Check your email</h1>
+          <p className="text-charcoal-light mb-6 text-sm">{t('requestResetSuccess')}</p>
+          <Link
+            href={localePath('/login')}
+            className="text-terra text-sm font-medium hover:underline"
+          >
             {t('loginInstead')}
           </Link>
         </div>
@@ -56,33 +69,33 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-charcoal">{t('requestResetTitle')}</h1>
+        <div className="mb-8 text-center">
+          <h1 className="text-charcoal text-3xl font-semibold">{t('requestResetTitle')}</h1>
           <p className="text-charcoal-light mt-2 text-sm">{t('requestResetDescription')}</p>
         </div>
 
-        <div className="bg-white border border-border rounded-sm p-8">
+        <div className="border-border rounded-sm border bg-white p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-charcoal mb-1.5">
+              <label htmlFor="email" className="text-charcoal mb-1.5 block text-sm font-medium">
                 {t('emailAddress')}
               </label>
               <input
                 id="email"
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
                 placeholder={t('emailPlaceholder')}
-                className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 text-sm transition-colors focus:outline-none"
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-sm">
+              <div className="rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
               </div>
             )}
@@ -90,14 +103,17 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-charcoal text-white py-3 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-charcoal hover:bg-charcoal/80 w-full rounded-sm py-3 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? 'Sending…' : t('requestResetTitle')}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <Link href={localePath('/login')} className="text-sm text-terra hover:underline font-medium">
+            <Link
+              href={localePath('/login')}
+              className="text-terra text-sm font-medium hover:underline"
+            >
               {t('loginInstead')}
             </Link>
           </div>

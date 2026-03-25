@@ -101,7 +101,7 @@ export default function SubscribeAndSave({
       </Button>
 
       {isSubscribe && (
-        <p className="text-xs text-charcoal-light text-center">{t('cancelAnytime')}</p>
+        <p className="text-charcoal-light text-center text-xs">{t('cancelAnytime')}</p>
       )}
     </div>
   );

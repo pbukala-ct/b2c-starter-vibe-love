@@ -14,7 +14,11 @@ export interface Order {
   taxedPrice?: {
     totalNet: { centAmount: number; currencyCode: string };
     totalGross: { centAmount: number; currencyCode: string };
-    taxPortions?: Array<{ name: string; amount: { centAmount: number; currencyCode: string }; rate: number }>;
+    taxPortions?: Array<{
+      name: string;
+      amount: { centAmount: number; currencyCode: string };
+      rate: number;
+    }>;
   };
   shippingInfo?: {
     shippingMethodName: string;

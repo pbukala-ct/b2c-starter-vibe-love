@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { COUNTRY_CONFIG, DEFAULT_LOCALE } from '@/lib/utils';
 
 const COUNTRY_TO_URL_LOCALE: Record<string, string> = {
@@ -28,17 +28,14 @@ const LocaleContext = createContext<LocaleContextType>({
 });
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [country, setCountryState] = useState<string>(DEFAULT_LOCALE.country);
-
-  useEffect(() => {
+  const [country, setCountryState] = useState<string>(() => {
+    if (typeof document === 'undefined') return DEFAULT_LOCALE.country;
     const saved = document.cookie
       .split('; ')
       .find((r) => r.startsWith('vibe-country='))
       ?.split('=')[1];
-    if (saved && COUNTRY_CONFIG[saved]) {
-      setCountryState(saved);
-    }
-  }, []);
+    return saved && COUNTRY_CONFIG[saved] ? saved : DEFAULT_LOCALE.country;
+  });
 
   const setCountry = async (newCountry: string) => {
     if (!COUNTRY_CONFIG[newCountry]) return;

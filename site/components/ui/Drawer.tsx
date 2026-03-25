@@ -11,7 +11,14 @@ interface DrawerProps {
   position?: 'left' | 'right';
 }
 
-export function Drawer({ isOpen, onClose, title, children, footer, position = 'right' }: DrawerProps) {
+export function Drawer({
+  isOpen,
+  onClose,
+  title,
+  children,
+  footer,
+  position = 'right',
+}: DrawerProps) {
   // Lock body scroll when drawer is open
   useEffect(() => {
     if (isOpen) {
@@ -19,14 +26,16 @@ export function Drawer({ isOpen, onClose, title, children, footer, position = 'r
     } else {
       document.body.style.overflow = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black/20 z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 z-40 bg-black/20 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -36,24 +45,25 @@ export function Drawer({ isOpen, onClose, title, children, footer, position = 'r
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`fixed top-0 ${position === 'right' ? 'right-0' : 'left-0'} h-full w-full max-w-sm bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ${
-          isOpen
-            ? 'translate-x-0'
-            : position === 'right'
-            ? 'translate-x-full'
-            : '-translate-x-full'
+        className={`fixed top-0 ${position === 'right' ? 'right-0' : 'left-0'} z-50 flex h-full w-full max-w-sm flex-col bg-white shadow-2xl transition-transform duration-300 ${
+          isOpen ? 'translate-x-0' : position === 'right' ? 'translate-x-full' : '-translate-x-full'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-border flex-shrink-0">
-          <h2 className="font-semibold text-charcoal text-lg">{title}</h2>
+        <div className="border-border flex flex-shrink-0 items-center justify-between border-b p-5">
+          <h2 className="text-charcoal text-lg font-semibold">{title}</h2>
           <button
             onClick={onClose}
             className="text-charcoal-light hover:text-charcoal transition-colors"
             aria-label="Close"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>

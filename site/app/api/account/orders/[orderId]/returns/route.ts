@@ -2,10 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { getOrderById, addOrderReturnInfo } from '@/lib/ct/orders';
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ orderId: string }> }
-) {
+export async function POST(req: Request, { params }: { params: Promise<{ orderId: string }> }) {
   const session = await getSession();
   if (!session.customerId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -36,9 +33,19 @@ export async function POST(
   const returnDate = new Date().toISOString();
 
   try {
-    const updated = await addOrderReturnInfo(orderId, order.version, items, returnTrackingId, returnDate, comment);
+    const updated = await addOrderReturnInfo(
+      orderId,
+      order.version,
+      items,
+      returnTrackingId,
+      returnDate,
+      comment
+    );
     return NextResponse.json(updated);
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message || 'Failed to create return' }, { status: 500 });
+    return NextResponse.json(
+      { error: (err as Error).message || 'Failed to create return' },
+      { status: 500 }
+    );
   }
 }

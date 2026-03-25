@@ -28,7 +28,12 @@ export function getLocalizedString(
   locale?: string
 ): string {
   if (!obj) return '';
-  return obj[locale ?? DEFAULT_LOCALE.locale] || obj[DEFAULT_LOCALE.locale] || Object.values(obj)[0] || '';
+  return (
+    obj[locale ?? DEFAULT_LOCALE.locale] ||
+    obj[DEFAULT_LOCALE.locale] ||
+    Object.values(obj)[0] ||
+    ''
+  );
 }
 
 export function slugify(str: string): string {

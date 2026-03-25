@@ -11,8 +11,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const sub = await getRecurringOrderById(id);
     // Normalise lineItems from origin order if needed
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const normalised = { ...sub, lineItems: sub.lineItems?.length ? sub.lineItems : (sub as any).originOrder?.obj?.lineItems ?? [], nextOrderDate: sub.nextOrderDate ?? sub.nextOrderAt };
+
+    const normalised = {
+      ...sub,
+      lineItems: sub.lineItems?.length
+        ? sub.lineItems
+        : ((sub as { originOrder?: { obj?: { lineItems?: unknown[] } } }).originOrder?.obj
+            ?.lineItems ?? []),
+      nextOrderDate: sub.nextOrderDate ?? sub.nextOrderAt,
+    };
     return NextResponse.json({ subscription: normalised });
   } catch {
     return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
@@ -44,14 +51,19 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     };
   } else if (action === 'setSchedule') {
     const { recurrencePolicyId, schedule } = body;
-    ctAction = { action: 'setSchedule', recurrencePolicy: recurrencePolicyId ? { id: recurrencePolicyId } : schedule };
+    ctAction = {
+      action: 'setSchedule',
+      recurrencePolicy: recurrencePolicyId ? { id: recurrencePolicyId } : schedule,
+    };
   } else {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
 
   try {
     const current = await getRecurringOrderById(id);
-    const result = await updateRecurringOrder(id, current.version, [ctAction as { action: string; [key: string]: unknown }]);
+    const result = await updateRecurringOrder(id, current.version, [
+      ctAction as { action: string; [key: string]: unknown },
+    ]);
     return NextResponse.json({ subscription: result });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Failed to update subscription';

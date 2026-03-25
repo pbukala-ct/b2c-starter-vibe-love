@@ -46,12 +46,16 @@ export default function AccountProfilePage() {
       if (!res.ok) {
         setError(data.error || t('updateFailed'));
       } else {
-        mutate(KEY_ACCOUNT, {
-          ...user!,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-        }, { revalidate: false });
+        mutate(
+          KEY_ACCOUNT,
+          {
+            ...user!,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+          },
+          { revalidate: false }
+        );
         setMessage(t('profileUpdated'));
       }
     } catch {

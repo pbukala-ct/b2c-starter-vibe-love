@@ -14,7 +14,12 @@ function shapeWishlist(raw: Record<string, unknown>) {
         id: li.id,
         productId: li.productId,
         name: li.nameAllLocales
-          ? Object.fromEntries((li.nameAllLocales as Array<{ locale: string; value: string }>).map(n => [n.locale, n.value]))
+          ? Object.fromEntries(
+              (li.nameAllLocales as Array<{ locale: string; value: string }>).map((n) => [
+                n.locale,
+                n.value,
+              ])
+            )
           : (li.name ?? {}),
         quantity: li.quantity ?? 1,
         productSlug: li.productSlug,

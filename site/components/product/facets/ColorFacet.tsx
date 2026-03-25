@@ -23,7 +23,12 @@ interface ColorFacetProps {
   onSelect: (key: string | null) => void;
 }
 
-export default function ColorFacet({ buckets, attributeValues, currentValue, onSelect }: ColorFacetProps) {
+export default function ColorFacet({
+  buckets,
+  attributeValues,
+  currentValue,
+  onSelect,
+}: ColorFacetProps) {
   return (
     <div className="flex flex-wrap gap-2">
       {buckets.map(({ key }) => {

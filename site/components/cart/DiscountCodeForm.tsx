@@ -15,7 +15,11 @@ interface DiscountCodeFormProps {
   onRemove: (discountCodeId: string) => Promise<void>;
 }
 
-export function DiscountCodeForm({ appliedDiscounts = [], onApply, onRemove }: DiscountCodeFormProps) {
+export function DiscountCodeForm({
+  appliedDiscounts = [],
+  onApply,
+  onRemove,
+}: DiscountCodeFormProps) {
   const t = useTranslations('cart');
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -43,22 +47,24 @@ export function DiscountCodeForm({ appliedDiscounts = [], onApply, onRemove }: D
         <input
           type="text"
           value={code}
-          onChange={e => setCode(e.target.value)}
+          onChange={(e) => setCode(e.target.value)}
           placeholder={t('discountCodePlaceholder')}
           aria-label={t('discountCode')}
-          className="flex-1 border border-border rounded-sm px-3 py-2 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+          className="border-border text-charcoal focus:border-charcoal flex-1 rounded-sm border px-3 py-2 text-sm transition-colors focus:outline-none"
         />
         <button
           type="submit"
           disabled={isLoading || !code.trim()}
-          className="bg-charcoal text-white px-4 py-2 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          className="bg-charcoal hover:bg-charcoal/80 rounded-sm px-4 py-2 text-sm font-medium whitespace-nowrap text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isLoading ? '…' : t('applyCode')}
         </button>
       </form>
 
       {error && (
-        <p className="text-sm text-red-600" role="alert">{error}</p>
+        <p className="text-sm text-red-600" role="alert">
+          {error}
+        </p>
       )}
 
       {appliedDiscounts.length > 0 && (
@@ -66,15 +72,15 @@ export function DiscountCodeForm({ appliedDiscounts = [], onApply, onRemove }: D
           {appliedDiscounts.map((d) => (
             <li
               key={d.discountCodeId}
-              className="flex items-center justify-between bg-sage/10 border border-sage/20 rounded-sm px-3 py-2 text-sm"
+              className="bg-sage/10 border-sage/20 flex items-center justify-between rounded-sm border px-3 py-2 text-sm"
             >
-              <span className="font-medium text-charcoal">
+              <span className="text-charcoal font-medium">
                 {d.code ?? d.name ?? d.discountCodeId}
               </span>
               <button
                 type="button"
                 onClick={() => onRemove(d.discountCodeId)}
-                className="text-terra hover:underline text-xs ml-3"
+                className="text-terra ml-3 text-xs hover:underline"
               >
                 {t('removeCode')}
               </button>

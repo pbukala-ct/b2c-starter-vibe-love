@@ -166,7 +166,9 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
     ? baseFacets
     : [
         ...baseFacets.filter((f) => !FACET_BLOCKLIST.includes(f.attributeId ?? '')),
-        ...getExtraFacets(await getTranslations({ locale: locale.toLowerCase(), namespace: 'search' })),
+        ...getExtraFacets(
+          await getTranslations({ locale: locale.toLowerCase(), namespace: 'search' })
+        ),
       ];
 
   queryParts.push(...buildFacetFilterQueryParts(facetFilters, resolvedFacetDefinitions, locale));

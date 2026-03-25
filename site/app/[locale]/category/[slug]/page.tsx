@@ -35,7 +35,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const name = getLocalizedString(category.name, locale);
   const limit = 24;
 
-  const { sort: sortParam, offset: offsetParam, page, ...rawFacetFilters } = sp;
+  const { sort: sortParam, offset: offsetParam, ...rawFacetFilters } = sp;
   const offset = parseInt(offsetParam || '0');
   const facetFilters = Object.fromEntries(
     Object.entries(rawFacetFilters).filter(([, v]) => v !== undefined)

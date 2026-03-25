@@ -249,10 +249,19 @@ export async function applyDiscountCode(cartId: string, cartVersion: number, cod
   });
 }
 
-export async function removeDiscountCode(cartId: string, cartVersion: number, discountCodeId: string) {
+export async function removeDiscountCode(
+  cartId: string,
+  cartVersion: number,
+  discountCodeId: string
+) {
   return ct('POST', `/carts/${cartId}`, {
     version: cartVersion,
-    actions: [{ action: 'removeDiscountCode', discountCode: { typeId: 'discount-code', id: discountCodeId } }],
+    actions: [
+      {
+        action: 'removeDiscountCode',
+        discountCode: { typeId: 'discount-code', id: discountCodeId },
+      },
+    ],
   });
 }
 

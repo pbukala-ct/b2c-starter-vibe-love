@@ -41,7 +41,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     const currentCart = await getCart(session.cartId);
-    const updatedCart = await removeDiscountCode(session.cartId, currentCart.version, discountCodeId);
+    const updatedCart = await removeDiscountCode(
+      session.cartId,
+      currentCart.version,
+      discountCodeId
+    );
 
     const response = NextResponse.json({ cart: updatedCart });
     const token = await createSessionToken({ ...session, cartId: updatedCart.id });

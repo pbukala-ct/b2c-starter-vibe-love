@@ -14,7 +14,12 @@ function shapeWishlist(raw: Record<string, unknown>) {
         id: li.id,
         productId: li.productId,
         name: li.nameAllLocales
-          ? Object.fromEntries((li.nameAllLocales as Array<{ locale: string; value: string }>).map(n => [n.locale, n.value]))
+          ? Object.fromEntries(
+              (li.nameAllLocales as Array<{ locale: string; value: string }>).map((n) => [
+                n.locale,
+                n.value,
+              ])
+            )
           : (li.name ?? {}),
         quantity: li.quantity ?? 1,
         productSlug: li.productSlug,
@@ -29,10 +34,7 @@ function shapeWishlist(raw: Record<string, unknown>) {
   };
 }
 
-export async function DELETE(
-  _req: Request,
-  { params }: { params: Promise<{ itemId: string }> }
-) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ itemId: string }> }) {
   const session = await getSession();
   if (!session.customerId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -47,10 +49,7 @@ export async function DELETE(
   }
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ itemId: string }> }
-) {
+export async function PUT(req: Request, { params }: { params: Promise<{ itemId: string }> }) {
   const session = await getSession();
   if (!session.customerId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });

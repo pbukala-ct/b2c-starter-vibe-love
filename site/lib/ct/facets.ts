@@ -18,7 +18,6 @@ export interface FacetDefinition {
   attributeValues?: { key: string; label: string }[];
 }
 
-
 function isEnumType(
   type: AttributeDefinition['type']
 ): type is AttributeEnumType | AttributeLocalizedEnumType {
@@ -65,7 +64,8 @@ export async function getSearchableAttributes(locale = 'en-US'): Promise<FacetDe
                 label:
                   typeof value.label === 'string'
                     ? value.label
-                    : getLocalizedString(value.label as Record<string, string>, locale) || value.key,
+                    : getLocalizedString(value.label as Record<string, string>, locale) ||
+                      value.key,
               })
             )
           : undefined;

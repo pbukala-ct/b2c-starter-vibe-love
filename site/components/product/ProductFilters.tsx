@@ -154,7 +154,9 @@ export default function ProductFilters({
             {renderer === 'color' && (
               <ColorFacet
                 buckets={facet.buckets}
-                attributeValues={facetDefinitions.find((d) => d.attributeId === facet.name)?.attributeValues}
+                attributeValues={
+                  facetDefinitions.find((d) => d.attributeId === facet.name)?.attributeValues
+                }
                 currentValue={currentValue}
                 onSelect={(key) => updateFilter(paramKey, key)}
               />

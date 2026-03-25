@@ -120,7 +120,10 @@ export default function SubscriptionsPage() {
                     <p className="text-charcoal text-sm font-semibold">
                       {formatMoney(total, currency)}
                     </p>
-                    <Link href={localePath(`/account/subscriptions/${sub.id}`)} className="text-xs text-terra hover:underline">
+                    <Link
+                      href={localePath(`/account/subscriptions/${sub.id}`)}
+                      className="text-terra text-xs hover:underline"
+                    >
                       {t('viewDetails')}
                     </Link>
                   </div>
@@ -199,12 +202,17 @@ export default function SubscriptionsPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-charcoal-light text-xs">{t('changeSchedule')}</span>
                       {policies.map((p) => {
-                        const isCurrent = sub.schedule?.value === p.schedule.value && sub.schedule?.intervalUnit === p.schedule.intervalUnit;
+                        const isCurrent =
+                          sub.schedule?.value === p.schedule.value &&
+                          sub.schedule?.intervalUnit === p.schedule.intervalUnit;
                         const loadKey = sub.id + 'setSchedule' + p.id;
                         return (
                           <button
                             key={p.id}
-                            onClick={() => !isCurrent && handleAction(sub.id, 'setSchedule', { recurrencePolicyId: p.id })}
+                            onClick={() =>
+                              !isCurrent &&
+                              handleAction(sub.id, 'setSchedule', { recurrencePolicyId: p.id })
+                            }
                             disabled={isCurrent || actionLoading === loadKey}
                             className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                               isCurrent

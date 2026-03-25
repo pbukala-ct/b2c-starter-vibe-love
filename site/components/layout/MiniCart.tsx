@@ -89,11 +89,21 @@ export default function MiniCart() {
     }
   };
 
-  const cartItems = (
+  const cartItems =
     !cart || cart.lineItems.length === 0 ? (
-      <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-16">
-        <svg className="w-12 h-12 text-border" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+      <div className="flex h-full flex-col items-center justify-center gap-3 py-16 text-center">
+        <svg
+          className="text-border h-12 w-12"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1}
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+          />
         </svg>
         <p className="text-charcoal-light">{t('empty')}</p>
         <Link
@@ -109,40 +119,49 @@ export default function MiniCart() {
         {cart.lineItems.map((item) => {
           const name = getLocalizedString(item.name);
           const image = item.variant?.images?.[0]?.url;
-          const price = formatMoney(item.price?.value?.centAmount || 0, item.price?.value?.currencyCode);
+          const price = formatMoney(
+            item.price?.value?.centAmount || 0,
+            item.price?.value?.currencyCode
+          );
           const isSubscription = !!item.recurrenceInfo?.recurrencePolicy;
           const policyId = item.recurrenceInfo?.recurrencePolicy?.id;
-          const intervalLabel = policyId ? (policyMap.get(policyId) || 'Subscribe & Save') : 'Subscribe & Save';
+          const intervalLabel = policyId
+            ? policyMap.get(policyId) || 'Subscribe & Save'
+            : 'Subscribe & Save';
 
           return (
             <div key={item.id} className="flex gap-3">
               {image && (
-                <div className="w-16 h-16 relative flex-shrink-0 bg-cream-dark rounded-sm overflow-hidden">
+                <div className="bg-cream-dark relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-sm">
                   <Image src={image} alt={name} fill className="object-cover" sizes="64px" />
                 </div>
               )}
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <Link
-                  href={localePath(`/${getLocalizedString(item.productSlug) || item.productKey || item.productId}/p/${item.variant?.sku || item.productId}`)}
+                  href={localePath(
+                    `/${getLocalizedString(item.productSlug) || item.productKey || item.productId}/p/${item.variant?.sku || item.productId}`
+                  )}
                   onClick={() => setShowMiniCart(false)}
-                  className="text-sm font-medium text-charcoal hover:text-terra line-clamp-2"
+                  className="text-charcoal hover:text-terra line-clamp-2 text-sm font-medium"
                 >
                   {name}
                 </Link>
                 {isSubscription && (
-                  <span className="inline-block text-xs text-sage font-medium mt-0.5">
+                  <span className="text-sage mt-0.5 inline-block text-xs font-medium">
                     ♻ {intervalLabel}
                   </span>
                 )}
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-sm text-charcoal">
-                    {item.quantity > 1 && <span className="text-charcoal-light mr-1">{item.quantity}×</span>}
+                <div className="mt-1 flex items-center justify-between">
+                  <span className="text-charcoal text-sm">
+                    {item.quantity > 1 && (
+                      <span className="text-charcoal-light mr-1">{item.quantity}×</span>
+                    )}
                     {price}
                   </span>
                   <button
                     onClick={() => handleRemove(item.id)}
                     disabled={isUpdating === item.id}
-                    className="text-charcoal-light hover:text-red-500 transition-colors text-xs"
+                    className="text-charcoal-light text-xs transition-colors hover:text-red-500"
                     aria-label={t('removeItem')}
                   >
                     {t('remove')}
@@ -153,8 +172,7 @@ export default function MiniCart() {
           );
         })}
       </div>
-    )
-  );
+    );
 
   return (
     <>
@@ -183,9 +201,16 @@ export default function MiniCart() {
         isOpen={showMiniCart}
         onClose={() => setShowMiniCart(false)}
         title={`${t('title')}${itemCount > 0 ? ` (${itemCount})` : ''}`}
-        footer={cart && cart.lineItems.length > 0 ? (
-          <MiniCartFooter cart={cart} country={country} localePath={localePath} onClose={() => setShowMiniCart(false)} />
-        ) : undefined}
+        footer={
+          cart && cart.lineItems.length > 0 ? (
+            <MiniCartFooter
+              cart={cart}
+              country={country}
+              localePath={localePath}
+              onClose={() => setShowMiniCart(false)}
+            />
+          ) : undefined
+        }
       >
         {cartItems}
       </Drawer>

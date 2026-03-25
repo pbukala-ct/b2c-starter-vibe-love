@@ -6,10 +6,7 @@ export async function POST(request: NextRequest) {
     const { token, newPassword } = await request.json();
 
     if (!token || !newPassword) {
-      return NextResponse.json(
-        { error: 'Token and new password are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Token and new password are required' }, { status: 400 });
     }
 
     const { body: customer } = await apiRoot

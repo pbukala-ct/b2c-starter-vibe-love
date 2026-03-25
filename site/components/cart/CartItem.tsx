@@ -16,7 +16,7 @@ interface CartItemProps {
 }
 
 export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
-  const { locale, localePath } = useLocale();
+  const { localePath } = useLocale();
   const { formatMoney, getLocalizedString } = useFormatters();
   const policyMap = useRecurrencePolicies();
   const [qty, setQty] = useState(item.quantity);

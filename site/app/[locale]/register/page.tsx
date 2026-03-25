@@ -53,7 +53,11 @@ export default function RegisterPage() {
         setError(data.error || t('registrationFailed'));
       } else {
         const c = data.customer || data;
-        mutate(KEY_ACCOUNT, { id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName }, { revalidate: false });
+        mutate(
+          KEY_ACCOUNT,
+          { id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName },
+          { revalidate: false }
+        );
         router.push(redirect);
       }
     } catch {

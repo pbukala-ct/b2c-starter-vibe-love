@@ -35,7 +35,10 @@ export function MiniLoginForm({ onLoginSuccess }: MiniLoginFormProps) {
         setError(data.error || 'Invalid email or password');
       } else {
         const c = data.customer || data;
-        mutateAccount({ id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName }, { revalidate: false });
+        mutateAccount(
+          { id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName },
+          { revalidate: false }
+        );
         // Refresh cart in case an anonymous cart was merged
         await mutateCart();
         onLoginSuccess?.();
@@ -49,13 +52,13 @@ export function MiniLoginForm({ onLoginSuccess }: MiniLoginFormProps) {
 
   if (!isExpanded) {
     return (
-      <div className="bg-cream border border-border rounded-sm p-4 text-sm flex items-center justify-between">
+      <div className="bg-cream border-border flex items-center justify-between rounded-sm border p-4 text-sm">
         <span className="text-charcoal-light">
           {t('signInPrompt')}{' '}
           <button
             type="button"
             onClick={() => setIsExpanded(true)}
-            className="text-terra hover:underline font-medium"
+            className="text-terra font-medium hover:underline"
           >
             {t('signInLink')}
           </button>
@@ -63,7 +66,7 @@ export function MiniLoginForm({ onLoginSuccess }: MiniLoginFormProps) {
         <button
           type="button"
           onClick={() => setIsExpanded(true)}
-          className="text-xs text-charcoal-light hover:text-charcoal transition-colors ml-2"
+          className="text-charcoal-light hover:text-charcoal ml-2 text-xs transition-colors"
         >
           ›
         </button>
@@ -72,9 +75,9 @@ export function MiniLoginForm({ onLoginSuccess }: MiniLoginFormProps) {
   }
 
   return (
-    <div className="bg-white border border-border rounded-sm p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-medium text-charcoal text-sm">{t('miniLoginTitle')}</h3>
+    <div className="border-border rounded-sm border bg-white p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-charcoal text-sm font-medium">{t('miniLoginTitle')}</h3>
         <button
           type="button"
           onClick={() => setIsExpanded(false)}
@@ -86,42 +89,44 @@ export function MiniLoginForm({ onLoginSuccess }: MiniLoginFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="block text-xs font-medium text-charcoal mb-1">
+          <label className="text-charcoal mb-1 block text-xs font-medium">
             {tAuth('emailLabel')}
           </label>
           <input
             type="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
             placeholder={tAuth('emailPlaceholder')}
-            className="w-full border border-border rounded-sm px-3 py-2 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+            className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2 text-sm transition-colors focus:outline-none"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-charcoal mb-1">
+          <label className="text-charcoal mb-1 block text-xs font-medium">
             {tAuth('passwordLabel')}
           </label>
           <input
             type="password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="current-password"
             placeholder="••••••••"
-            className="w-full border border-border rounded-sm px-3 py-2 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+            className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2 text-sm transition-colors focus:outline-none"
           />
         </div>
 
         {error && (
-          <p className="text-xs text-red-600" role="alert">{error}</p>
+          <p className="text-xs text-red-600" role="alert">
+            {error}
+          </p>
         )}
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-charcoal text-white py-2.5 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm disabled:opacity-50"
+          className="bg-charcoal hover:bg-charcoal/80 w-full rounded-sm py-2.5 text-sm font-medium text-white transition-colors disabled:opacity-50"
         >
           {isLoading ? 'Signing in…' : 'Sign In'}
         </button>

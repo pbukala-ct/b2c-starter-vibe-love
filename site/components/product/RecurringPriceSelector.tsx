@@ -47,7 +47,7 @@ export function RecurringPriceSelector({
         className={`flex cursor-pointer items-center justify-between rounded border-2 p-4 transition-colors ${
           value === 'one-time'
             ? 'border-charcoal bg-cream'
-            : 'border-border bg-white hover:border-charcoal/40'
+            : 'border-border hover:border-charcoal/40 bg-white'
         }`}
       >
         <span className="flex items-center gap-2">
@@ -57,12 +57,12 @@ export function RecurringPriceSelector({
             value="one-time"
             checked={value === 'one-time'}
             onChange={() => onChange('one-time')}
-            className="h-4 w-4 accent-charcoal"
+            className="accent-charcoal h-4 w-4"
             aria-label={t('oneTimePurchase')}
           />
-          <span className="text-sm font-medium text-charcoal">{t('oneTimePurchase')}</span>
+          <span className="text-charcoal text-sm font-medium">{t('oneTimePurchase')}</span>
         </span>
-        <span className="text-sm font-semibold text-charcoal">
+        <span className="text-charcoal text-sm font-semibold">
           {formatMoney(oneTimePrice.centAmount, oneTimePrice.currencyCode)}
         </span>
       </label>
@@ -72,7 +72,7 @@ export function RecurringPriceSelector({
         className={`flex cursor-pointer flex-col gap-2 rounded border-2 p-4 transition-colors ${
           value !== 'one-time'
             ? 'border-sage bg-sage/5'
-            : 'border-border bg-white hover:border-sage/40'
+            : 'border-border hover:border-sage/40 bg-white'
         } ${disabled ? 'opacity-60' : ''}`}
       >
         <span className="flex items-center gap-2">
@@ -86,10 +86,10 @@ export function RecurringPriceSelector({
                 onChange('');
               }
             }}
-            className="h-4 w-4 accent-sage"
+            className="accent-sage h-4 w-4"
             aria-label={t('subscribeAndSave')}
           />
-          <span className="text-sm font-medium text-charcoal">{t('subscribeAndSave')}</span>
+          <span className="text-charcoal text-sm font-medium">{t('subscribeAndSave')}</span>
         </span>
 
         {recurringPrices.length > 0 && (
@@ -98,7 +98,7 @@ export function RecurringPriceSelector({
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}
             onClick={(e) => e.stopPropagation()}
-            className="mt-1 w-full max-w-xs rounded border border-border bg-white px-3 py-2 text-sm text-charcoal focus:border-charcoal focus:outline-none"
+            className="border-border text-charcoal focus:border-charcoal mt-1 w-full max-w-xs rounded border bg-white px-3 py-2 text-sm focus:outline-none"
             aria-label={t('selectRecurrence')}
           >
             <option value="">{t('selectRecurrence')}</option>

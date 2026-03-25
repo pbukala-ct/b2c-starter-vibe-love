@@ -12,7 +12,9 @@ export interface ShippingMethod {
   freeAbove: { centAmount: number } | null;
 }
 
-async function shippingMethodsFetcher([, country, currency]: [string, string, string]): Promise<ShippingMethod[]> {
+async function shippingMethodsFetcher([, country, currency]: [string, string, string]): Promise<
+  ShippingMethod[]
+> {
   const res = await fetch(`/api/shipping-methods?country=${country}&currency=${currency}`);
   if (!res.ok) return [];
   const data = await res.json();

@@ -127,9 +127,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
                     {items.map(({ item, qty }) => (
                       <div key={item.id} className="flex justify-between text-sm">
                         <div>
-                          <span className="text-charcoal">
-                            {getLocalizedString(item.name)}
-                          </span>
+                          <span className="text-charcoal">{getLocalizedString(item.name)}</span>
                           <span className="text-charcoal-light ml-2">× {qty}</span>
                           {item.recurrenceInfo?.recurrencePolicy && (
                             <span className="text-sage border-sage/30 ml-2 rounded-full border px-1.5 py-0.5 text-xs">

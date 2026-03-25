@@ -47,65 +47,71 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-charcoal">{t('resetPasswordTitle')}</h1>
+        <div className="mb-8 text-center">
+          <h1 className="text-charcoal text-3xl font-semibold">{t('resetPasswordTitle')}</h1>
           <p className="text-charcoal-light mt-2 text-sm">{t('resetPasswordDescription')}</p>
         </div>
 
-        <div className="bg-white border border-border rounded-sm p-8">
+        <div className="border-border rounded-sm border bg-white p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="token" className="block text-sm font-medium text-charcoal mb-1.5">
+              <label htmlFor="token" className="text-charcoal mb-1.5 block text-sm font-medium">
                 {t('tokenLabel')}
               </label>
               <input
                 id="token"
                 type="text"
                 value={token}
-                onChange={e => setToken(e.target.value)}
+                onChange={(e) => setToken(e.target.value)}
                 required
                 autoComplete="one-time-code"
                 placeholder={t('tokenPlaceholder')}
-                className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors font-mono"
+                className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 font-mono text-sm transition-colors focus:outline-none"
               />
             </div>
 
             <div>
-              <label htmlFor="new-password" className="block text-sm font-medium text-charcoal mb-1.5">
+              <label
+                htmlFor="new-password"
+                className="text-charcoal mb-1.5 block text-sm font-medium"
+              >
                 {t('newPasswordLabel')}
               </label>
               <input
                 id="new-password"
                 type="password"
                 value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
+                onChange={(e) => setNewPassword(e.target.value)}
                 required
                 autoComplete="new-password"
                 placeholder="••••••••"
-                className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 text-sm transition-colors focus:outline-none"
               />
             </div>
 
             <div>
-              <label htmlFor="confirm-password" className="block text-sm font-medium text-charcoal mb-1.5">
+              <label
+                htmlFor="confirm-password"
+                className="text-charcoal mb-1.5 block text-sm font-medium"
+              >
                 {t('confirmPassword')}
               </label>
               <input
                 id="confirm-password"
                 type="password"
                 value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 autoComplete="new-password"
                 placeholder="••••••••"
-                className="w-full border border-border rounded-sm px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                className="border-border text-charcoal focus:border-charcoal w-full rounded-sm border px-3 py-2.5 text-sm transition-colors focus:outline-none"
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-sm">
+              <div className="rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
               </div>
             )}
@@ -113,14 +119,17 @@ function ResetPasswordContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-charcoal text-white py-3 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-charcoal hover:bg-charcoal/80 w-full rounded-sm py-3 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? 'Resetting…' : t('submitReset')}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <Link href={localePath('/login')} className="text-sm text-terra hover:underline font-medium">
+            <Link
+              href={localePath('/login')}
+              className="text-terra text-sm font-medium hover:underline"
+            >
               {t('loginInstead')}
             </Link>
           </div>
@@ -132,11 +141,13 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-charcoal border-t-transparent" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="border-charcoal h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+        </div>
+      }
+    >
       <ResetPasswordContent />
     </Suspense>
   );

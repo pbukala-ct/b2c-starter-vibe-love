@@ -42,7 +42,11 @@ export default function LoginPage() {
         setError(data.error || t('invalidCredentials'));
       } else {
         const c = data.customer || data;
-        mutate(KEY_ACCOUNT, { id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName }, { revalidate: false });
+        mutate(
+          KEY_ACCOUNT,
+          { id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName },
+          { revalidate: false }
+        );
         router.push(redirect);
       }
     } catch {
@@ -135,7 +139,10 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-3 text-center">
-            <Link href={localePath('/forgot-password')} className="text-charcoal-light text-xs hover:underline">
+            <Link
+              href={localePath('/forgot-password')}
+              className="text-charcoal-light text-xs hover:underline"
+            >
               {t('forgotPassword')}
             </Link>
           </div>

@@ -59,19 +59,19 @@ export function SecurityTab() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-charcoal mb-2">{t('changePassword')}</h2>
-      <p className="text-sm text-charcoal-light mb-6">{t('changePasswordDescription')}</p>
+      <h2 className="text-charcoal mb-2 text-xl font-semibold">{t('changePassword')}</h2>
+      <p className="text-charcoal-light mb-6 text-sm">{t('changePasswordDescription')}</p>
 
-      <div className="bg-white border border-border rounded-sm p-6">
-        <form onSubmit={handleSubmit} className="space-y-5 max-w-md">
+      <div className="border-border rounded-sm border bg-white p-6">
+        <form onSubmit={handleSubmit} className="max-w-md space-y-5">
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-1.5">
+            <label className="text-charcoal mb-1.5 block text-sm font-medium">
               {t('currentPassword')}
             </label>
             <input
               type="password"
               value={form.currentPassword}
-              onChange={e => setForm(f => ({ ...f, currentPassword: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, currentPassword: e.target.value }))}
               required
               autoComplete="current-password"
               className={inputClass}
@@ -79,13 +79,13 @@ export function SecurityTab() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-1.5">
+            <label className="text-charcoal mb-1.5 block text-sm font-medium">
               {t('newPassword')}
             </label>
             <input
               type="password"
               value={form.newPassword}
-              onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, newPassword: e.target.value }))}
               required
               autoComplete="new-password"
               className={inputClass}
@@ -93,13 +93,13 @@ export function SecurityTab() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-1.5">
+            <label className="text-charcoal mb-1.5 block text-sm font-medium">
               {t('confirmNewPassword')}
             </label>
             <input
               type="password"
               value={form.confirmNewPassword}
-              onChange={e => setForm(f => ({ ...f, confirmNewPassword: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, confirmNewPassword: e.target.value }))}
               required
               autoComplete="new-password"
               className={inputClass}
@@ -107,13 +107,13 @@ export function SecurityTab() {
           </div>
 
           {success && (
-            <div className="bg-sage/10 border border-sage/20 text-charcoal text-sm px-4 py-3 rounded-sm">
+            <div className="bg-sage/10 border-sage/20 text-charcoal rounded-sm border px-4 py-3 text-sm">
               {success}
             </div>
           )}
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-sm">
+            <div className="rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           )}
@@ -121,7 +121,7 @@ export function SecurityTab() {
           <button
             type="submit"
             disabled={isLoading}
-            className="bg-charcoal text-white px-6 py-2.5 text-sm font-medium hover:bg-charcoal/80 transition-colors rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-charcoal hover:bg-charcoal/80 rounded-sm px-6 py-2.5 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isLoading ? 'Saving…' : t('changePassword')}
           </button>

@@ -17,7 +17,7 @@ export default function AddToWishlistButton({ productId, sku }: Props) {
 
   if (!user) return null;
 
-  const wishlistItem = wishlist?.items.find(i => i.productId === productId);
+  const wishlistItem = wishlist?.items.find((i) => i.productId === productId);
   const isInWishlist = !!wishlistItem;
 
   async function handleClick() {
@@ -41,14 +41,14 @@ export default function AddToWishlistButton({ productId, sku }: Props) {
       disabled={loading}
       aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
       title={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-      className={`flex items-center justify-center w-auto h-auto p-4 border rounded-sm transition-colors disabled:opacity-50 ${
+      className={`flex h-auto w-auto items-center justify-center rounded-sm border p-4 transition-colors disabled:opacity-50 ${
         isInWishlist
           ? 'border-terra bg-terra/5 text-terra'
-          : 'border-border bg-white text-charcoal-light hover:border-terra hover:text-terra'
+          : 'border-border text-charcoal-light hover:border-terra hover:text-terra bg-white'
       }`}
     >
       <svg
-        className="w-5 h-5"
+        className="h-5 w-5"
         fill={isInWishlist ? 'currentColor' : 'none'}
         stroke="currentColor"
         viewBox="0 0 24 24"
