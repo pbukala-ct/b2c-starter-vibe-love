@@ -54,19 +54,24 @@ export async function POST(req: NextRequest) {
     lastLoginAt?: string;
   };
 
-  // Look up agent credentials from CT Custom Objects
-  const key = email.replace(/[^a-zA-Z0-9_-]/g, '_');
+  // Look up agent credentials from CT Custom Objects by email value
+  // (key format may differ between storefront-created and MC-app-created records)
   let agentRecord: AgentRecord | null = null;
   let recordVersion: number | undefined;
+  let recordKey: string | undefined;
 
   try {
     const result = await apiRoot
       .customObjects()
-      .withContainerAndKey({ container: 'agent-credentials', key })
-      .get()
+      .withContainer({ container: 'agent-credentials' })
+      .get({ queryArgs: { where: `value(email="${email}")`, limit: 1 } })
       .execute();
-    agentRecord = result.body.value as AgentRecord;
-    recordVersion = result.body.version;
+    const obj = result.body.results[0] ?? null;
+    if (obj) {
+      agentRecord = obj.value as AgentRecord;
+      recordVersion = obj.version;
+      recordKey = obj.key;
+    }
   } catch {
     // Not found — return generic error to avoid email enumeration
   }
@@ -84,7 +89,7 @@ export async function POST(req: NextRequest) {
   }
 
   const sessionId = randomUUID();
-  const agentId = agentRecord.agentId ?? key;
+  const agentId = agentRecord.agentId ?? recordKey ?? email.replace(/[^a-zA-Z0-9_-]/g, '_');
 
   const sessionData: AgentSession = {
     agentId,
@@ -116,7 +121,7 @@ export async function POST(req: NextRequest) {
     .post({
       body: {
         container: 'agent-credentials',
-        key,
+        key: recordKey!,
         version: recordVersion,
         value: {
           ...agentRecord,
