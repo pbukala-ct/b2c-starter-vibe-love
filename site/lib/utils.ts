@@ -83,6 +83,5 @@ export function parseStreetAddress(streetAddress: string): {
 }
 
 export function toUrlLocale(country: string): string {
-  const map: Record<string, string> = { US: 'en-us', GB: 'en-gb', DE: 'de-de' };
-  return map[country] || 'en-us';
+  return (COUNTRY_CONFIG[country]?.locale ?? DEFAULT_LOCALE.locale).toLowerCase();
 }

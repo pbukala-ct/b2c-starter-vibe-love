@@ -24,6 +24,7 @@ export const COUNTRY_CONFIG = {
 
 **What updates automatically** (no manual changes needed):
 - `CURRENCY_LOCALE` map inside `formatMoney` — picks the right `Intl` locale per currency
+- `toUrlLocale()` — derives the URL locale (e.g. `'fr-fr'`) from `COUNTRY_CONFIG[country].locale.toLowerCase()`
 - `useCountryConfig()` hook — client-side `CountrySelector` and `LocaleProvider` pick it up
 - `getLocale()` server utility — recognises the new country cookie value
 

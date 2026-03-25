@@ -90,18 +90,23 @@ All commercetools API calls live in `site/lib/ct/`. Each file owns one domain:
 | `lib/ct/custom-objects.ts` | CT custom objects |
 | `lib/ct/cart.ts` | Cart operations |
 
-All files import the shared `ct()` helper from `lib/ct/request.ts`:
+All files import `apiRoot` from `lib/ct/client.ts` and use the commercetools SDK:
 
 ```typescript
 // lib/ct/widgets.ts
-import { ct } from './request';
+import { apiRoot } from './client';
 
 export async function getWidgets(customerId: string) {
-  return ct('GET', `/widgets?where=${encodeURIComponent(`customerId = "${customerId}"`)}`);
+  const { body } = await apiRoot
+    .widgets()
+    .get({ queryArgs: { where: `customerId = "${customerId}"` } })
+    .execute();
+  return body;
 }
 
 export async function createWidget(data: Record<string, unknown>) {
-  return ct('POST', '/widgets', data);
+  const { body } = await apiRoot.widgets().post({ body: data }).execute();
+  return body;
 }
 ```
 

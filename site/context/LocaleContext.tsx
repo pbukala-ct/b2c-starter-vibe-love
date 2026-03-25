@@ -1,13 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { COUNTRY_CONFIG, DEFAULT_LOCALE } from '@/lib/utils';
-
-const COUNTRY_TO_URL_LOCALE: Record<string, string> = {
-  US: 'en-us',
-  GB: 'en-gb',
-  DE: 'de-de',
-};
+import { COUNTRY_CONFIG, DEFAULT_LOCALE, toUrlLocale } from '@/lib/utils';
 
 interface LocaleContextType {
   country: string;
@@ -22,8 +16,8 @@ const LocaleContext = createContext<LocaleContextType>({
   country: DEFAULT_LOCALE.country,
   currency: DEFAULT_LOCALE.currency,
   locale: DEFAULT_LOCALE.locale,
-  urlLocale: 'en-us',
-  localePath: (path) => `/en-us${path}`,
+  urlLocale: toUrlLocale(DEFAULT_LOCALE.country),
+  localePath: (path) => `/${toUrlLocale(DEFAULT_LOCALE.country)}${path}`,
   setCountry: async () => {},
 });
 
@@ -46,7 +40,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ country: newCountry }),
     });
-    const newUrlLocale = COUNTRY_TO_URL_LOCALE[newCountry] || 'en-us';
+    const newUrlLocale = toUrlLocale(newCountry);
     const currentPath = window.location.pathname;
     // Strip existing locale prefix and navigate to new one
     const pathWithoutLocale = currentPath.replace(/^\/[a-z]{2}-[a-z]{2}(\/|$)/, '/');
@@ -54,7 +48,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   };
 
   const config = COUNTRY_CONFIG[country] || COUNTRY_CONFIG[DEFAULT_LOCALE.country];
-  const urlLocale = COUNTRY_TO_URL_LOCALE[country] || 'en-us';
+  const urlLocale = toUrlLocale(country);
   const localePath = (path: string) => `/${urlLocale}${path.startsWith('/') ? path : `/${path}`}`;
 
   return (
