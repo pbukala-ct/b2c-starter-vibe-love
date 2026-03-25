@@ -1,4 +1,5 @@
-import { apiUrl, projectKey } from './client';
+import { apiRoot } from './client';
+import type { ProductSearchRequest, SearchSorting } from '@commercetools/platform-sdk';
 
 export interface SearchFilters {
   color?: string;
@@ -67,25 +68,6 @@ export interface Image {
   dimensions?: { w: number; h: number };
 }
 
-async function getAdminToken(): Promise<string> {
-  const authUrl = process.env.CTP_AUTH_URL!;
-  const creds = Buffer.from(
-    `${process.env.CTP_CLIENT_ID}:${process.env.CTP_CLIENT_SECRET}`
-  ).toString('base64');
-  const resp = await fetch(`${authUrl}/oauth/token`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${creds}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: `grant_type=client_credentials&scope=${encodeURIComponent(process.env.CTP_SCOPES!)}`,
-    next: { revalidate: 3500 },
-  });
-  const data = await resp.json();
-  return data.access_token;
-}
-
-
 const SORT_FIELD_MAP: Record<string, string> = {
   price: 'variants.prices.centAmount',
 };
@@ -98,7 +80,6 @@ export function parseSortParam(sort: string): SortValues {
 }
 
 export async function searchProducts(params: SearchParams): Promise<SearchResult> {
-  const token = await getAdminToken();
   const {
     query,
     categoryId,
@@ -164,46 +145,30 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
         ? queryParts[0]
         : { and: queryParts };
 
-  const sortParam = sort.map((s) => (s.field === 'name' ? { ...s, language: locale } : s));
+  const sortParam = sort.map(
+    (s) => (s.field === 'name' ? { ...s, language: locale } : s) as SearchSorting
+  );
 
-  const body: Record<string, unknown> = {
+  const body: ProductSearchRequest = {
     limit,
     offset,
-    productProjectionParameters: {
-      priceCurrency: currency,
-      priceCountry: country,
-    },
+    productProjectionParameters: { priceCurrency: currency, priceCountry: country },
     sort: sortParam,
+    ...(searchQuery ? { query: searchQuery as ProductSearchRequest['query'] } : {}),
   };
-
-  if (searchQuery) body.query = searchQuery;
-
-  const doSearch = (b: Record<string, unknown>) =>
-    fetch(`${apiUrl}/${projectKey}/products/search`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(b),
-      next: { revalidate: 60 },
-    });
-
-  let resp = await doSearch(body);
 
   // If the sort field has no data in the index (e.g. categoryOrderHints not set in Merchant Center),
   // CT returns a query_shard_exception. Retry without the custom sort so the page still loads.
-  if (!resp.ok) {
-    const err = await resp.json();
-    if (
-      err.message?.includes('query_shard_exception') ||
-      err.message?.includes('No mapping found')
-    ) {
-      resp = await doSearch({ ...body, sort: [{ field: 'createdAt', order: 'desc' }] });
-    }
-    if (!resp.ok) {
-      throw new Error(`Product search failed: ${err.message}`);
-    }
+  try {
+    const { body: result } = await apiRoot.products().search().post({ body: body }).execute();
+    return result as unknown as SearchResult;
+  } catch (err: unknown) {
+    const msg =
+      (err as { body?: { message?: string } }).body?.message ??
+      (err as { message?: string }).message ??
+      '';
+    throw new Error(`Product search failed: ${msg}`, { cause: err });
   }
-
-  return resp.json();
 }
 
 export async function getProductBySku(
@@ -212,26 +177,26 @@ export async function getProductBySku(
   currency: string,
   country: string
 ): Promise<ProductProjection | null> {
-  const token = await getAdminToken();
-
-  const resp = await fetch(`${apiUrl}/${projectKey}/products/search`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      limit: 1,
-      query: { exact: { field: 'variants.sku', value: sku } },
-      productProjectionParameters: {
-        priceCurrency: currency,
-        priceCountry: country,
-        localeProjection: [locale],
-      },
-    }),
-    next: { revalidate: 60 },
-  });
-
-  if (!resp.ok) return null;
-  const data = await resp.json();
-  return data.results[0]?.productProjection || null;
+  try {
+    const { body } = await apiRoot
+      .products()
+      .search()
+      .post({
+        body: {
+          limit: 1,
+          query: { exact: { field: 'variants.sku', value: sku } } as ProductSearchRequest['query'],
+          productProjectionParameters: {
+            priceCurrency: currency,
+            priceCountry: country,
+            localeProjection: [locale],
+          },
+        },
+      })
+      .execute();
+    return (body as unknown as SearchResult).results[0]?.productProjection ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getProductById(
@@ -239,20 +204,20 @@ export async function getProductById(
   currency: string,
   country: string
 ): Promise<ProductProjection | null> {
-  const token = await getAdminToken();
-
-  const resp = await fetch(`${apiUrl}/${projectKey}/products/search`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      limit: 1,
-      query: { exact: { field: 'id', value: id } },
-      productProjectionParameters: { priceCurrency: currency, priceCountry: country },
-    }),
-    next: { revalidate: 60 },
-  });
-
-  if (!resp.ok) return null;
-  const data = await resp.json();
-  return data.results[0]?.productProjection || null;
+  try {
+    const { body } = await apiRoot
+      .products()
+      .search()
+      .post({
+        body: {
+          limit: 1,
+          query: { exact: { field: 'id', value: id } } as ProductSearchRequest['query'],
+          productProjectionParameters: { priceCurrency: currency, priceCountry: country },
+        },
+      })
+      .execute();
+    return (body as unknown as SearchResult).results[0]?.productProjection ?? null;
+  } catch {
+    return null;
+  }
 }
