@@ -62,3 +62,64 @@ Using the browser, run through the following tests.  Fix any found errors and re
   e. If another card exists, click "Set Default" on the new card and verify the Default badge
   f. Click "Remove" on the new card and verify it disappears from the list
 
+10. Agent Portal — Login and session management
+  a. Go to /agent/login
+  b. Verify unauthenticated access to /agent/dashboard redirects to /agent/login
+  c. Enter invalid credentials; verify "Invalid credentials" error is shown
+  d. Enter valid agent credentials (agent@ct.com / 1234!); verify redirect to /agent/dashboard
+  e. Verify the agent nav bar shows agent name, role, and a MM:SS countdown timer
+  f. Verify countdown timer ticks down in real time
+  g. Click "Log out"; verify redirect to /agent/login and session is cleared
+
+11. Agent Portal — Customer lookup
+  a. Log in as agent
+  b. On the dashboard, type at least 2 characters in the "Search by name" field
+  c. Verify a dropdown of matching customers appears within ~300 ms
+  d. Select a customer from the dropdown; verify redirect to the customer detail page
+  e. Verify the agent nav bar shows the selected customer's full name (not a raw ID)
+  f. End the session; go back to dashboard; search by email for a known customer
+  g. Verify the result card shows customer name, email, account status, and open order count
+  h. Search for a non-existent email; verify "No customer found" message appears
+  i. Click "Start customer session"; verify redirect to the customer detail page
+  j. Click "End session"; verify redirect back to the dashboard and customer indicator is gone
+
+12. Agent Portal — Active cart view
+  a. Log in as agent and start a session for a customer who has an active cart
+  b. Verify the cart page shows all line items with SKU, name, quantity, unit price, and total
+  c. Verify the cart total is displayed correctly
+  d. If a discount code is applied, verify it is shown
+  e. If the cart was last modified more than 24 hours ago, verify the staleness warning is shown
+  f. Start a session for a customer with no active cart; verify "No active cart" message is shown
+
+13. Agent Portal — Cart editing (order-placement role required)
+  a. Log in as agent with order-placement role and start a session for a customer with an active cart
+  b. Click "+" on a line item to increase quantity; verify the quantity and total update
+  c. Click "−" on a line item to decrease quantity; verify it decrements
+  d. Click "Remove" on a line item; verify it disappears from the cart
+  e. Enter a valid SKU in the "Add item by SKU" field and click Add; verify the item appears
+  f. Enter an invalid SKU; verify an error is shown and the cart is unchanged
+  g. Enter a valid discount code and click Apply; verify it appears on the cart
+  h. Click "×" on a discount code; verify it is removed
+  i. Click "Edit address", fill in all required fields, save; verify the address updates on the cart
+
+14. Agent Portal — Customer address book
+  a. Log in as agent with order-placement role and start a session for a customer
+  b. Scroll to the "Address Book" section on the customer detail page
+  c. Verify all saved addresses are listed with name, street, city, postal code, and country
+  d. Click "+ Add address"; fill in all required fields; click "Add address"
+  e. Verify the new address appears in the list
+  f. Click "Edit" on any address; change the city; click "Save changes"
+  g. Verify the updated city appears in the address card
+  h. Log in as read-only agent; verify the "Add address" button and "Edit" links are not visible
+
+15. Agent Portal — Checkout with address picker
+  a. Log in as agent with order-placement role, start a session for a customer with an active cart and at least one saved address
+  b. Click "Place order on behalf of customer"
+  c. Verify the confirmation modal shows the customer's saved addresses as radio buttons
+  d. Select an address and click "Confirm & place order"
+  e. Verify a success message appears with the order number
+  f. Verify the cart is now empty / "No active cart" is shown
+  g. Start a session for a customer with a cart but no saved addresses and no cart shipping address
+  h. Click "Place order on behalf of customer"
+  i. Verify the modal shows a message directing the agent to add an address; confirm button is disabled
+

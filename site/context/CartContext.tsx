@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 
 export interface CartLineItem {
   id: string;
@@ -84,6 +84,29 @@ export function CartProvider({ initialCart, children }: { initialCart: Cart | nu
       setIsLoading(false);
     }
   }, []);
+
+  // Refresh cart when the agent portal broadcasts a cart mutation (same-browser sync)
+  useEffect(() => {
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel('cart-updates');
+      channel.onmessage = () => { refreshCart(); };
+    } catch {
+      // BroadcastChannel not supported — skip
+    }
+    return () => { channel?.close(); };
+  }, [refreshCart]);
+
+  // Refresh cart when the storefront tab regains focus (cross-machine fallback)
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        refreshCart();
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [refreshCart]);
 
   return (
     <CartContext.Provider value={{ cart, isLoading, showMiniCart, setCart, setShowMiniCart, itemCount, addToCartAndShow, refreshCart }}>

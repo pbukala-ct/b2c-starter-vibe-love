@@ -125,6 +125,84 @@ All commercetools calls go through server-side Next.js API routes. The browser n
 | `/api/shipping-methods` | GET | Shipping options |
 | `/api/recurrence-policies` | GET | Subscription frequencies |
 
+## Agent Portal (CS Agent Impersonation) — Phase 1 + Phase 2
+
+A protected area of the storefront (`/agent`) accessible only to authenticated CS agents. Phase 1 is read-only: agents can look up customers and view their active cart. Write operations (cart edit, checkout) are Phase 2.
+
+### Authentication
+- Dedicated login at `/agent/login` (separate from customer login)
+- Agents sign in with email + password; credentials stored in CT Custom Objects (`agent-credentials`)
+- Passwords hashed with scrypt (Node.js built-in) for existing accounts; new accounts created via MC App use bcrypt (`bcrypt:<hash>` prefix) — both formats accepted transparently by the login route
+- JWT sessions signed with `AGENT_SESSION_SECRET` (distinct from `SESSION_SECRET`), stored in `agent-session` HTTP-only cookie
+- 30-minute inactivity timeout; automatic logout when timer reaches zero
+- Roles: `read-only` (view only) or `order-placement` (can edit cart + checkout)
+- All `/api/agent/*` routes require a valid agent session (return 401 otherwise)
+- Agent nav bar shows the active customer's full name (not raw ID) and a live MM:SS countdown to session expiry; warning style applied when under 5 minutes remain
+
+### Customer Lookup
+- Agents can search by email address, commercetools customer ID, order number, or by name (first/last name partial match)
+- Name search returns up to 10 matching customers in a dropdown; agent selects one to start a session
+- Name search debounces 300 ms, requires minimum 2 characters
+- Exact-match search (email/customerId/orderId) returns: customer name, email, account status, open order count
+- Agents can start a customer session (scopes the agent JWT to one customer at a time)
+- Agents must explicitly end a customer session before looking up a different customer
+
+### Active Cart View
+- Agent can view the customer's active cart: line items, SKU, name, quantity, unit price, totals
+- Applied discount codes and shipping address displayed
+- Staleness warning shown if cart was last modified more than 24 hours ago
+- "No active cart" state handled
+
+### Audit Log
+- Every agent action (login, logout, customer lookup, cart view, session start/end) produces an immutable audit log entry in CT Custom Objects (`agent-audit-log`)
+- Entries contain: agentId, agentEmail, customerId, sessionId, actionType, actionDetail, timestamp, outcome
+- Compliance query endpoint: `GET /api/agent/audit?customerId=<id>&dateFrom=<iso>&dateTo=<iso>`
+
+### Cart Edit (Phase 2)
+- Add items by SKU (stock validation by CT), remove items, update quantity (quantity 0 removes item)
+- Apply and remove discount codes
+- Update shipping address on cart (field-level validation, required fields enforced)
+- All write operations require `order-placement` role
+- After each successful cart mutation, the agent portal broadcasts a `cart-updated` event via the browser `BroadcastChannel('cart-updates')` API; the customer-facing mini cart subscribes and calls `refreshCart()` instantly (same-browser real-time sync)
+- `visibilitychange` fallback: the mini cart also re-fetches the cart whenever the storefront tab regains focus, covering cross-machine scenarios
+
+### Customer Address Book (Phase 2)
+- Agents can view all saved addresses on the customer detail page
+- Agents with `order-placement` role can add new addresses (POST) and edit existing addresses (PUT)
+- Address changes write to `customer.addresses` in CT via `addAddress` and `changeAddress` actions
+- All address book actions are audit-logged with `customer.address-book.*` action types
+
+### Agent-Initiated Checkout (Phase 2)
+- Confirmation modal shows full order summary (items, total) before submission
+- Address picker in modal lists customer's saved addresses as radio options; pre-selects one matching the cart shipping address if available
+- If a different address is selected, the cart shipping address is updated before order submission
+- If the customer has no saved addresses and no cart shipping address, the agent is prompted to add one
+- Places order using existing CT cart checkout flow
+- Order confirmation email sent to customer with agent-assisted attribution
+- Payment failure surfaces failure reason to agent; cart left intact
+- `confirmationToken: "confirmed"` guard prevents accidental checkout
+
+### Agent API Routes
+
+| Route | Methods | Purpose |
+|---|---|---|
+| `/api/agent/auth/login` | POST | Agent login; issues `agent-session` cookie |
+| `/api/agent/auth/logout` | POST | Agent logout; clears cookie + writes audit entry |
+| `/api/agent/session` | PATCH | Set/clear `activeCustomerId` in agent JWT |
+| `/api/agent/customers/lookup` | GET | Search customer by email, customerId, orderId, or name (partial match) |
+| `/api/agent/customers/[customerId]/cart` | GET | View customer's active cart |
+| `/api/agent/customers/[customerId]/cart/items` | POST, DELETE, PATCH | Add/remove/update cart line items |
+| `/api/agent/customers/[customerId]/cart/discounts` | POST, DELETE | Apply/remove discount codes |
+| `/api/agent/customers/[customerId]/cart/address` | PUT | Update shipping address on cart |
+| `/api/agent/customers/[customerId]/addresses` | GET, POST | View and add customer addresses |
+| `/api/agent/customers/[customerId]/addresses/[addressId]` | PUT | Update a customer address |
+| `/api/agent/customers/[customerId]/checkout` | POST | Place order on behalf of customer |
+| `/api/agent/audit` | GET | Compliance audit log query |
+
+### Setup
+- Provision agent accounts: `node tools/setup-agent-credentials.mjs` (edit `AGENTS` array, requires `tools/.env`)
+- Required env var: `AGENT_SESSION_SECRET` in `site/.env` (see CLAUDE.md)
+
 ## Admin Tools
 
 Scripts in `tools/` for commercetools project setup and exploration. All use `tools/.env` (admin scope).
@@ -138,3 +216,4 @@ Scripts in `tools/` for commercetools project setup and exploration. All use `to
 | `setup-subscriptions.mjs` | Configure recurrence policies |
 | `get-attribute-values.mjs` | List product attribute values |
 | `test-search*.mjs` | Various Product Search API tests |
+| `setup-agent-credentials.mjs` | Provision CS agent accounts in CT Custom Objects |

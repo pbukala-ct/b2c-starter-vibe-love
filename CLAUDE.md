@@ -43,12 +43,18 @@ Carts are created with `shippingMode: 'Single'`. Use `setShippingAddress` + `set
 
 **CRITICAL: `site/.env` and `tools/.env` are completely separate API clients with different permission scopes. NEVER copy, share, or reuse credentials between them.**
 
-- `site/.env` — **Storefront** API client (limited scope: Frontend B2C + manage_payments, manage_recurring_orders, manage_custom_objects). Also needs `SESSION_SECRET`.
+- `site/.env` — **Storefront** API client (limited scope: Frontend B2C + manage_payments, manage_recurring_orders, manage_custom_objects). Also needs `SESSION_SECRET` and `AGENT_SESSION_SECRET`.
 - `tools/.env` — **Admin** API client (`manage_project` scope — can modify or delete anything in the CT project). Used ONLY by scripts in `tools/`.
 
 If `site/.env` is missing, tell the user to create a new **Frontend B2C** API client in Merchant Center. **NEVER copy `tools/.env` to `site/.env`** — this would give the public-facing storefront full admin access to the commercetools project.
 
 Both files are gitignored. Never commit them.
+
+### Agent Portal Secrets
+
+The agent portal (CS agent impersonation feature) requires one additional secret in `site/.env`:
+
+- `AGENT_SESSION_SECRET` — signs agent JWT sessions; **must be different from `SESSION_SECRET`**. Generate with `openssl rand -hex 32`. Never reuse the customer session secret here — mixing the two would allow token confusion between agent and customer sessions.
 
 ## Adding or Changing Features
 
@@ -65,3 +71,4 @@ Tests live in `test/tests/`. They run against the live Netlify site by default (
 
 ## Tools Pattern
 All tools import from `tools/ct-admin.mjs` which reads `tools/.env`. To create a new tool, follow the existing pattern.
+

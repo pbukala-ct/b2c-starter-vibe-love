@@ -13,6 +13,7 @@ Fork it, connect your own commercetools project, and use Claude Code to customiz
 - **Cart and checkout** — guest or logged-in, split shipments, credit card with test auto-fill
 - **Customer accounts** — profile, order history, subscriptions (pause/resume/skip), address book, payment methods
 - **Internationalization** — country/currency/language switching (US, GB, DE)
+- **CS Agent Portal** (`/agent`) — agent login, customer lookup, cart view and editing, agent-initiated checkout, full audit log
 - **Admin tools** (`tools/`) for catalog exploration, subscription setup, and more
 - **E2E tests** generated from plain-English descriptions in `test.txt`
 
@@ -87,6 +88,7 @@ Every push to **main** triggers an automatic redeploy.
 | `CTP_API_URL` | CT API URL |
 | `CTP_SCOPES` | API client scopes |
 | `SESSION_SECRET` | Random string for JWT signing (ask Claude Code to generate one) |
+| `AGENT_SESSION_SECRET` | Separate random string for agent JWT signing (must differ from `SESSION_SECRET`) |
 
 ---
 
@@ -137,6 +139,8 @@ You can also ask Claude Code to run just the tests at any time: *"Run the tests 
 ```
 ├── site/               # Next.js storefront
 │   ├── app/            #   App Router pages and API routes
+│   │   ├── agent/      #     CS agent portal pages
+│   │   └── api/        #     BFF API routes (including /api/agent/*)
 │   ├── components/     #   React components
 │   ├── lib/            #   Shared utilities and CT client
 │   ├── context/        #   React context providers
