@@ -10,7 +10,6 @@ import { getTranslations } from 'next-intl/server';
 import PDPActions from '@/components/product/PDPActions';
 import type { Price } from '@/lib/ct/search';
 import { Metadata } from 'next';
-import { useLocale } from '@/context/LocaleContext';
 
 interface PageProps {
   params: Promise<{ slug: string; sku: string }>;
@@ -198,7 +197,7 @@ export default async function ProductPage({ params }: PageProps) {
             {[t('freeShipping'), t('splitShipments'), t('shipsWithin')].map((line) => (
               <div key={line} className="text-charcoal-light flex items-center gap-2 text-xs">
                 <svg
-                  className="text-sage h-4 w-4 flex-shrink-0"
+                  className="text-sage h-4 w-4 shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
