@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { apiRoot } from './client';
+import { DEFAULT_LOCALE } from '@/lib/utils';
 import type {
   ProductSearchFacetResult,
   ProductSearchRequest,
@@ -137,9 +138,9 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
     categoryId,
     categorySubTree = true,
     facetFilters = {},
-    locale = 'en-US',
-    currency = 'USD',
-    country = 'US',
+    locale = DEFAULT_LOCALE.locale,
+    currency = DEFAULT_LOCALE.currency,
+    country = DEFAULT_LOCALE.country,
     limit = 24,
     offset = 0,
     sort = [{ field: 'createdAt', order: 'desc' as const }],

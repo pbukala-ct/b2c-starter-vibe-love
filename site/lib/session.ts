@@ -43,7 +43,7 @@ export async function getLocale(): Promise<{ country: string; currency: string; 
   }
   const cookieStore = await cookies();
   const country = cookieStore.get('vibe-country')?.value || DEFAULT_COUNTRY;
-  const config = COUNTRY_CONFIG[country] || COUNTRY_CONFIG[DEFAULT_COUNTRY] || COUNTRY_CONFIG['US'];
+  const config = COUNTRY_CONFIG[country] || COUNTRY_CONFIG[DEFAULT_COUNTRY];
   return { country, currency: config.currency, locale: config.locale };
 }
 

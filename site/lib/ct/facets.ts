@@ -39,7 +39,7 @@ async function fetchProductTypes(): Promise<ProductType[]> {
   return body.results;
 }
 
-export async function getSearchableAttributes(locale = 'en-US'): Promise<FacetDefinition[]> {
+export async function getSearchableAttributes(locale: string): Promise<FacetDefinition[]> {
   const productTypes = await fetchProductTypes();
   const seen = new Set<string>();
   return productTypes
