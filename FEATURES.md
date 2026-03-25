@@ -27,6 +27,7 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - Variant selection (color, size, specifications)
 - Image gallery with thumbnail strip
 - Breadcrumb navigation (Home > Category > Product)
+- Quantity selector (− / count / + control, min 1, max 99) above the add-to-cart button
 - Subscribe & Save option (see below)
 - Free shipping threshold display (orders over $500)
 

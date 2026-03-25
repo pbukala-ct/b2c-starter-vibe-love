@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 interface SubscribeAndSaveProps {
   productId: string;
   variantId: number;
+  quantity?: number;
   regularPrice: Price;
   recurringPrices: Price[];
   onAddToCart?: (cart: unknown, mode: 'one-time' | 'subscribe') => void;
@@ -20,6 +21,7 @@ interface SubscribeAndSaveProps {
 export default function SubscribeAndSave({
   productId,
   variantId,
+  quantity = 1,
   regularPrice,
   recurringPrices,
   onAddToCart,
@@ -47,7 +49,7 @@ export default function SubscribeAndSave({
         body: JSON.stringify({
           productId,
           variantId,
-          quantity: 1,
+          quantity,
           recurrencePolicyId,
         }),
       });

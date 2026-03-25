@@ -7,8 +7,7 @@ import { getRecurrencePolicies } from '@/lib/ct/auth';
 import { formatMoney, getLocalizedString, toUrlLocale } from '@/lib/utils';
 import { getLocale } from '@/lib/session';
 import { getTranslations } from 'next-intl/server';
-import SubscribeAndSave from '@/components/product/SubscribeAndSave';
-import AddToCartButton from '@/components/product/AddToCartButton';
+import PDPActions from '@/components/product/PDPActions';
 import type { Price } from '@/lib/ct/search';
 import { Metadata } from 'next';
 import { useLocale } from '@/context/LocaleContext';
@@ -165,22 +164,15 @@ export default async function ProductPage({ params }: PageProps) {
             )}
           </div>
 
-          {regularPrice &&
-            (isSubscriptionEligible &&
-            recurringPrices.length > 0 &&
-            recurrencePolicies.length > 0 ? (
-              <SubscribeAndSave
-                productId={product.id}
-                variantId={variant?.id || product.masterVariant.id}
-                regularPrice={regularPrice}
-                recurringPrices={recurringPrices}
-              />
-            ) : (
-              <AddToCartButton
-                productId={product.id}
-                variantId={variant?.id || product.masterVariant.id}
-              />
-            ))}
+          {regularPrice && (
+            <PDPActions
+              productId={product.id}
+              variantId={variant?.id || product.masterVariant.id}
+              regularPrice={regularPrice}
+              recurringPrices={recurringPrices}
+              isSubscriptionEligible={isSubscriptionEligible && recurrencePolicies.length > 0}
+            />
+          )}
 
           {description && (
             <div>
