@@ -12,11 +12,12 @@ const DEFAULT_URL_LOCALE = COUNTRY_TO_LOCALE[DEFAULT_LOCALE.country];
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip static files, api routes, Next.js internals
+  // Skip static files, api routes, Next.js internals, and agent portal
   if (
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon') ||
+    pathname.startsWith('/agent') ||
     pathname.includes('.')
   ) {
     return NextResponse.next();
