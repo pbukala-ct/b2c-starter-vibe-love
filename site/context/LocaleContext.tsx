@@ -21,15 +21,16 @@ const LocaleContext = createContext<LocaleContextType>({
   setCountry: async () => {},
 });
 
-export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [country, setCountryState] = useState<string>(() => {
-    if (typeof document === 'undefined') return DEFAULT_LOCALE.country;
-    const saved = document.cookie
-      .split('; ')
-      .find((r) => r.startsWith('vibe-country='))
-      ?.split('=')[1];
-    return saved && COUNTRY_CONFIG[saved] ? saved : DEFAULT_LOCALE.country;
-  });
+export function LocaleProvider({
+  children,
+  initialCountry,
+}: {
+  children: ReactNode;
+  initialCountry?: string;
+}) {
+  const [country, setCountryState] = useState<string>(
+    initialCountry && COUNTRY_CONFIG[initialCountry] ? initialCountry : DEFAULT_LOCALE.country
+  );
 
   const setCountry = async (newCountry: string) => {
     if (!COUNTRY_CONFIG[newCountry]) return;

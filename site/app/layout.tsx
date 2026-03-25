@@ -4,7 +4,7 @@ import { CartProvider } from '@/context/CartContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { getCategoryTree } from '@/lib/ct/categories';
-import { getSession } from '@/lib/session';
+import { getSession, getLocale } from '@/lib/session';
 import { getCart } from '@/lib/ct/cart';
 import { LocaleProvider } from '@/context/LocaleContext';
 import { SWRConfig } from 'swr';
@@ -18,10 +18,11 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [categories, session, messages] = await Promise.all([
+  const [categories, session, messages, { country: initialCountry }] = await Promise.all([
     getCategoryTree(),
     getSession(),
     getMessages(),
+    getLocale(),
   ]);
 
   let initialCart = null;
@@ -59,7 +60,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <NextIntlClientProvider messages={messages}>
           <SWRConfig value={{ fallback: { [KEY_CART]: initialCart, [KEY_ACCOUNT]: initialUser } }}>
-            <LocaleProvider>
+            <LocaleProvider initialCountry={initialCountry}>
               <CartProvider>
                 <Header categories={categories} />
                 <main className="min-h-screen">{children}</main>
