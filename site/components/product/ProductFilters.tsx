@@ -5,9 +5,10 @@ import { useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import type { ProductSearchFacetResult } from '@commercetools/platform-sdk';
 import type { FacetDefinition, SortValues } from '@/lib/ct/search';
-import { FACET_RENDERER_MAP } from '@/lib/ct/facet-config';
+import { BOOLEAN_FACET_ACTIVE_VALUE, FACET_RENDERER_MAP } from '@/lib/ct/facet-config';
 import ColorFacet from './facets/ColorFacet';
 import PillFacet from './facets/PillFacet';
+import ToggleFacet from './facets/ToggleFacet';
 
 const SORT_OPTIONS: Array<{ value: SortValues; translationKey: string }> = [
   {
@@ -130,7 +131,8 @@ export default function ProductFilters({
       {/* Dynamic facets */}
       {bucketFacets.map((facet) => {
         const config = FACET_RENDERER_MAP[facet.name];
-        const renderer = config?.renderer ?? 'pill';
+        const isBoolean = facet.buckets.every((b) => b.key === 'true' || b.key === 'false');
+        const renderer = config?.renderer ?? (isBoolean ? 'toggle' : 'pill');
         const paramKey = config?.urlParam ?? facetParamKey(facet.name);
         const currentValue = searchParams.get(paramKey);
 
@@ -141,13 +143,31 @@ export default function ProductFilters({
                 {facetDefinitions.find((d) => d.attributeId === facet.name)?.attributeLabel ??
                   formatFacetLabel(facet.name)}
               </h3>
-              {currentValue && (
-                <button
-                  onClick={() => updateFilter(paramKey, null)}
-                  className="text-terra text-xs hover:underline"
-                >
-                  {t('clear')}
-                </button>
+              {renderer === 'toggle' ? (
+                <ToggleFacet
+                  isActive={currentValue === BOOLEAN_FACET_ACTIVE_VALUE}
+                  onToggle={() =>
+                    updateFilter(
+                      paramKey,
+                      currentValue === BOOLEAN_FACET_ACTIVE_VALUE
+                        ? null
+                        : BOOLEAN_FACET_ACTIVE_VALUE
+                    )
+                  }
+                  label={
+                    facetDefinitions.find((d) => d.attributeId === facet.name)?.attributeLabel ??
+                    formatFacetLabel(facet.name)
+                  }
+                />
+              ) : (
+                currentValue && (
+                  <button
+                    onClick={() => updateFilter(paramKey, null)}
+                    className="text-terra text-xs hover:underline"
+                  >
+                    {t('clear')}
+                  </button>
+                )
               )}
             </div>
 
