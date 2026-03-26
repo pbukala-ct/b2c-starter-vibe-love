@@ -29,6 +29,9 @@ export default function ProductCard({ product }: ProductCardProps) {
     : undefined;
   const price = product.masterVariant?.price;
   const discountedPrice = price?.discounted?.value;
+  const discountName = price?.discounted?.discount?.obj?.name
+    ? getLocalizedString(price.discounted.discount.obj.name)
+    : null;
   const hasSubscription = product.masterVariant?.recurrencePrices?.some((p) => p.recurrencePolicy);
   // === false: treat missing availability data as in-stock; only explicitly false means sold out
   const isSoldOut = product.masterVariant?.availability?.isOnStock === false;
@@ -79,6 +82,12 @@ export default function ProductCard({ product }: ProductCardProps) {
         {hasSubscription && (
           <div className="bg-sage absolute top-2 left-2 rounded-sm px-2 py-0.5 text-xs font-medium text-white">
             {t('subscribeAndSave')}
+          </div>
+        )}
+
+        {discountName && (
+          <div className="bg-terra absolute top-2 right-2 rounded-sm px-2 py-0.5 text-xs font-medium text-white">
+            {discountName}
           </div>
         )}
 

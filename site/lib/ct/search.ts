@@ -187,7 +187,11 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
   const body: ProductSearchRequest = {
     limit,
     offset,
-    productProjectionParameters: { priceCurrency: currency, priceCountry: country },
+    productProjectionParameters: {
+      priceCurrency: currency,
+      priceCountry: country,
+      expand: ['masterVariant.price.discounted.discount'],
+    },
     sort: sortParam,
     ...(searchQuery ? { query: searchQuery as ProductSearchRequest['query'] } : {}),
     ...(facets ? { facets } : {}),
@@ -243,6 +247,10 @@ export async function getProductBySku(
             priceCurrency: currency,
             priceCountry: country,
             localeProjection: [locale],
+            expand: [
+              'variants.price.discounted.discount',
+              'masterVariant.price.discounted.discount',
+            ],
           },
         },
       })

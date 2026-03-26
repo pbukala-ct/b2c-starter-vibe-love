@@ -105,10 +105,15 @@ export default async function ProductPage({ params }: PageProps) {
   const attrs = variant?.attributes || product.masterVariant?.attributes || [];
   const getAttr = (n: string) => attrs.find((a: { name: string }) => a.name === n)?.value;
 
+  // variant.price is the CT-embedded price (currency/country selected by CT) and is the only
+  // source that carries the discounted field. variant.prices entries are raw and never have it.
   const regularPrice =
-    variant?.prices?.find((p: Price) => !p.recurrencePolicy && p.value.currencyCode === currency) ||
-    variant?.price;
+    variant?.price ||
+    variant?.prices?.find((p: Price) => !p.recurrencePolicy && p.value.currencyCode === currency);
   const displayPrice = regularPrice?.discounted?.value ?? regularPrice?.value;
+  const discountName = regularPrice?.discounted?.discount?.obj?.name
+    ? getLocalizedString(regularPrice.discounted.discount.obj.name, locale)
+    : null;
   const recurringPrices = variant?.prices?.filter((p: Price) => !!p.recurrencePolicy) || [];
   const recurrencePolicies = policiesResult.results || [];
 
@@ -251,16 +256,23 @@ export default async function ProductPage({ params }: PageProps) {
           <div>
             <h1 className="text-charcoal mb-3 text-2xl font-semibold lg:text-3xl">{name}</h1>
             {regularPrice && displayPrice && (
-              <div className="flex items-baseline gap-3">
-                <p
-                  className={`text-2xl font-medium ${regularPrice.discounted ? 'text-terra' : 'text-charcoal'}`}
-                >
-                  {formatMoney(displayPrice.centAmount, displayPrice.currencyCode)}
-                </p>
-                {regularPrice.discounted && (
-                  <p className="text-charcoal-light text-lg line-through">
-                    {formatMoney(regularPrice.value.centAmount, regularPrice.value.currencyCode)}
+              <div className="space-y-1">
+                <div className="flex items-baseline gap-3">
+                  <p
+                    className={`text-2xl font-medium ${regularPrice.discounted ? 'text-terra' : 'text-charcoal'}`}
+                  >
+                    {formatMoney(displayPrice.centAmount, displayPrice.currencyCode)}
                   </p>
+                  {regularPrice.discounted && (
+                    <p className="text-charcoal-light text-lg line-through">
+                      {formatMoney(regularPrice.value.centAmount, regularPrice.value.currencyCode)}
+                    </p>
+                  )}
+                </div>
+                {discountName && (
+                  <span className="bg-terra inline-block rounded-sm px-2 py-0.5 text-xs font-medium text-white">
+                    {discountName}
+                  </span>
                 )}
               </div>
             )}

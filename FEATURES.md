@@ -42,6 +42,8 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - Clickable thumbnail strip below carousel highlights the active image; scrolling the carousel updates the active thumbnail
 - Single-image fallback (no arrows); no-image placeholder
 - Discounted price display: when a CT product discount applies, the discounted price is shown in accent color (`text-terra`) with the original price struck through; both PDP and product cards support this
+- Product discount badge: the CT product discount name (localized, from Merchant Center) is shown as a `bg-terra` badge — top-right on listing cards, below the price on PDP; discount reference is expanded in the search query (`masterVariant.price.discounted.discount` / `variants.price.discounted.discount`)
+- Sold-out listing cards: products with `isOnStock === false` show a localized "Out of stock" label on hover instead of the add-to-cart button
 - Breadcrumb navigation (Home > Category > Product)
 - Quantity selector (− / count / + control, min 1, max 99) above the add-to-cart button
 - Subscribe & Save option (see below)
