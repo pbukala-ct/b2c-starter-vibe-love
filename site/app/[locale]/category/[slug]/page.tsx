@@ -16,10 +16,15 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const { locale } = await getLocale();
   const category = await getCategoryBySlug(slug);
   if (!category) return { title: 'Category Not Found' };
-  const name = getLocalizedString(category.name);
-  return { title: name };
+  return {
+    title:
+      getLocalizedString(category.metaTitle, locale) || getLocalizedString(category.name, locale),
+    description: getLocalizedString(category.metaDescription, locale) || undefined,
+    keywords: getLocalizedString(category.metaKeywords, locale) || undefined,
+  };
 }
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {

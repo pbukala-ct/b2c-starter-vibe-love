@@ -1,13 +1,8 @@
 import { apiRoot } from './client';
+import type { Category } from '@/lib/types';
+import { mapCategory } from '@/lib/mappers/category';
 
-export interface Category {
-  id: string;
-  name: Record<string, string>;
-  slug: Record<string, string>;
-  parent?: { typeId: string; id: string };
-  orderHint?: string;
-  children?: Category[];
-}
+export type { Category };
 
 let categoriesCache: Category[] | null = null;
 let cacheTime = 0;
@@ -22,13 +17,7 @@ export async function getCategories(): Promise<Category[]> {
     .categories()
     .get({ queryArgs: { limit: 200 } })
     .execute();
-  categoriesCache = result.body.results.map((c) => ({
-    id: c.id,
-    name: c.name as Record<string, string>,
-    slug: c.slug as Record<string, string>,
-    parent: c.parent,
-    orderHint: c.orderHint,
-  }));
+  categoriesCache = result.body.results.map(mapCategory);
   cacheTime = Date.now();
   return categoriesCache;
 }

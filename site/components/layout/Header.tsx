@@ -10,7 +10,7 @@ import MegaMenu from './MegaMenu';
 import MiniCart from './MiniCart';
 import CountrySelector from './CountrySelector';
 import SearchBar from './SearchBar';
-import type { Category } from '@/lib/ct/categories';
+import type { Category } from '@/lib/types';
 import { useLocale } from '@/context/LocaleContext';
 import { useFormatters } from '@/hooks/useFormatters';
 import { useWishlist } from '@/hooks/useWishlist';

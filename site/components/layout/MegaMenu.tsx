@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import type { Category } from '@/lib/ct/categories';
+import type { Category } from '@/lib/types';
 import { useFormatters } from '@/hooks/useFormatters';
 import { useLocale } from '@/context/LocaleContext';
 
