@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useRef, useState } from 'react';
+import { transformDetailImageUrl, transformThumbnailImageUrl } from '@/lib/ct/image-config';
 
 interface ProductImage {
   url: string;
@@ -14,6 +15,14 @@ interface ProductImageCarouselProps {
 }
 
 export default function ProductImageCarousel({ images, name }: ProductImageCarouselProps) {
+  const transformedImages = images.map((img) => ({
+    ...img,
+    url: transformDetailImageUrl(img.url),
+  }));
+  const thumbnailImages = images.map((img) => ({
+    ...img,
+    url: transformThumbnailImageUrl(img.url),
+  }));
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -45,7 +54,7 @@ export default function ProductImageCarousel({ images, name }: ProductImageCarou
     setActiveIndex(Math.round(el.scrollLeft / (item.clientWidth + 12)));
   };
 
-  if (images.length === 0) {
+  if (transformedImages.length === 0) {
     return (
       <div className="text-border flex aspect-3/4 items-center justify-center rounded-sm bg-white">
         <svg className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,11 +69,11 @@ export default function ProductImageCarousel({ images, name }: ProductImageCarou
     );
   }
 
-  if (images.length === 1) {
+  if (transformedImages.length === 1) {
     return (
       <div className="relative aspect-3/4 overflow-hidden rounded-sm bg-white">
         <Image
-          src={images[0].url}
+          src={transformedImages[0].url}
           alt={name}
           fill
           className="object-contain"
@@ -85,7 +94,7 @@ export default function ProductImageCarousel({ images, name }: ProductImageCarou
           className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth [grid-area:1/1] [&::-webkit-scrollbar]:hidden"
           style={{ scrollbarWidth: 'none' }}
         >
-          {images.map((img, i) => (
+          {transformedImages.map((img, i) => (
             <div
               key={i}
               data-carousel-item
@@ -134,7 +143,7 @@ export default function ProductImageCarousel({ images, name }: ProductImageCarou
         className="flex gap-2 overflow-x-auto px-px py-px [&::-webkit-scrollbar]:hidden"
         style={{ scrollbarWidth: 'none' }}
       >
-        {images.map((img, i) => (
+        {thumbnailImages.map((img, i) => (
           <button
             key={i}
             onClick={() => scrollToIndex(i)}

@@ -8,6 +8,7 @@ import { useLocale } from '@/context/LocaleContext';
 import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { transformListingImageUrl } from '@/lib/ct/image-config';
 
 interface ProductCardProps {
   product: ProductProjection;
@@ -23,7 +24,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   const name = getLocalizedString(product.name);
   const slug = getLocalizedString(product.slug) || product.key || product.id;
   const sku = product.masterVariant?.sku || product.id;
-  const image = product.masterVariant?.images?.[0]?.url;
+  const image = product.masterVariant?.images?.[0]?.url
+    ? transformListingImageUrl(product.masterVariant.images[0].url)
+    : undefined;
   const price = product.masterVariant?.price;
   const hasSubscription = product.masterVariant?.recurrencePrices?.some((p) => p.recurrencePolicy);
 
