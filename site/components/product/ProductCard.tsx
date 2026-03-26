@@ -28,6 +28,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     ? transformListingImageUrl(product.masterVariant.images[0].url)
     : undefined;
   const price = product.masterVariant?.price;
+  const discountedPrice = price?.discounted?.value;
   const hasSubscription = product.masterVariant?.recurrencePrices?.some((p) => p.recurrencePolicy);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
@@ -94,8 +95,21 @@ export default function ProductCard({ product }: ProductCardProps) {
           {name}
         </h3>
         {price ? (
-          <p className="text-charcoal-light text-sm">
-            {formatMoney(price.value.centAmount, price.value.currencyCode)}
+          <p className="flex items-baseline gap-2 text-sm">
+            {discountedPrice ? (
+              <>
+                <span className="text-terra font-medium">
+                  {formatMoney(discountedPrice.centAmount, discountedPrice.currencyCode)}
+                </span>
+                <span className="text-charcoal-light line-through">
+                  {formatMoney(price.value.centAmount, price.value.currencyCode)}
+                </span>
+              </>
+            ) : (
+              <span className="text-charcoal-light">
+                {formatMoney(price.value.centAmount, price.value.currencyCode)}
+              </span>
+            )}
           </p>
         ) : (
           <p className="text-charcoal-light text-sm">{t('seeOptions')}</p>

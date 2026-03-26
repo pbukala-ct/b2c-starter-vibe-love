@@ -76,10 +76,18 @@ export interface Variant {
   availability?: { isOnStock?: boolean; availableQuantity?: number };
 }
 
+export interface MoneyValue {
+  type: string;
+  currencyCode: string;
+  centAmount: number;
+  fractionDigits: number;
+}
+
 export interface Price {
   id: string;
   key?: string;
-  value: { type: string; currencyCode: string; centAmount: number; fractionDigits: number };
+  value: MoneyValue;
+  discounted?: { value: MoneyValue; discount: { typeId: string; id: string } };
   country?: string;
   recurrencePolicy?: { typeId: string; id: string };
 }

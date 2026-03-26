@@ -108,6 +108,7 @@ export default async function ProductPage({ params }: PageProps) {
   const regularPrice =
     variant?.prices?.find((p: Price) => !p.recurrencePolicy && p.value.currencyCode === currency) ||
     variant?.price;
+  const displayPrice = regularPrice?.discounted?.value ?? regularPrice?.value;
   const recurringPrices = variant?.prices?.filter((p: Price) => !!p.recurrencePolicy) || [];
   const recurrencePolicies = policiesResult.results || [];
 
@@ -249,10 +250,19 @@ export default async function ProductPage({ params }: PageProps) {
         <div className="space-y-6">
           <div>
             <h1 className="text-charcoal mb-3 text-2xl font-semibold lg:text-3xl">{name}</h1>
-            {regularPrice && (
-              <p className="text-charcoal text-2xl font-medium">
-                {formatMoney(regularPrice.value.centAmount, regularPrice.value.currencyCode)}
-              </p>
+            {regularPrice && displayPrice && (
+              <div className="flex items-baseline gap-3">
+                <p
+                  className={`text-2xl font-medium ${regularPrice.discounted ? 'text-terra' : 'text-charcoal'}`}
+                >
+                  {formatMoney(displayPrice.centAmount, displayPrice.currencyCode)}
+                </p>
+                {regularPrice.discounted && (
+                  <p className="text-charcoal-light text-lg line-through">
+                    {formatMoney(regularPrice.value.centAmount, regularPrice.value.currencyCode)}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 

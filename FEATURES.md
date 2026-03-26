@@ -36,10 +36,12 @@ Comprehensive inventory of implemented storefront features. This file is the sou
   - Attribute display labels fetched from CT product type model (localized), with derived fallback
   - Server-rendered `<Link>` elements — no client JS required for navigation
 - Out-of-stock handling: `variant.availability.isOnStock` drives sold-out state; when sold out shows localized "Out of stock" message + disabled "Currently unavailable" button (`product.outOfStock` / `product.currentlyUnavailable` translation keys)
+- Image URL transforms configured in `lib/ct/image-config.ts` — three separate functions for listing (`transformListingImageUrl`), PDP carousel (`transformDetailImageUrl`), and PDP thumbnails (`transformThumbnailImageUrl`); supports CDN prefixes, size suffixes, Imgix, Cloudinary, etc. Next.js image optimization disabled (`unoptimized: true`) to prevent query params being appended to CDN URLs
 - Horizontal image carousel (`ProductImageCarousel`) with portrait (3:4) aspect ratio, `object-contain` (no cropping), white background, and CSS snap scrolling
 - Carousel shows 2 images at a time; left/right arrow buttons overlaid via CSS grid for reliable vertical centering
 - Clickable thumbnail strip below carousel highlights the active image; scrolling the carousel updates the active thumbnail
 - Single-image fallback (no arrows); no-image placeholder
+- Discounted price display: when a CT product discount applies, the discounted price is shown in accent color (`text-terra`) with the original price struck through; both PDP and product cards support this
 - Breadcrumb navigation (Home > Category > Product)
 - Quantity selector (− / count / + control, min 1, max 99) above the add-to-cart button
 - Subscribe & Save option (see below)
