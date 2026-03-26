@@ -1,6 +1,6 @@
 ---
 name: variant-config
-description: How to configure which product attributes appear as variant selectors on the PDP — deny list, render style, color codes, sort order, and availability filtering.
+description: How to configure which product attributes appear as variant selectors on the PDP, and which appear as informational text sections — deny list, render style, color codes, sort order, availability filtering, and info attributes.
 ---
 
 # Variant Attribute Configuration
@@ -101,6 +101,23 @@ The current variant's `isOnStock` also drives the PDP-level out-of-stock state:
 ## Attribute display labels
 
 Labels shown above each selector group (e.g. "Color", "Größe") are fetched from the CT product type model via `getAttributeLabels(locale)` in `lib/ct/facets.ts` (reuses the cached product type fetch). `deriveDisplayLabel()` in `page.tsx` is used as a fallback when the attribute is not found in the product type.
+
+---
+
+## `PDP_INFO_ATTRIBUTES`
+
+Attribute names to render as informational text sections on the PDP, below the product description. Each entry renders with its localized label from the CT product type model and its value as preformatted text (preserves line breaks).
+
+```typescript
+export const PDP_INFO_ATTRIBUTES: string[] = ['productspec', 'product-spec'];
+```
+
+- Labels come from the CT product type model (same cached fetch as variant selectors); `deriveDisplayLabel()` is the fallback.
+- Values are rendered in a `<pre>` block with `whitespace-pre-wrap`.
+- Attributes with no value on the current variant are silently skipped.
+- **To add an info section:** append the CT attribute name.
+- **To remove one:** delete it from the array.
+- Note: attributes in `PDP_INFO_ATTRIBUTES` should typically also be in `VARIANT_SELECTOR_BLOCKLIST` so they don't appear as selectors.
 
 ---
 

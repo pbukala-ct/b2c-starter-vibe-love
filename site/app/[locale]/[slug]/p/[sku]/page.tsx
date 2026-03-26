@@ -16,6 +16,7 @@ import {
   VARIANT_RENDERER_MAP,
   VARIANT_COLOR_CODE_ATTR,
   VARIANT_SORT_ORDER,
+  PDP_INFO_ATTRIBUTES,
 } from '@/lib/ct/variant-config';
 import { getAttributeLabels } from '@/lib/ct/facets';
 import { Metadata } from 'next';
@@ -110,10 +111,14 @@ export default async function ProductPage({ params }: PageProps) {
   const recurringPrices = variant?.prices?.filter((p: Price) => !!p.recurrencePolicy) || [];
   const recurrencePolicies = policiesResult.results || [];
 
-  const specText = (() => {
-    const v = getAttr('productspec') || getAttr('product-spec');
-    return v ? getLocalizedString(v as Record<string, string>, locale) : '';
-  })();
+  const infoSections = PDP_INFO_ATTRIBUTES.map((name) => ({
+    name,
+    label: attributeLabels[name] ?? deriveDisplayLabel(name),
+    text: (() => {
+      const v = getAttr(name);
+      return v ? getLocalizedString(v as Record<string, string>, locale) : '';
+    })(),
+  })).filter((s) => s.text);
   const isSubscriptionEligible = getAttr('subscription-eligible') === true;
 
   let categoryName = '',
@@ -273,16 +278,16 @@ export default async function ProductPage({ params }: PageProps) {
             </div>
           )}
 
-          {specText && (
-            <div>
+          {infoSections.map((section) => (
+            <div key={section.name}>
               <h2 className="text-charcoal mb-2 text-xs font-semibold tracking-wider uppercase">
-                {t('specifications')}
+                {section.label}
               </h2>
               <pre className="text-charcoal-light font-sans text-sm leading-relaxed whitespace-pre-wrap">
-                {specText}
+                {section.text}
               </pre>
             </div>
-          )}
+          ))}
 
           <div className="border-border space-y-2 border-t pt-4">
             {[t('freeShipping'), t('splitShipments'), t('shipsWithin')].map((line) => (

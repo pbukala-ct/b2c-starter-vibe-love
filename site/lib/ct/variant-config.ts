@@ -29,6 +29,14 @@ export const VARIANT_RENDERER_MAP: Record<string, VariantRenderer> = {
 };
 
 /**
+ * Attribute names to render as informational text sections on the PDP,
+ * below the product description. Each entry is rendered with its localized
+ * label from the CT product type model and its value as preformatted text.
+ * Add or remove attribute names here to control which fields appear.
+ */
+export const PDP_INFO_ATTRIBUTES: string[] = ['productspec', 'product-spec'];
+
+/**
  * Display order for variant selector groups.
  * Attributes listed here appear first in the given order.
  * Unlisted attributes are appended after in their natural order.
