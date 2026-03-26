@@ -195,7 +195,8 @@ A protected area of the storefront (`/agent`) accessible only to authenticated C
 
 ### Customer Lookup
 - Agents can search by email address, commercetools customer ID, order number, or by name (first/last name partial match)
-- Name search uses CT `ilike` prefix predicate (`firstName ilike "jo%"`) — tokens are split on whitespace; each token matches any customer whose first or last name starts with that token, case-insensitively
+- Name search uses CT `=` predicate which is case-insensitive by spec — "johnson" finds "Johnson", "JOHNSON", etc.; input is split on whitespace so "Maria Smith" finds anyone with firstName "Maria" OR lastName "Smith"
+- Name search is exact-match per token (partial prefix search requires the CT Customer Search API, not yet enabled)
 - Name search returns up to 10 matching customers in a dropdown; agent selects one to start a session
 - Name search debounces 300 ms, requires minimum 2 characters
 - Exact-match search (email/customerId/orderId) returns: customer name, email, account status, open order count

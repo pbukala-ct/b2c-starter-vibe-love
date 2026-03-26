@@ -23,7 +23,11 @@ export async function GET(req: NextRequest) {
   try {
     type CustomerRecord = { id: string; email: string; firstName?: string; lastName?: string; isEmailVerified: boolean };
 
-    // Name search: case-insensitive prefix match via CT ilike
+    // Name search: case-insensitive exact match via CT = operator.
+    // CT string = comparisons are case-insensitive by spec, so "sofia" finds "Sofia".
+    // Input is split on whitespace so "Maria Smith" searches first OR last name per token.
+    // (CT Customers API does not support ilike — partial/prefix search requires the
+    //  CT Customer Search API which is not yet enabled on this project.)
     if (name) {
       const trimmed = name.trim();
 
@@ -32,13 +36,10 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ found: false, customers: [] });
       }
 
-      // Split into tokens and build prefix-wildcard ilike clauses per token.
-      // Using "token%" (prefix only, not "%token%") avoids leading-% encoding
-      // issues and is sufficient for name prefix search.
       const tokens = [...new Set(trimmed.split(/\s+/).filter(Boolean))];
       const clauses = tokens.flatMap((t) => {
         const escaped = t.replace(/"/g, '\\"');
-        return [`firstName ilike "${escaped}%"`, `lastName ilike "${escaped}%"`];
+        return [`firstName = "${escaped}"`, `lastName = "${escaped}"`];
       });
       const where = clauses.join(' or ');
 
