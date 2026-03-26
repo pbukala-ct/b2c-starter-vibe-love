@@ -58,7 +58,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
       </nav>
 
       <div className="flex gap-8">
-        <aside className="hidden w-52 flex-shrink-0 md:block">
+        <aside className="hidden w-52 shrink-0 md:block">
           <Suspense>
             <ProductFilters
               currentSort={sort ? parseSortParam(sort) : undefined}

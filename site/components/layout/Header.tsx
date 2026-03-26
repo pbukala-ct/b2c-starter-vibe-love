@@ -65,7 +65,7 @@ export default function Header({ categories }: HeaderProps) {
           </button>
 
           {/* Logo */}
-          <Link href={localePath('/')} className="flex-shrink-0">
+          <Link href={localePath('/')} className="shrink-0">
             <div className="flex items-center gap-2">
               <div className="bg-charcoal flex h-7 w-7 items-center justify-center rounded-sm">
                 <span className="text-xs font-bold tracking-wider text-white">V</span>

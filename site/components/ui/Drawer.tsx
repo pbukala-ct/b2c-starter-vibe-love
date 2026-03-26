@@ -50,7 +50,7 @@ export function Drawer({
         }`}
       >
         {/* Header */}
-        <div className="border-border flex flex-shrink-0 items-center justify-between border-b p-5">
+        <div className="border-border flex shrink-0 items-center justify-between border-b p-5">
           <h2 className="text-charcoal text-lg font-semibold">{title}</h2>
           <button
             onClick={onClose}
@@ -72,7 +72,7 @@ export function Drawer({
         <div className="flex-1 overflow-y-auto p-5">{children}</div>
 
         {/* Footer */}
-        {footer && <div className="flex-shrink-0">{footer}</div>}
+        {footer && <div className="shrink-0">{footer}</div>}
       </aside>
     </>
   );

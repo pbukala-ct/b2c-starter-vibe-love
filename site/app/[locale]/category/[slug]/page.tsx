@@ -101,7 +101,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
       <div className="flex gap-8">
         {/* Filters sidebar */}
-        <aside className="hidden w-52 flex-shrink-0 md:block">
+        <aside className="hidden w-52 shrink-0 md:block">
           <Suspense>
             <ProductFilters
               currentSort={sortParam ? parseSortParam(sortParam) : undefined}

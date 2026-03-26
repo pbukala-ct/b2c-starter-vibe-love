@@ -864,7 +864,7 @@ export default function CheckoutPage() {
                 return (
                   <div key={item.id} className="flex gap-3">
                     {img && (
-                      <div className="bg-cream-dark relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-sm">
+                      <div className="bg-cream-dark relative h-12 w-12 shrink-0 overflow-hidden rounded-sm">
                         <Image src={img} alt={name} fill className="object-cover" sizes="48px" />
                       </div>
                     )}

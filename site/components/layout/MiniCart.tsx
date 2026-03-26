@@ -132,7 +132,7 @@ export default function MiniCart() {
           return (
             <div key={item.id} className="flex gap-3">
               {image && (
-                <div className="bg-cream-dark relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-sm">
+                <div className="bg-cream-dark relative h-16 w-16 shrink-0 overflow-hidden rounded-sm">
                   <Image src={image} alt={name} fill className="object-cover" sizes="64px" />
                 </div>
               )}
@@ -179,7 +179,7 @@ export default function MiniCart() {
       {/* Cart icon button */}
       <button
         onClick={() => setShowMiniCart(!showMiniCart)}
-        className="text-charcoal hover:text-terra relative flex items-center gap-1 transition-colors"
+        className="text-charcoal hover:text-terra relative flex cursor-pointer items-center gap-1 transition-colors"
         aria-label={`Cart (${itemCount} items)`}
       >
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,7 +191,7 @@ export default function MiniCart() {
           />
         </svg>
         {itemCount > 0 && (
-          <span className="bg-terra absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full text-xs font-medium text-white">
+          <span className="bg-terra absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] leading-none font-medium text-white">
             {itemCount > 9 ? '9+' : itemCount}
           </span>
         )}

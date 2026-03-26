@@ -52,7 +52,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
   return (
     <div className="border-border flex gap-4 border-b py-5 last:border-0">
       {/* Image */}
-      <div className="bg-cream-dark relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-sm">
+      <div className="bg-cream-dark relative h-20 w-20 shrink-0 overflow-hidden rounded-sm">
         {image ? (
           <Image src={image} alt={name} fill className="object-cover" sizes="80px" />
         ) : (
@@ -114,7 +114,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
       {/* Remove */}
       <button
         onClick={() => onRemove(item.id)}
-        className="text-charcoal-light mt-1 flex-shrink-0 self-start transition-colors hover:text-red-500"
+        className="text-charcoal-light mt-1 shrink-0 self-start transition-colors hover:text-red-500"
         aria-label={t('removeItem')}
       >
         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
