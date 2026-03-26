@@ -54,7 +54,17 @@ Using the browser, run through the following tests.  Fix any found errors and re
   g. Save and verify the updated city appears in the card
   h. Click "Remove" on the test address and verify it disappears from the list
 
-9. My Account — Payment Methods
+9. Product Image Carousel
+  a. Navigate to any product detail page that has multiple images
+  b. Verify images are displayed in a horizontal carousel (2 visible at once, portrait orientation, no cropping)
+  c. Verify left and right arrow buttons are vertically centered over the images
+  d. Click the right arrow; verify the carousel scrolls to the next image
+  e. Click the left arrow; verify the carousel scrolls back
+  f. Verify a thumbnail strip appears below the carousel
+  g. Click a thumbnail; verify the carousel scrolls to that image and the thumbnail gets a highlight ring
+  h. Verify scrolling the carousel updates the active thumbnail
+
+10. My Account — Payment Methods
   a. Sign in as registered user
   b. Go to My Account → Payment Methods
   c. Click "Add Card", fill in cardholder name, card number (4111 1111 1111 1111), expiry (12/28)

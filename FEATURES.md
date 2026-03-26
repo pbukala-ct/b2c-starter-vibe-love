@@ -25,7 +25,10 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 ## Product Detail Pages
 
 - Variant selection (color, size, specifications)
-- Image gallery with thumbnail strip
+- Horizontal image carousel (`ProductImageCarousel`) with portrait (3:4) aspect ratio, `object-contain` (no cropping), white background, and CSS snap scrolling
+- Carousel shows 2 images at a time; left/right arrow buttons overlaid via CSS grid for reliable vertical centering
+- Clickable thumbnail strip below carousel highlights the active image; scrolling the carousel updates the active thumbnail
+- Single-image fallback (no arrows); no-image placeholder
 - Breadcrumb navigation (Home > Category > Product)
 - Quantity selector (− / count / + control, min 1, max 99) above the add-to-cart button
 - Subscribe & Save option (see below)

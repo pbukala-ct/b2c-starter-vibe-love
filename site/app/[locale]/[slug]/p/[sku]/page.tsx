@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { getProductBySku } from '@/lib/ct/search';
 import { getCategoryById } from '@/lib/ct/categories';
@@ -8,6 +7,7 @@ import { formatMoney, getLocalizedString, toUrlLocale } from '@/lib/utils';
 import { getLocale } from '@/lib/session';
 import { getTranslations } from 'next-intl/server';
 import PDPActions from '@/components/product/PDPActions';
+import ProductImageCarousel from '@/components/product/ProductImageCarousel';
 import type { Price } from '@/lib/ct/search';
 import { Metadata } from 'next';
 
@@ -94,51 +94,7 @@ export default async function ProductPage({ params }: PageProps) {
       </nav>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
-        <div className="space-y-3">
-          {images.length > 0 ? (
-            <>
-              <div className="bg-cream-dark relative aspect-square overflow-hidden rounded-sm">
-                <Image
-                  src={images[0].url}
-                  alt={name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority
-                />
-              </div>
-              {images.length > 1 && (
-                <div className="grid grid-cols-4 gap-2">
-                  {images.slice(1, 5).map((img, i) => (
-                    <div
-                      key={i}
-                      className="bg-cream-dark relative aspect-square overflow-hidden rounded-sm"
-                    >
-                      <Image
-                        src={img.url}
-                        alt={`${name} ${i + 2}`}
-                        fill
-                        className="object-cover"
-                        sizes="25vw"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="bg-cream-dark text-border flex aspect-square items-center justify-center rounded-sm">
-              <svg className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-          )}
-        </div>
+        <ProductImageCarousel images={images} name={name} />
 
         <div className="space-y-6">
           <div>
