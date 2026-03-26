@@ -30,6 +30,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const price = product.masterVariant?.price;
   const discountedPrice = price?.discounted?.value;
   const hasSubscription = product.masterVariant?.recurrencePrices?.some((p) => p.recurrencePolicy);
+  // === false: treat missing availability data as in-stock; only explicitly false means sold out
+  const isSoldOut = product.masterVariant?.availability?.isOnStock === false;
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -80,14 +82,19 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {/* Quick add button */}
-        <button
-          onClick={handleAddToCart}
-          disabled={adding}
-          className="text-charcoal hover:bg-charcoal absolute right-2 bottom-2 rounded-sm bg-white px-3 py-1.5 text-xs font-medium opacity-0 shadow-sm transition-all duration-200 group-hover:opacity-100 hover:text-white"
-        >
-          {adding ? t('adding') : t('addToCart')}
-        </button>
+        {isSoldOut ? (
+          <span className="absolute right-2 bottom-2 rounded-sm bg-white px-3 py-1.5 text-xs font-medium text-gray-400 opacity-0 shadow-sm transition-all duration-200 group-hover:opacity-100">
+            {t('outOfStock')}
+          </span>
+        ) : (
+          <button
+            onClick={handleAddToCart}
+            disabled={adding}
+            className="text-charcoal hover:bg-charcoal absolute right-2 bottom-2 rounded-sm bg-white px-3 py-1.5 text-xs font-medium opacity-0 shadow-sm transition-all duration-200 group-hover:opacity-100 hover:text-white"
+          >
+            {adding ? t('adding') : t('addToCart')}
+          </button>
+        )}
       </div>
 
       <div>
