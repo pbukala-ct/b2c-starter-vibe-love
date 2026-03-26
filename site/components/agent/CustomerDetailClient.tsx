@@ -60,6 +60,7 @@ export default function CustomerDetailClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isCreatingCart, setIsCreatingCart] = useState(false);
 
   // Add item state
   const [addSku, setAddSku] = useState('');
@@ -92,6 +93,27 @@ export default function CustomerDetailClient({
   }
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+
+  async function handleCreateCart() {
+    setIsCreatingCart(true);
+    try {
+      const res = await fetch(`/api/agent/customers/${customerId}/cart`, { method: 'POST' });
+      const data = await res.json();
+      if (res.status === 409) {
+        // Cart already exists — refresh to pick it up
+        await refreshCart();
+        return;
+      }
+      if (!res.ok) {
+        flash(data.error ?? 'Failed to create cart', true);
+        return;
+      }
+      setCart(data.cart);
+      flash('New cart created');
+    } finally {
+      setIsCreatingCart(false);
+    }
+  }
 
   async function refreshCart() {
     const res = await fetch(`/api/agent/customers/${customerId}/cart`);
@@ -316,7 +338,16 @@ export default function CustomerDetailClient({
 
         {!cart && (
           <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-            <p className="text-gray-500 text-sm">This customer has no active cart.</p>
+            <p className="text-gray-500 text-sm mb-4">This customer has no active cart.</p>
+            {canEdit && (
+              <button
+                onClick={handleCreateCart}
+                disabled={isCreatingCart}
+                className="bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 disabled:opacity-40"
+              >
+                {isCreatingCart ? 'Creating cart…' : '+ Create cart'}
+              </button>
+            )}
           </div>
         )}
 

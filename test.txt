@@ -90,6 +90,8 @@ Using the browser, run through the following tests.  Fix any found errors and re
   d. If a discount code is applied, verify it is shown
   e. If the cart was last modified more than 24 hours ago, verify the staleness warning is shown
   f. Start a session for a customer with no active cart; verify "No active cart" message is shown
+  g. (order-placement role) Verify "+ Create cart" button is visible in the no-cart state
+  h. (read-only role) Verify no "Create cart" button is shown
 
 13. Agent Portal — Cart editing (order-placement role required)
   a. Log in as agent with order-placement role and start a session for a customer with an active cart
@@ -112,7 +114,35 @@ Using the browser, run through the following tests.  Fix any found errors and re
   g. Verify the updated city appears in the address card
   h. Log in as read-only agent; verify the "Add address" button and "Edit" links are not visible
 
-15. Agent Portal — Checkout with address picker
+15. Agent Portal — Cart creation (Phase 3)
+  a. Log in as agent with order-placement role and start a session for a customer with NO active cart
+  b. Verify the "+ Create cart" button is visible in the "No active cart" empty state
+  c. Click "+ Create cart"; verify a loading state is shown briefly
+  d. Verify the cart view appears (empty cart with 0 items) without a full page reload
+  e. Verify the "Create cart" button is no longer visible
+  f. Add an item by SKU and verify the item appears — the cart is usable immediately
+  g. (read-only agent) Verify no "Create cart" button is shown for a customer with no active cart
+  h. (double-click guard) Click "+ Create cart" and immediately click again; verify only one cart is created
+
+16. Agent Portal — Case-insensitive customer name search (Phase 3)
+  a. Log in as agent; go to the dashboard search
+  b. Enter "johnson" (all lowercase) in the name search tab
+  c. Verify results include customers with lastName "Johnson", "JOHNSON", or mixed case
+  d. Enter "jo" (2 characters) and verify results are returned (minimum 2-character threshold met)
+  e. Enter "j" (1 character) and verify no results are shown (below minimum)
+  f. Enter a partial first name (e.g. "Mar" for "Maria") and verify matching customers appear
+  g. Verify the existing email, customerId, and orderId search tabs still work correctly
+
+17. Agent Portal — Order attribution badge (Phase 3)
+  a. Log in as agent with order-placement role; start a session for a customer; create or use an existing cart
+  b. Add items, set shipping address, and complete agent-initiated checkout
+  c. Log in as that customer in the storefront; go to My Account → Orders
+  d. Verify the order placed by the agent shows a "CS Agent assisted" badge (indigo pill label)
+  e. Verify other orders placed directly by the customer show NO badge
+  f. Click into the agent-placed order detail; verify the badge is shown on the detail page too
+  g. Verify the badge uses both colour AND text (not colour alone) for accessibility
+
+18. Agent Portal — Checkout with address picker
   a. Log in as agent with order-placement role, start a session for a customer with an active cart and at least one saved address
   b. Click "Place order on behalf of customer"
   c. Verify the confirmation modal shows the customer's saved addresses as radio buttons

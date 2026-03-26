@@ -69,6 +69,13 @@ export interface Order {
     postalCode: string;
     country: string;
   }>;
+  custom?: {
+    fields?: {
+      agentId?: string;
+      agentEmail?: string;
+      agentName?: string;
+    };
+  };
   returnInfo?: Array<{
     items: Array<{
       id: string;

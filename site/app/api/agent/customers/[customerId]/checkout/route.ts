@@ -116,6 +116,32 @@ export async function POST(req: NextRequest, { params }: Params) {
     // Place the order
     const order = await createOrderFromCart(currentCart.id, version);
 
+    // Attach agent attribution to the order (non-blocking — checkout succeeds even if this fails)
+    try {
+      await apiRoot
+        .orders()
+        .withId({ ID: order.id })
+        .post({
+          body: {
+            version: order.version,
+            actions: [
+              {
+                action: 'setCustomType',
+                type: { typeId: 'type', key: 'agent-order-attribution' },
+                fields: {},
+              },
+              { action: 'setCustomField', name: 'agentId', value: session.agentId },
+              { action: 'setCustomField', name: 'agentEmail', value: session.agentEmail },
+              { action: 'setCustomField', name: 'agentName', value: session.agentName },
+            ],
+          },
+        })
+        .execute();
+    } catch {
+      // Attribution write failed — order still valid; log silently
+      console.error('[agent-checkout] Failed to write attribution to order', order.id);
+    }
+
     await writeAuditEntry({
       agentId: session.agentId,
       agentEmail: session.agentEmail,

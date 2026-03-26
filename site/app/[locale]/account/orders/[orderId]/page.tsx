@@ -8,6 +8,7 @@ import { formatStreetAddress } from '@/lib/utils';
 import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
 import type { Order } from '@/hooks/useOrders';
+import AgentOrderBadge from '@/components/agent/AgentOrderBadge';
 
 type LineItem = Order['lineItems'][number];
 
@@ -87,13 +88,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
         </h1>
       </div>
 
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6 flex items-center gap-3 flex-wrap">
         <p className="text-charcoal-light text-sm">
           {formatDate(order.createdAt, { year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
         <span className="bg-sage/10 text-sage border-sage/20 rounded-full border px-2 py-0.5 text-xs">
           {order.orderState}
         </span>
+        {order.custom?.fields?.agentId && <AgentOrderBadge />}
       </div>
 
       <div className="mb-6 space-y-6">

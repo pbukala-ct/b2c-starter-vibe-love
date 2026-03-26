@@ -5,6 +5,7 @@ import { useOrders } from '@/hooks/useOrders';
 import { useFormatters } from '@/hooks/useFormatters';
 import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
+import AgentOrderBadge from '@/components/agent/AgentOrderBadge';
 
 const STATE_COLORS: Record<string, string> = {
   Open: 'bg-yellow-50 text-yellow-700 border-yellow-200',
@@ -59,7 +60,7 @@ export default function OrdersPage() {
             <div key={order.id} className="border-border rounded-sm border bg-white p-5">
               <div className="mb-3 flex items-start justify-between">
                 <div>
-                  <div className="mb-1 flex items-center gap-3">
+                  <div className="mb-1 flex items-center gap-3 flex-wrap">
                     <p className="text-charcoal text-sm font-semibold">
                       {t('orderNumber', { number: order.orderNumber })}
                     </p>
@@ -68,6 +69,7 @@ export default function OrdersPage() {
                     >
                       {STATE_LABELS[order.orderState] || order.orderState}
                     </span>
+                    {order.custom?.fields?.agentId && <AgentOrderBadge />}
                   </div>
                   <p className="text-charcoal-light text-xs">
                     {formatDate(order.createdAt, {

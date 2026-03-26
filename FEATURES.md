@@ -179,7 +179,7 @@ All commercetools calls go through server-side Next.js API routes. The browser n
 | `/api/shipping-methods` | GET | Shipping options |
 | `/api/recurrence-policies` | GET | Subscription frequencies |
 
-## Agent Portal (CS Agent Impersonation) — Phase 1 + Phase 2
+## Agent Portal (CS Agent Impersonation) — Phase 1 + Phase 2 + Phase 3
 
 A protected area of the storefront (`/agent`) accessible only to authenticated CS agents. Phase 1 is read-only: agents can look up customers and view their active cart. Write operations (cart edit, checkout) are Phase 2.
 
@@ -195,8 +195,9 @@ A protected area of the storefront (`/agent`) accessible only to authenticated C
 
 ### Customer Lookup
 - Agents can search by email address, commercetools customer ID, order number, or by name (first/last name partial match)
+- Name search uses case-insensitive `ilike` predicate (`firstName ilike "%<term>%"`) — "johnson" matches "Johnson", "JOHNSON", "johnstone", etc.
 - Name search returns up to 10 matching customers in a dropdown; agent selects one to start a session
-- Name search debounces 300 ms, requires minimum 2 characters
+- Name search debounces 300 ms, requires minimum 2 characters; falls back to two normalised queries if CT `ilike` is unsupported
 - Exact-match search (email/customerId/orderId) returns: customer name, email, account status, open order count
 - Agents can start a customer session (scopes the agent JWT to one customer at a time)
 - Agents must explicitly end a customer session before looking up a different customer
@@ -205,7 +206,15 @@ A protected area of the storefront (`/agent`) accessible only to authenticated C
 - Agent can view the customer's active cart: line items, SKU, name, quantity, unit price, totals
 - Applied discount codes and shipping address displayed
 - Staleness warning shown if cart was last modified more than 24 hours ago
-- "No active cart" state handled
+- If no active cart exists, agents with `order-placement` role see a "+ Create cart" button
+- Creating a cart calls `POST /api/agent/customers/[id]/cart`, writes an audit entry, and transitions the UI to the cart view without a page reload
+
+### Cart Creation (Phase 3)
+- `POST /api/agent/customers/[customerId]/cart` creates a new Active CT cart owned by the customer (requires `order-placement` role)
+- Derives currency from the customer's first saved address country; defaults to USD
+- Guards against duplicate carts: returns 409 Conflict if an Active cart already exists; the UI refreshes to display the existing cart
+- Every creation attempt (success or failure) is written to the audit log with `actionType: "cart.created"`
+- Setup required: run `node tools/setup-agent-order-type.mjs` to create the CT custom type before deploying
 
 ### Audit Log
 - Every agent action (login, logout, customer lookup, cart view, session start/end) produces an immutable audit log entry in CT Custom Objects (`agent-audit-log`)
@@ -226,6 +235,14 @@ A protected area of the storefront (`/agent`) accessible only to authenticated C
 - Address changes write to `customer.addresses` in CT via `addAddress` and `changeAddress` actions
 - All address book actions are audit-logged with `customer.address-book.*` action types
 
+### Order Attribution (Phase 3)
+- Every order placed via the agent checkout route is tagged with a CT custom type `agent-order-attribution` containing `agentId`, `agentEmail`, and `agentName`
+- Attribution is written as a non-blocking CT order update after `createOrderFromCart` — checkout succeeds even if the attribution write fails
+- Customers see a "CS Agent assisted" badge on agent-attributed orders in My Account → Orders (list and detail views)
+- Badge is visually distinct (indigo pill) and uses both colour and text to meet WCAG 2.1 AA
+- Self-placed orders have no badge; attribution fields are only present when an agent performed the checkout
+- Setup: create the custom type first with `node tools/setup-agent-order-type.mjs`
+
 ### Agent-Initiated Checkout (Phase 2)
 - Confirmation modal shows full order summary (items, total) before submission
 - Address picker in modal lists customer's saved addresses as radio options; pre-selects one matching the cart shipping address if available
@@ -244,7 +261,7 @@ A protected area of the storefront (`/agent`) accessible only to authenticated C
 | `/api/agent/auth/logout` | POST | Agent logout; clears cookie + writes audit entry |
 | `/api/agent/session` | PATCH | Set/clear `activeCustomerId` in agent JWT |
 | `/api/agent/customers/lookup` | GET | Search customer by email, customerId, orderId, or name (partial match) |
-| `/api/agent/customers/[customerId]/cart` | GET | View customer's active cart |
+| `/api/agent/customers/[customerId]/cart` | GET, POST | View customer's active cart; POST creates a new cart |
 | `/api/agent/customers/[customerId]/cart/items` | POST, DELETE, PATCH | Add/remove/update cart line items |
 | `/api/agent/customers/[customerId]/cart/discounts` | POST, DELETE | Apply/remove discount codes |
 | `/api/agent/customers/[customerId]/cart/address` | PUT | Update shipping address on cart |
@@ -255,6 +272,7 @@ A protected area of the storefront (`/agent`) accessible only to authenticated C
 
 ### Setup
 - Provision agent accounts: `node tools/setup-agent-credentials.mjs` (edit `AGENTS` array, requires `tools/.env`)
+- Create order attribution CT custom type: `node tools/setup-agent-order-type.mjs` (run once per CT project, idempotent)
 - Required env var: `AGENT_SESSION_SECRET` in `site/.env` (see CLAUDE.md)
 
 ## Developer Tooling
