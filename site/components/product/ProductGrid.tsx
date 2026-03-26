@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import ProductCard from './ProductCard';
-import type { ProductProjection } from '@/lib/types';
+import { ProductProjection } from '@commercetools/platform-sdk';
 
 interface ProductGridProps {
   products: ProductProjection[];

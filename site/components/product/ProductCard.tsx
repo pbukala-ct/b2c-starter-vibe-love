@@ -2,13 +2,13 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import type { ProductProjection } from '@/lib/types';
 import { useFormatters } from '@/hooks/useFormatters';
 import { useLocale } from '@/context/LocaleContext';
 import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { transformListingImageUrl } from '@/lib/ct/image-config';
+import { ProductProjection } from '@commercetools/platform-sdk';
 
 interface ProductCardProps {
   product: ProductProjection;

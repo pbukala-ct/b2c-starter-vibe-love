@@ -10,7 +10,6 @@ import PDPActions from '@/components/product/PDPActions';
 import ProductImageCarousel from '@/components/product/ProductImageCarousel';
 import VariantSelector from '@/components/product/VariantSelector';
 import type { VariantAttributeGroup } from '@/components/product/VariantSelector';
-import type { Price } from '@/lib/ct/search';
 import {
   VARIANT_SELECTOR_BLOCKLIST,
   VARIANT_RENDERER_MAP,
@@ -20,6 +19,7 @@ import {
 } from '@/lib/ct/variant-config';
 import { getAttributeLabels } from '@/lib/ct/facets';
 import { Metadata } from 'next';
+import { Price } from '@commercetools/platform-sdk';
 
 interface PageProps {
   params: Promise<{ slug: string; sku: string }>;

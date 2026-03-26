@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { Price } from '@/lib/types';
 import QuantitySelector from './QuantitySelector';
 import AddToCartButton from './AddToCartButton';
 import SubscribeAndSave from './SubscribeAndSave';
 import Button from '@/components/ui/Button';
+import { Price } from '@commercetools/platform-sdk';
 
 interface PDPActionsProps {
   productId: string;

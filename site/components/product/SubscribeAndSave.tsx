@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import type { Price } from '@/lib/types';
 import { useCart } from '@/context/CartContext';
 import { useLocale } from '@/context/LocaleContext';
 import Button from '@/components/ui/Button';
 import { useRecurrencePoliciesList } from '@/hooks/useRecurrencePolicies';
 import { RecurringPriceSelector } from './RecurringPriceSelector';
 import { useTranslations } from 'next-intl';
+import { Price } from '@commercetools/platform-sdk';
 
 interface SubscribeAndSaveProps {
   productId: string;

@@ -2,6 +2,8 @@ import { getTranslations } from 'next-intl/server';
 import { apiRoot } from './client';
 import { DEFAULT_LOCALE } from '@/lib/utils';
 import type {
+  ProductPagedSearchResponse,
+  ProductProjection,
   ProductSearchFacetResult,
   ProductSearchRequest,
   SearchSorting,
@@ -34,14 +36,6 @@ export interface SearchParams {
   facetDefinitions?: FacetDefinition[];
 }
 
-interface RawSearchResult {
-  total: number;
-  offset: number;
-  limit: number;
-  results: Array<{ id: string; productProjection: ProductProjection }>;
-  facets: ProductSearchFacetResult[];
-}
-
 export interface SearchResult {
   total: number;
   offset: number;
@@ -49,52 +43,6 @@ export interface SearchResult {
   products: ProductProjection[];
   facets: ProductSearchFacetResult[];
   facetDefinitions: FacetDefinition[];
-}
-
-export interface ProductProjection {
-  id: string;
-  key?: string;
-  name: Record<string, string>;
-  description?: Record<string, string>;
-  slug: Record<string, string>;
-  categories: Array<{ typeId: string; id: string }>;
-  masterVariant: Variant;
-  variants: Variant[];
-  productType: { typeId: string; id: string };
-  attributes?: Array<{ name: string; value: unknown }>;
-}
-
-export interface Variant {
-  id: number;
-  sku?: string;
-  key?: string;
-  prices?: Price[];
-  price?: Price;
-  images?: Image[];
-  attributes?: Array<{ name: string; value: unknown }>;
-  recurrencePrices?: Price[];
-  availability?: { isOnStock?: boolean; availableQuantity?: number };
-}
-
-export interface MoneyValue {
-  type: string;
-  currencyCode: string;
-  centAmount: number;
-  fractionDigits: number;
-}
-
-export interface Price {
-  id: string;
-  key?: string;
-  value: MoneyValue;
-  discounted?: { value: MoneyValue; discount: { typeId: string; id: string } };
-  country?: string;
-  recurrencePolicy?: { typeId: string; id: string };
-}
-
-export interface Image {
-  url: string;
-  dimensions?: { w: number; h: number };
 }
 
 const SORT_FIELD_MAP: Record<string, string> = {
@@ -245,11 +193,11 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
     ...(facets ? { facets } : {}),
   };
 
-  const toSearchResult = (raw: RawSearchResult): SearchResult => ({
+  const toSearchResult = (raw: ProductPagedSearchResponse): SearchResult => ({
     total: raw.total,
     offset: raw.offset,
     limit: raw.limit,
-    products: raw.results.map((r) => r.productProjection),
+    products: raw.results.map((r) => r.productProjection).filter((p) => p !== undefined),
     facets: raw.facets ?? [],
     facetDefinitions: resolvedFacetDefinitions,
   });
@@ -258,7 +206,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
   // CT returns a query_shard_exception. Retry without the custom sort so the page still loads.
   try {
     const { body: result } = await apiRoot.products().search().post({ body: body }).execute();
-    return toSearchResult(result as unknown as RawSearchResult);
+    return toSearchResult(result);
   } catch (err: unknown) {
     const msg =
       (err as { body?: { message?: string } }).body?.message ??
@@ -271,7 +219,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
         .search()
         .post({ body: fallbackBody })
         .execute();
-      return toSearchResult(result as unknown as RawSearchResult);
+      return toSearchResult(result);
     }
     throw new Error(`Product search failed: ${msg}`, { cause: err });
   }
@@ -299,30 +247,7 @@ export async function getProductBySku(
         },
       })
       .execute();
-    return (body as unknown as RawSearchResult).results[0]?.productProjection ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export async function getProductById(
-  id: string,
-  currency: string,
-  country: string
-): Promise<ProductProjection | null> {
-  try {
-    const { body } = await apiRoot
-      .products()
-      .search()
-      .post({
-        body: {
-          limit: 1,
-          query: { exact: { field: 'id', value: id } } as ProductSearchRequest['query'],
-          productProjectionParameters: { priceCurrency: currency, priceCountry: country },
-        },
-      })
-      .execute();
-    return (body as unknown as RawSearchResult).results[0]?.productProjection ?? null;
+    return body.results[0]?.productProjection ?? null;
   } catch {
     return null;
   }
