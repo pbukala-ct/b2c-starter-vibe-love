@@ -177,12 +177,9 @@ export default async function ProductPage({ params }: PageProps) {
   }
 
   // All selectable attribute names (used for cross-attribute availability filtering)
-  const selectableAttrNames = Object.entries(attrValueSets)
-    .filter(([, values]) => values.size > 1)
-    .map(([name]) => name);
+  const selectableAttrNames = Object.keys(attrValueSets);
 
   const variantGroups: VariantAttributeGroup[] = Object.entries(attrValueSets)
-    .filter(([, values]) => values.size > 1)
     .sort(([a], [b]) => {
       const ai = VARIANT_SORT_ORDER.indexOf(a);
       const bi = VARIANT_SORT_ORDER.indexOf(b);
