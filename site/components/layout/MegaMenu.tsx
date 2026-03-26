@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import type { Category } from '@/lib/ct/categories';
 import { useFormatters } from '@/hooks/useFormatters';
 import { useLocale } from '@/context/LocaleContext';
@@ -13,6 +14,7 @@ interface MegaMenuProps {
 export default function MegaMenu({ categories }: MegaMenuProps) {
   const { localePath } = useLocale();
   const { getLocalizedString } = useFormatters();
+  const t = useTranslations('nav');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const topLevel = categories.filter((c) => !c.parent);
@@ -55,7 +57,7 @@ export default function MegaMenu({ categories }: MegaMenuProps) {
                     href={localePath(`/category/${slug}`)}
                     className="text-charcoal hover:text-terra py-1 text-sm font-semibold transition-colors"
                   >
-                    All {name}
+                    {t('allCategory', { name })}
                   </Link>
                   <div className="border-border my-2 border-t" />
                   {cat.children?.map((child) => {

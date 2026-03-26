@@ -25,6 +25,7 @@
     "cart": "Cart",
     "search": "Search",
     "selectCountry": "Select country",
+    "allCategory": "All {name}",
     "profile": "Profile",
     "orders": "Orders",
     "subscriptions": "Subscriptions",

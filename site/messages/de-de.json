@@ -25,6 +25,7 @@
     "cart": "Warenkorb",
     "search": "Suchen",
     "selectCountry": "Land auswählen",
+    "allCategory": "Alle {name}",
     "profile": "Profil",
     "orders": "Bestellungen",
     "subscriptions": "Abonnements",
