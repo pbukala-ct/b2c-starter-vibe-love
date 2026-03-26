@@ -97,7 +97,9 @@
     "discountCodePlaceholder": "Code eingeben",
     "applyCode": "Einlösen",
     "removeCode": "Entfernen",
-    "invalidCode": "Ungültiger oder abgelaufener Rabattcode"
+    "invalidCode": "Ungültiger oder abgelaufener Rabattcode",
+    "decreaseQuantity": "Menge verringern",
+    "increaseQuantity": "Menge erhöhen"
   },
   "miniCart": {
     "title": "Warenkorb",

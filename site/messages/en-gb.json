@@ -97,7 +97,9 @@
     "discountCodePlaceholder": "Enter code",
     "applyCode": "Apply",
     "removeCode": "Remove",
-    "invalidCode": "Invalid or expired discount code"
+    "invalidCode": "Invalid or expired discount code",
+    "decreaseQuantity": "Decrease quantity",
+    "increaseQuantity": "Increase quantity"
   },
   "miniCart": {
     "title": "Shopping Basket",
