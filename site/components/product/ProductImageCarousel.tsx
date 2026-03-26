@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { transformDetailImageUrl, transformThumbnailImageUrl } from '@/lib/ct/image-config';
 
 interface ProductImage {
@@ -15,14 +15,14 @@ interface ProductImageCarouselProps {
 }
 
 export default function ProductImageCarousel({ images, name }: ProductImageCarouselProps) {
-  const transformedImages = images.map((img) => ({
-    ...img,
-    url: transformDetailImageUrl(img.url),
-  }));
-  const thumbnailImages = images.map((img) => ({
-    ...img,
-    url: transformThumbnailImageUrl(img.url),
-  }));
+  const transformedImages = useMemo(
+    () => images.map((img) => ({ ...img, url: transformDetailImageUrl(img.url) })),
+    [images]
+  );
+  const thumbnailImages = useMemo(
+    () => images.map((img) => ({ ...img, url: transformThumbnailImageUrl(img.url) })),
+    [images]
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -96,7 +96,7 @@ export default function ProductImageCarousel({ images, name }: ProductImageCarou
         >
           {transformedImages.map((img, i) => (
             <div
-              key={i}
+              key={img.url}
               data-carousel-item
               className="relative aspect-3/4 w-[calc(50%-6px)] shrink-0 snap-start overflow-hidden rounded-sm bg-white"
             >
@@ -145,7 +145,7 @@ export default function ProductImageCarousel({ images, name }: ProductImageCarou
       >
         {thumbnailImages.map((img, i) => (
           <button
-            key={i}
+            key={img.url}
             onClick={() => scrollToIndex(i)}
             aria-label={`View image ${i + 1}`}
             className={`relative aspect-3/4 w-14 shrink-0 cursor-pointer overflow-hidden rounded-sm transition-opacity ${
