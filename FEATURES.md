@@ -9,7 +9,11 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - Mega menu with full category tree
 - Dynamic faceted filtering driven by commercetools Product Search facets API
 - Facet definitions auto-fetched from product type attributes (60s module-level cache), filtered by `FACET_BLOCKLIST` and extended with `getExtraFacets(t)` in `facet-config.ts`
-- Per-facet render config in `FACET_RENDERER_MAP`: `'color'` (swatches) or `'pill'` (pills with counts); defaults to `'pill'` for unmapped facets
+- Per-facet render config in `FACET_RENDERER_MAP`: `'color'` (swatches), `'pill'` (pills with counts), `'toggle'` (boolean on/off), or `'range'` (formatted money range pills); defaults to `'pill'` for unmapped facets
+- Boolean facets auto-detected (all bucket keys `'true'`/`'false'`) and rendered as toggle switches via `ToggleFacet`
+- Money/range facets auto-detected via `attributeType === 'money'` and rendered as formatted price range pills via `MoneyRangeFacet`; bucket keys (e.g. `*-10000.0`) formatted as human-readable labels (e.g. `< $100`)
+- Configurable price range facet in `getExtraFacets` with custom `ranges` array (e.g. `[{to:10000},{from:10000,to:20000},{from:20000}]`)
+- Range filter applied server-side via CT `SearchLongRangeExpression` (`gte`/`lt` fields); attributeId resolved by direct match before falling back to `variants.attributes.` prefix
 - Color facet (`search-color`) and finish facet (`search-finish`) rendered as swatches via `ColorFacet`
 - Color swatch labels resolved from CT localized enum (`attributeValues`) — no next-intl translations for color names
 - Extra facets (e.g. price) labeled via `next-intl` `search.price` key (all three locales)

@@ -7,6 +7,7 @@ import type { ProductSearchFacetResult } from '@commercetools/platform-sdk';
 import type { FacetDefinition, SortValues } from '@/lib/ct/search';
 import { BOOLEAN_FACET_ACTIVE_VALUE, FACET_RENDERER_MAP } from '@/lib/ct/facet-config';
 import ColorFacet from './facets/ColorFacet';
+import MoneyRangeFacet from './facets/MoneyRangeFacet';
 import PillFacet from './facets/PillFacet';
 import ToggleFacet from './facets/ToggleFacet';
 
@@ -131,8 +132,10 @@ export default function ProductFilters({
       {/* Dynamic facets */}
       {bucketFacets.map((facet) => {
         const config = FACET_RENDERER_MAP[facet.name];
+        const facetDef = facetDefinitions.find((d) => d.attributeId === facet.name);
         const isBoolean = facet.buckets.every((b) => b.key === 'true' || b.key === 'false');
-        const renderer = config?.renderer ?? (isBoolean ? 'toggle' : 'pill');
+        const isMoney = facetDef?.attributeType === 'money';
+        const renderer = config?.renderer ?? (isBoolean ? 'toggle' : isMoney ? 'range' : 'pill');
         const paramKey = config?.urlParam ?? facetParamKey(facet.name);
         const currentValue = searchParams.get(paramKey);
 
@@ -140,8 +143,7 @@ export default function ProductFilters({
           <div key={facet.name}>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-charcoal text-xs font-semibold tracking-wider uppercase">
-                {facetDefinitions.find((d) => d.attributeId === facet.name)?.attributeLabel ??
-                  formatFacetLabel(facet.name)}
+                {facetDef?.attributeLabel ?? formatFacetLabel(facet.name)}
               </h3>
               {renderer === 'toggle' ? (
                 <ToggleFacet
@@ -184,6 +186,14 @@ export default function ProductFilters({
 
             {renderer === 'pill' && (
               <PillFacet
+                buckets={facet.buckets}
+                currentValue={currentValue}
+                onSelect={(key) => updateFilter(paramKey, key)}
+              />
+            )}
+
+            {renderer === 'range' && (
+              <MoneyRangeFacet
                 buckets={facet.buckets}
                 currentValue={currentValue}
                 onSelect={(key) => updateFilter(paramKey, key)}

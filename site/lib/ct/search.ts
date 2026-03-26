@@ -63,6 +63,14 @@ const URL_PARAM_TO_ATTRIBUTE_ID: Record<string, string> = Object.fromEntries(
     .map(([attributeId, cfg]) => [cfg.urlParam!, attributeId])
 );
 
+function parseRangeKey(value: string): { gte?: number; lt?: number } {
+  const [rawFrom, rawTo] = value.split('-');
+  const result: { gte?: number; lt?: number } = {};
+  if (rawFrom !== '*') result.gte = Number(rawFrom);
+  if (rawTo !== '*') result.lt = Number(rawTo);
+  return result;
+}
+
 function buildFacetFilterQueryParts(
   facetFilters: Record<string, string>,
   facetDefinitions: FacetDefinition[],
@@ -70,10 +78,18 @@ function buildFacetFilterQueryParts(
 ): unknown[] {
   return Object.entries(facetFilters).flatMap(([urlParam, value]) => {
     if (!value) return [];
-    const attributeId = URL_PARAM_TO_ATTRIBUTE_ID[urlParam] ?? `variants.attributes.${urlParam}`;
+    const attributeId =
+      URL_PARAM_TO_ATTRIBUTE_ID[urlParam] ??
+      facetDefinitions.find(
+        (f) => f.attributeId === urlParam || f.attributeId === `variants.attributes.${urlParam}`
+      )?.attributeId ??
+      `variants.attributes.${urlParam}`;
     const facetDef = facetDefinitions.find((f) => f.attributeId === attributeId);
     if (!facetDef) return [];
     const facetValue = facetDefinitionToFacetValue(facetDef, locale);
+    if (facetDef.attributeType === 'money' || facetDef.attributeType === 'range') {
+      return [{ range: { field: facetValue.field, ...parseRangeKey(value) } }];
+    }
     return [
       {
         exact: {

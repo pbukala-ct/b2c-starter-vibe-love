@@ -16,6 +16,8 @@ export interface FacetDefinition {
   attributeId?: string;
   attributeLabel?: string;
   attributeValues?: { key: string; label: string }[];
+  /** Ranges for range/money facets. Values are in the unit the CT field expects (e.g. centAmount for price). */
+  ranges?: Array<{ from?: number; to?: number }>;
 }
 
 function isEnumType(
@@ -173,7 +175,7 @@ export function facetDefinitionsToFacetExpressions(
           ranges: {
             ...facetValue,
             level: 'products',
-            ranges: [{ from: 0 }],
+            ranges: facetDefinition.ranges ?? [{ from: 0 }],
           },
         } as ProductSearchFacetExpression;
       default:

@@ -26,6 +26,7 @@ export function getExtraFacets(t: (key: string) => string): FacetDefinition[] {
       attributeId: 'variants.prices',
       attributeType: 'money',
       attributeLabel: t('price'),
+      ranges: [{ to: 10000 }, { from: 10000, to: 20000 }, { from: 20000 }],
     },
   ];
 }
@@ -38,8 +39,9 @@ export const BOOLEAN_FACET_ACTIVE_VALUE = 'true';
  * - 'color'   — color swatches (maps bucket keys to hex values)
  * - 'pill'    — pill buttons with counts (default for unknown facets)
  * - 'toggle'  — single on/off toggle; auto-applied to boolean (true/false) facets
+ * - 'range'   — pill buttons with formatted money labels; auto-applied to money facets
  */
-export type FacetRenderer = 'color' | 'pill' | 'toggle';
+export type FacetRenderer = 'color' | 'pill' | 'toggle' | 'range';
 
 export interface FacetRenderConfig {
   renderer: FacetRenderer;
