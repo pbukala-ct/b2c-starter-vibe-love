@@ -23,11 +23,10 @@ export async function GET(req: NextRequest) {
   try {
     type CustomerRecord = { id: string; email: string; firstName?: string; lastName?: string; isEmailVerified: boolean };
 
-    // Name search: case-insensitive exact match via CT = operator.
-    // CT string = comparisons are case-insensitive by spec, so "sofia" finds "Sofia".
+    // Name search: CT = is case-sensitive on name fields in practice.
+    // Workaround: include both the input as typed AND title-cased form in an in() clause,
+    // covering the common case where names are stored as "Sofia" but typed as "sofia".
     // Input is split on whitespace so "Maria Smith" searches first OR last name per token.
-    // (CT Customers API does not support ilike — partial/prefix search requires the
-    //  CT Customer Search API which is not yet enabled on this project.)
     if (name) {
       const trimmed = name.trim();
 
@@ -36,10 +35,14 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ found: false, customers: [] });
       }
 
+      const toTitleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+
       const tokens = [...new Set(trimmed.split(/\s+/).filter(Boolean))];
       const clauses = tokens.flatMap((t) => {
-        const escaped = t.replace(/"/g, '\\"');
-        return [`firstName = "${escaped}"`, `lastName = "${escaped}"`];
+        const variants = [...new Set([t, toTitleCase(t), t.toLowerCase(), t.toUpperCase()])]
+          .map((v) => `"${v.replace(/"/g, '\\"')}"`)
+          .join(', ');
+        return [`firstName in (${variants})`, `lastName in (${variants})`];
       });
       const where = clauses.join(' or ');
 
