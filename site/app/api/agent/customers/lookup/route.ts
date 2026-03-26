@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
   try {
     type CustomerRecord = { id: string; email: string; firstName?: string; lastName?: string; isEmailVerified: boolean };
 
-    // Name search: case-insensitive partial match
+    // Name search: case-insensitive prefix match via CT ilike
     if (name) {
       const trimmed = name.trim();
 
@@ -32,31 +32,21 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ found: false, customers: [] });
       }
 
-      const escaped = trimmed.replace(/"/g, '\\"');
-      const ilikeWhere = `firstName ilike "%${escaped}%" or lastName ilike "%${escaped}%"`;
+      // Split into tokens and build prefix-wildcard ilike clauses per token.
+      // Using "token%" (prefix only, not "%token%") avoids leading-% encoding
+      // issues and is sufficient for name prefix search.
+      const tokens = [...new Set(trimmed.split(/\s+/).filter(Boolean))];
+      const clauses = tokens.flatMap((t) => {
+        const escaped = t.replace(/"/g, '\\"');
+        return [`firstName ilike "${escaped}%"`, `lastName ilike "${escaped}%"`];
+      });
+      const where = clauses.join(' or ');
 
-      let customers: Array<{ id: string; email: string; firstName?: string; lastName?: string; isEmailVerified: boolean }> = [];
-
-      try {
-        const result = await apiRoot
-          .customers()
-          .get({ queryArgs: { where: ilikeWhere, limit: 10 } })
-          .execute();
-        customers = result.body.results;
-      } catch {
-        // ilike not supported — fall back to two exact-prefix queries and deduplicate
-        const lc = escaped.toLowerCase();
-        const [r1, r2] = await Promise.all([
-          apiRoot.customers().get({ queryArgs: { where: `firstName = "${escaped}" or lastName = "${escaped}"`, limit: 10 } }).execute(),
-          lc !== escaped
-            ? apiRoot.customers().get({ queryArgs: { where: `firstName = "${lc}" or lastName = "${lc}"`, limit: 10 } }).execute()
-            : Promise.resolve({ body: { results: [] } }),
-        ]);
-        const seen = new Set<string>();
-        for (const c of [...r1.body.results, ...r2.body.results]) {
-          if (!seen.has(c.id)) { seen.add(c.id); customers.push(c); }
-        }
-      }
+      const result = await apiRoot
+        .customers()
+        .get({ queryArgs: { where, limit: 10 } })
+        .execute();
+      const customers = result.body.results;
 
       await writeAuditEntry({
         agentId: session.agentId,

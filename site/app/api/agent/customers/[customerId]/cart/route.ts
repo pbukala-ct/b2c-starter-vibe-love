@@ -131,6 +131,7 @@ export async function POST(
           currency,
           country,
           shippingMode: 'Single',
+          origin: 'Merchant',
         },
       })
       .execute();

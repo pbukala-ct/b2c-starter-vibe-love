@@ -195,9 +195,9 @@ A protected area of the storefront (`/agent`) accessible only to authenticated C
 
 ### Customer Lookup
 - Agents can search by email address, commercetools customer ID, order number, or by name (first/last name partial match)
-- Name search uses case-insensitive `ilike` predicate (`firstName ilike "%<term>%"`) — "johnson" matches "Johnson", "JOHNSON", "johnstone", etc.
+- Name search uses CT `ilike` prefix predicate (`firstName ilike "jo%"`) — tokens are split on whitespace; each token matches any customer whose first or last name starts with that token, case-insensitively
 - Name search returns up to 10 matching customers in a dropdown; agent selects one to start a session
-- Name search debounces 300 ms, requires minimum 2 characters; falls back to two normalised queries if CT `ilike` is unsupported
+- Name search debounces 300 ms, requires minimum 2 characters
 - Exact-match search (email/customerId/orderId) returns: customer name, email, account status, open order count
 - Agents can start a customer session (scopes the agent JWT to one customer at a time)
 - Agents must explicitly end a customer session before looking up a different customer
@@ -210,7 +210,7 @@ A protected area of the storefront (`/agent`) accessible only to authenticated C
 - Creating a cart calls `POST /api/agent/customers/[id]/cart`, writes an audit entry, and transitions the UI to the cart view without a page reload
 
 ### Cart Creation (Phase 3)
-- `POST /api/agent/customers/[customerId]/cart` creates a new Active CT cart owned by the customer (requires `order-placement` role)
+- `POST /api/agent/customers/[customerId]/cart` creates a new Active CT cart owned by the customer with `origin: "Merchant"` (requires `order-placement` role)
 - Derives currency from the customer's first saved address country; defaults to USD
 - Guards against duplicate carts: returns 409 Conflict if an Active cart already exists; the UI refreshes to display the existing cart
 - Every creation attempt (success or failure) is written to the audit log with `actionType: "cart.created"`
