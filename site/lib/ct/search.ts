@@ -76,7 +76,7 @@ function buildFacetFilterQueryParts(
   facetDefinitions: FacetDefinition[],
   locale: string
 ): unknown[] {
-  return Object.entries(facetFilters).flatMap(([urlParam, value]) => {
+  return Object.entries(facetFilters).flatMap<unknown>(([urlParam, value]) => {
     if (!value) return [];
     const attributeId =
       URL_PARAM_TO_ATTRIBUTE_ID[urlParam] ??
@@ -203,6 +203,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
   const body: ProductSearchRequest = {
     limit,
     offset,
+    markMatchingVariants: true,
     productProjectionParameters: {
       priceCurrency: currency,
       priceCountry: country,
@@ -217,7 +218,26 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
     total: raw.total,
     offset: raw.offset,
     limit: raw.limit,
-    products: raw.results.map((r) => r.productProjection).filter((p) => p !== undefined),
+    products: raw.results
+      .map((r) => {
+        const projection = r.productProjection;
+        if (!projection) return undefined;
+        const mv = r.matchingVariants;
+        if (!mv || mv.allMatched) return projection;
+        const matchingIds = new Set(mv.matchedVariants.map((v) => v.id));
+        return {
+          ...projection,
+          masterVariant: {
+            ...projection.masterVariant,
+            isMatchingVariant: matchingIds.has(projection.masterVariant.id),
+          },
+          variants: (projection.variants ?? []).map((v) => ({
+            ...v,
+            isMatchingVariant: matchingIds.has(v.id),
+          })),
+        };
+      })
+      .filter((p) => p !== undefined),
     facets: raw.facets ?? [],
     facetDefinitions: resolvedFacetDefinitions,
   });
@@ -226,6 +246,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
   // CT returns a query_shard_exception. Retry without the custom sort so the page still loads.
   try {
     const { body: result } = await apiRoot.products().search().post({ body: body }).execute();
+    console.log(result.results[4]);
     return toSearchResult(result);
   } catch (err: unknown) {
     const msg =

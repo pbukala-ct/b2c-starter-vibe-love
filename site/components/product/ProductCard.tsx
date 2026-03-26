@@ -8,10 +8,15 @@ import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { transformListingImageUrl } from '@/lib/ct/image-config';
-import { ProductProjection } from '@commercetools/platform-sdk';
+import { ProductProjection, ProductVariant } from '@commercetools/platform-sdk';
 
 interface ProductCardProps {
   product: ProductProjection;
+}
+
+function findDisplayVariant(product: ProductProjection): ProductVariant {
+  const allVariants = [product.masterVariant, ...(product.variants || [])];
+  return allVariants.find((v) => v.isMatchingVariant) ?? product.masterVariant;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
@@ -23,18 +28,19 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const name = getLocalizedString(product.name);
   const slug = getLocalizedString(product.slug) || product.key || product.id;
-  const sku = product.masterVariant?.sku || product.id;
-  const image = product.masterVariant?.images?.[0]?.url
-    ? transformListingImageUrl(product.masterVariant.images[0].url)
+  const displayVariant = findDisplayVariant(product);
+  const sku = displayVariant?.sku || product.id;
+  const image = displayVariant?.images?.[0]?.url
+    ? transformListingImageUrl(displayVariant.images[0].url)
     : undefined;
-  const price = product.masterVariant?.price;
+  const price = displayVariant?.price;
   const discountedPrice = price?.discounted?.value;
   const discountName = price?.discounted?.discount?.obj?.name
     ? getLocalizedString(price.discounted.discount.obj.name)
     : null;
-  const hasSubscription = product.masterVariant?.recurrencePrices?.some((p) => p.recurrencePolicy);
+  const hasSubscription = displayVariant?.recurrencePrices?.some((p) => p.recurrencePolicy);
   // === false: treat missing availability data as in-stock; only explicitly false means sold out
-  const isSoldOut = product.masterVariant?.availability?.isOnStock === false;
+  const isSoldOut = displayVariant?.availability?.isOnStock === false;
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
