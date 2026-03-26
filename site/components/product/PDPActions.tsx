@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { Price } from '@/lib/types';
 import QuantitySelector from './QuantitySelector';
 import AddToCartButton from './AddToCartButton';
 import SubscribeAndSave from './SubscribeAndSave';
+import Button from '@/components/ui/Button';
 
 interface PDPActionsProps {
   productId: string;
@@ -12,6 +14,7 @@ interface PDPActionsProps {
   regularPrice: Price;
   recurringPrices: Price[];
   isSubscriptionEligible: boolean;
+  isSoldOut: boolean;
 }
 
 export default function PDPActions({
@@ -20,8 +23,21 @@ export default function PDPActions({
   regularPrice,
   recurringPrices,
   isSubscriptionEligible,
+  isSoldOut,
 }: PDPActionsProps) {
+  const t = useTranslations('product');
   const [quantity, setQuantity] = useState(1);
+
+  if (isSoldOut) {
+    return (
+      <div className="space-y-3">
+        <p className="text-charcoal-light text-sm">{t('outOfStock')}</p>
+        <Button variant="primary" size="lg" className="w-full" disabled>
+          {t('currentlyUnavailable')}
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

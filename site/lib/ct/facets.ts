@@ -39,6 +39,21 @@ async function fetchProductTypes(): Promise<ProductType[]> {
   return body.results;
 }
 
+/** Returns a map of attribute name → localized label from all product types. */
+export async function getAttributeLabels(locale: string): Promise<Record<string, string>> {
+  const productTypes = await fetchProductTypes();
+  const map: Record<string, string> = {};
+  for (const pt of productTypes) {
+    for (const attr of pt.attributes ?? []) {
+      if (!map[attr.name]) {
+        map[attr.name] =
+          getLocalizedString(attr.label as Record<string, string>, locale) || attr.name;
+      }
+    }
+  }
+  return map;
+}
+
 export async function getSearchableAttributes(locale: string): Promise<FacetDefinition[]> {
   const productTypes = await fetchProductTypes();
   const seen = new Set<string>();

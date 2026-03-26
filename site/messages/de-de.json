@@ -57,6 +57,8 @@
     "description": "Beschreibung",
     "specifications": "Spezifikationen",
     "addToCart": "In den Warenkorb",
+    "outOfStock": "Nicht vorrätig",
+    "currentlyUnavailable": "Derzeit nicht verfügbar",
     "adding": "...",
     "color": "Farbe",
     "size": "Größe",

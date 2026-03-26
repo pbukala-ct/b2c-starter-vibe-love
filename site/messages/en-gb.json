@@ -57,6 +57,8 @@
     "description": "Description",
     "specifications": "Specifications",
     "addToCart": "Add to Basket",
+    "outOfStock": "Out of stock",
+    "currentlyUnavailable": "Currently unavailable",
     "adding": "...",
     "color": "Colour",
     "size": "Size",

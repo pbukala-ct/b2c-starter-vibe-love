@@ -72,6 +72,7 @@ You have access to the following skills to implement specific features
 1. Superuser: customer impersonation [skill](./.claude/skills/superuser/SKILL.md)
 2. BOPIS: Buy Online, Pick Up In Store — channel API, supply-channel cart, per-store inventory, channel selector UI [skill](./.claude/skills/bopis/SKILL.md)
 3. Bundles: configurable product bundles — CT custom type setup, parent-child line item relationships, cascade cart updates, bundle PDP component [skill](./.claude/skills/bundles/SKILL.md)
+4. Variant Config: configure PDP variant selectors — deny list, render style (pill/swatch), color codes, sort order, availability filtering [skill](./.claude/skills/variant-config/SKILL.md)
 
 ## Generic guideline skills
 1. Add API: Guidelines to follow when creating a new api call [skill](./.claude/skills/add-api/SKILL.md)

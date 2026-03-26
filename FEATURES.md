@@ -24,7 +24,18 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 
 ## Product Detail Pages
 
-- Variant selection (color, size, specifications)
+- Variant selection driven by `lib/ct/variant-config.ts` (see variant-config skill):
+  - Auto-detects selectable attributes (those with >1 distinct value across variants)
+  - `VARIANT_SELECTOR_BLOCKLIST` — attribute names never shown as selectors (e.g. `new-arrival`, `subscription-eligible`, `search-color`, `search-finish`, raw code attrs)
+  - `VARIANT_RENDERER_MAP` — `'pill'` (default) or `'color'` swatch per attribute; `color-label` and `finish-label` render as swatches
+  - `VARIANT_COLOR_CODE_ATTR` — maps display attribute to companion hex-code attribute (`color-label` → `color-code`, `finish-label` → `finish-code`); label value used as swatch tooltip and text fallback
+  - `VARIANT_SORT_ORDER` — explicit display order (color first, finish second, size third); unlisted attributes appended after
+  - Best-match navigation: selecting a value maximises matching of other currently selected attributes (e.g. switching color preserves size)
+  - Cross-attribute availability: an option is only enabled if at least one in-stock variant exists with that value AND all other currently-selected attribute values (e.g. Blue + Matte selected → size S disabled if no Blue + Matte + S variant is in stock)
+  - Unavailable options rendered as non-clickable `<span>` (dimmed, `cursor-not-allowed`, `title="Sold out"`)
+  - Attribute display labels fetched from CT product type model (localized), with derived fallback
+  - Server-rendered `<Link>` elements — no client JS required for navigation
+- Out-of-stock handling: `variant.availability.isOnStock` drives sold-out state; when sold out shows localized "Out of stock" message + disabled "Currently unavailable" button (`product.outOfStock` / `product.currentlyUnavailable` translation keys)
 - Horizontal image carousel (`ProductImageCarousel`) with portrait (3:4) aspect ratio, `object-contain` (no cropping), white background, and CSS snap scrolling
 - Carousel shows 2 images at a time; left/right arrow buttons overlaid via CSS grid for reliable vertical centering
 - Clickable thumbnail strip below carousel highlights the active image; scrolling the carousel updates the active thumbnail

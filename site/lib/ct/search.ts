@@ -73,6 +73,7 @@ export interface Variant {
   images?: Image[];
   attributes?: Array<{ name: string; value: unknown }>;
   recurrencePrices?: Price[];
+  availability?: { isOnStock?: boolean; availableQuantity?: number };
 }
 
 export interface Price {
