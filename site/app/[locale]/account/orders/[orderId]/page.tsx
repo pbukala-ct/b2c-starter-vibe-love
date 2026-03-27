@@ -69,8 +69,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
     city: string;
     state?: string;
     postalCode: string;
+    country?: string;
   }) =>
-    `${formatStreetAddress(a.streetNumber, a.streetName)}, ${a.city}${a.state ? ` ${a.state}` : ''} ${a.postalCode}`;
+    `${formatStreetAddress(a.streetNumber, a.streetName, a.country)}, ${a.city}${a.state ? ` ${a.state}` : ''} ${a.postalCode}`;
 
   return (
     <div>
@@ -269,7 +270,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
                   <p>
                     {addr.firstName} {addr.lastName}
                   </p>
-                  <p>{formatStreetAddress(addr.streetNumber, addr.streetName)}</p>
+                  <p>{formatStreetAddress(addr.streetNumber, addr.streetName, addr.country)}</p>
                   {addr.additionalAddressInfo && <p>{addr.additionalAddressInfo}</p>}
                   <p>
                     {addr.city}
@@ -290,7 +291,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
                   <p>
                     {formatStreetAddress(
                       order.billingAddress.streetNumber,
-                      order.billingAddress.streetName
+                      order.billingAddress.streetName,
+                      order.billingAddress.country
                     )}
                   </p>
                   {order.billingAddress.additionalAddressInfo && (

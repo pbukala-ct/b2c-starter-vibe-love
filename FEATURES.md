@@ -2,6 +2,13 @@
 
 Comprehensive inventory of implemented storefront features. This file is the source of truth for what exists in the codebase — keep it updated when adding or removing features.
 
+## Design & Theme
+
+- Luxury brand aesthetic: black/white/gold (`#c8a96e`) palette, sharp corners (no border radius), uppercase tracking on labels and buttons
+- Cormorant Garant serif font for headings; Inter for body text (both loaded from Google Fonts)
+- All theme tokens defined in `@theme` block in `site/app/globals.css` (Tailwind CSS v4 — no `tailwind.config.ts`)
+- Color tokens: `cream` (#ffffff), `charcoal` (#000000), `charcoal-light` (muted grey), `terra` (#c8a96e gold), `sage` (green accent), `border` (neutral grey)
+
 ## Search & Discovery
 
 - Full-text product search via commercetools Product Search API
@@ -72,9 +79,19 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 ## Checkout
 
 - Guest checkout (no account required)
-- Logged-in checkout with saved address pre-fill
-- Shipping address form with country/state/postal code
-- Shipping method selection with pricing
+- Logged-in checkout with saved address dropdown for both shipping and billing
+- On page load, cart's existing shipping address pre-fills the form; if it matches a saved address the dropdown pre-selects it
+- When no cart address exists, auto-selects the saved address matching the current locale's country
+- Selecting a saved address immediately sets it on the cart via `PATCH /api/cart`
+- Typing a new address debounces 600 ms then sets it on the cart once all required fields are filled
+- Shipping method selection immediately sets the method on the cart via `PATCH /api/cart`
+- Billing "same as shipping" checkbox mirrors the shipping address to cart billing in real time
+- Country in address forms pre-selected from the URL locale param (e.g. `de-de` → Germany)
+- Country select populated from global locale config (same source as locale switcher)
+- Postal code validated per country using the `validator` npm package (`isPostalCode`)
+- Email validated using `validator` (`isEmail`)
+- Billing address section appears before split shipment section
+- Shared `AddressFields` component (`components/address/AddressFields.tsx`) used for all address forms — renders first/last name, street (combined for US, split name+number for EU), apt/suite, city, postal code, state, country, phone, and optionally email; postal code validated on blur
 - Credit card payment form with auto-fill test card button (4242 4242 4242 4242)
 - Order confirmation page with subscription setup notification
 
@@ -126,8 +143,10 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 
 - List, add, edit, and delete saved addresses
 - Default shipping and default billing toggles (independent)
-- Optional address nickname
-- Localized address format (US vs. EU street/number)
+- Country defaults to the current locale's country when adding a new address
+- Localized address display: US format (`123 Main St`), European format (`Main St 123`)
+- Phone field included in address form
+- Shared `AddressFields` component used for all address field rendering (same as checkout)
 
 ## My Account — Payment Methods
 
@@ -182,7 +201,7 @@ All commercetools calls go through server-side Next.js API routes. The browser n
 | `/api/auth/reset` | POST | Reset password with token |
 | `/api/auth/confirm` | POST | Confirm email with token |
 | `/api/auth/change-password` | POST | Change password (authenticated) |
-| `/api/cart` | GET, POST | Get or create cart |
+| `/api/cart` | GET, POST, PATCH | Get or create cart; PATCH sets shipping address, billing address, and/or shipping method |
 | `/api/cart/items` | POST | Add item |
 | `/api/cart/items/[itemId]` | PUT, DELETE | Update quantity, remove item |
 | `/api/cart/discount` | POST, DELETE | Apply / remove discount code |

@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession, getLocale, createSessionToken, setSessionCookie } from '@/lib/session';
-import { getCart, createCart } from '@/lib/ct/cart';
+import {
+  getCart,
+  createCart,
+  setShippingAddress,
+  setBillingAddress,
+  setShippingMethod,
+} from '@/lib/ct/cart';
 
 export async function GET(_req: NextRequest) {
   const session = await getSession();
@@ -29,6 +35,18 @@ export async function GET(_req: NextRequest) {
     setSessionCookie(resp, token);
     return resp;
   }
+}
+
+export async function PATCH(req: NextRequest) {
+  const session = await getSession();
+  if (!session.cartId) return NextResponse.json({ error: 'No cart' }, { status: 400 });
+
+  const { shippingAddress, billingAddress, shippingMethodId } = await req.json();
+  let cart = await getCart(session.cartId);
+  if (shippingAddress) cart = await setShippingAddress(session.cartId, cart.version, shippingAddress);
+  if (billingAddress) cart = await setBillingAddress(session.cartId, cart.version, billingAddress);
+  if (shippingMethodId) cart = await setShippingMethod(session.cartId, cart.version, shippingMethodId);
+  return NextResponse.json({ cart });
 }
 
 export async function POST(_req: NextRequest) {

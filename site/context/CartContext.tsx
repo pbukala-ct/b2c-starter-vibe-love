@@ -34,6 +34,18 @@ export interface Cart {
     totalNet: { centAmount: number; currencyCode: string };
   };
   shippingMode?: string;
+  shippingAddress?: {
+    firstName?: string;
+    lastName?: string;
+    streetName?: string;
+    streetNumber?: string;
+    additionalAddressInfo?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+    phone?: string;
+  };
   shipping?: unknown[];
   itemShippingAddresses?: unknown[];
   customerId?: string;

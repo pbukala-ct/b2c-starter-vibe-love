@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAccount } from '@/hooks/useAccount';
 import { useSWRConfig } from 'swr';
-import { KEY_ACCOUNT } from '@/lib/cache-keys';
+import { KEY_ACCOUNT, KEY_CART, KEY_WISHLIST } from '@/lib/cache-keys';
 import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
 
@@ -47,6 +47,8 @@ export default function LoginPage() {
           { id: c.id, email: c.email, firstName: c.firstName, lastName: c.lastName },
           { revalidate: false }
         );
+        mutate(KEY_CART);
+        mutate(KEY_WISHLIST);
         router.push(redirect);
       }
     } catch {

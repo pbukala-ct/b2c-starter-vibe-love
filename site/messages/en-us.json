@@ -166,6 +166,8 @@
     "stateRegion": "State / Region",
     "country": "Country",
     "email": "Email",
+    "invalidPostalCode": "Invalid postal code for this country",
+    "invalidEmail": "Invalid email address",
     "cardNumber": "Card Number",
     "cardholderName": "Cardholder Name",
     "cardholderNamePlaceholder": "Full name on card",
@@ -399,6 +401,24 @@
     "noProducts": "No products found",
     "noProductsHint": "Try adjusting your filters or search terms",
     "productCount": "{count, plural, one {# product} other {# products}}"
+  },
+  "addressFields": {
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "streetAddress": "Street Address",
+    "streetAddressPlaceholder": "123 Main Street",
+    "streetName": "Street Name",
+    "streetNumber": "Street Number",
+    "additionalAddressInfo": "Apt, Suite, Floor (optional)",
+    "additionalAddressInfoPlaceholder": "e.g. Apt 4B",
+    "city": "City",
+    "state": "State / Region",
+    "postalCode": "Postal Code",
+    "country": "Country",
+    "invalidPostalCode": "Invalid postal code for this country",
+    "phone": "Phone",
+    "email": "Email",
+    "invalidEmail": "Invalid email address"
   },
   "home": {
     "curatedForModernLiving": "Curated for Modern Living",

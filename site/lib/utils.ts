@@ -57,10 +57,17 @@ export function isCombinedStreetField(country: string): boolean {
  * Combine separate CT streetNumber + streetName into a single display string.
  * Works for all locales (US shows "123 Main St", EU shows "123 Main St" too).
  */
-export function formatStreetAddress(streetNumber?: string, streetName?: string): string {
+export function formatStreetAddress(
+  streetNumber?: string,
+  streetName?: string,
+  country?: string
+): string {
   const num = streetNumber?.trim() || '';
   const name = streetName?.trim() || '';
-  if (num && name) return `${num} ${name}`;
+  if (num && name) {
+    // European format: street name first, then number (e.g. "Lagedeich 1")
+    return isCombinedStreetField(country || 'US') ? `${num} ${name}` : `${name} ${num}`;
+  }
   return name || num;
 }
 
@@ -80,6 +87,41 @@ export function parseStreetAddress(streetAddress: string): {
   }
   // No leading number — entire string is the street name
   return { streetNumber: '', streetName: trimmed };
+}
+
+/**
+ * Convert a form address (with optional combined streetAddress) to the CT API shape.
+ * Parses the combined street field for US addresses; uses separate fields otherwise.
+ */
+export function toCtAddress(addr: {
+  firstName: string;
+  lastName: string;
+  streetName: string;
+  streetNumber?: string;
+  streetAddress?: string;
+  additionalAddressInfo?: string;
+  city: string;
+  postalCode: string;
+  state?: string;
+  country: string;
+  phone?: string;
+}) {
+  const street =
+    isCombinedStreetField(addr.country) && addr.streetAddress
+      ? parseStreetAddress(addr.streetAddress)
+      : { streetName: addr.streetName, streetNumber: addr.streetNumber || '' };
+  return {
+    firstName: addr.firstName,
+    lastName: addr.lastName,
+    streetName: street.streetName,
+    streetNumber: street.streetNumber || undefined,
+    additionalAddressInfo: addr.additionalAddressInfo || undefined,
+    city: addr.city,
+    postalCode: addr.postalCode,
+    state: addr.state || undefined,
+    country: addr.country,
+    phone: addr.phone || undefined,
+  };
 }
 
 export function toUrlLocale(country: string): string {

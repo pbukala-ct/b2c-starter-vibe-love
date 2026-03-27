@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAccount } from '@/hooks/useAccount';
 import { mutate } from 'swr';
-import { KEY_ACCOUNT } from '@/lib/cache-keys';
+import { KEY_ACCOUNT, KEY_CART, KEY_WISHLIST } from '@/lib/cache-keys';
 import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
 
@@ -35,6 +35,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
     mutate(KEY_ACCOUNT, null, { revalidate: false });
+    mutate(KEY_CART, null, { revalidate: false });
+    mutate(KEY_WISHLIST, null, { revalidate: false });
     router.push(localePath('/'));
   }
 

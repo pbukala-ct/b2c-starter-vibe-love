@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useLocale } from '@/context/LocaleContext';
-import { isCombinedStreetField, formatStreetAddress, parseStreetAddress } from '@/lib/utils';
+import { formatStreetAddress, toCtAddress } from '@/lib/utils';
 import { useAddresses, useAddressMutations } from '@/hooks/useAddresses';
 import type { Address } from '@/hooks/useAddresses';
+import AddressFields from '@/components/address/AddressFields';
+import type { AddressFormValues } from '@/components/address/AddressFields';
 import { useTranslations } from 'next-intl';
 
 const emptyAddress: Address = {
@@ -17,7 +19,7 @@ const emptyAddress: Address = {
   city: '',
   state: '',
   postalCode: '',
-  country: 'US',
+  country: '',
   phone: '',
 };
 
@@ -40,13 +42,15 @@ function AddressForm({
   currentDefaultShippingId?: string;
   currentDefaultBillingId?: string;
 }) {
-  const initWithStreetAddr: Address = {
+  const [form, setForm] = useState<Address>({
     ...initial,
+    streetNumber: initial.streetNumber ?? '',
     streetAddress:
-      initial.streetAddress || formatStreetAddress(initial.streetNumber, initial.streetName),
+      initial.streetAddress ||
+      formatStreetAddress(initial.streetNumber, initial.streetName, initial.country),
     country: initial.country || defaultCountry,
-  };
-  const [form, setForm] = useState<Address>(initWithStreetAddr);
+  });
+  const [postalCodeError, setPostalCodeError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -62,22 +66,16 @@ function AddressForm({
           : '';
   const [setDefault, setSetDefault] = useState<DefaultType>(initialDefault);
 
-  const isCombined = isCombinedStreetField(form.country);
   const t = useTranslations('addresses');
+  const tFields = useTranslations('addressFields');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (postalCodeError) return;
     setError('');
     setIsSaving(true);
     try {
-      const addrToSave = { ...form };
-      if (isCombined && addrToSave.streetAddress) {
-        const parsed = parseStreetAddress(addrToSave.streetAddress);
-        addrToSave.streetName = parsed.streetName;
-        addrToSave.streetNumber = parsed.streetNumber;
-      }
-      delete addrToSave.streetAddress;
-      await onSave(addrToSave, setDefault || undefined);
+      await onSave({ ...toCtAddress(form), id: form.id }, setDefault || undefined);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save address');
     } finally {
@@ -85,69 +83,18 @@ function AddressForm({
     }
   }
 
-  const field = (
-    key: keyof Address,
-    label: string,
-    required = false,
-    type = 'text',
-    placeholder?: string
-  ) => (
-    <div>
-      <label htmlFor={`addr-${key}`} className="text-charcoal mb-1 block text-xs font-medium">
-        {label}
-      </label>
-      <input
-        id={`addr-${key}`}
-        type={type}
-        required={required}
-        placeholder={placeholder}
-        value={(form[key] as string) || ''}
-        onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-        className="border-border focus:border-charcoal w-full rounded-sm border px-3 py-2 text-sm focus:outline-none"
-      />
-    </div>
-  );
-
   return (
     <div className="border-border mb-6 rounded-sm border bg-white p-6">
       <h2 className="text-charcoal mb-4 font-semibold">{title}</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Nickname at the top */}
-        {field('additionalAddressInfo', t('nickname'), false, 'text', t('nicknamePlaceholder'))}
-        <div className="grid grid-cols-2 gap-4">
-          {field('firstName', t('firstName'), true)}
-          {field('lastName', t('lastName'), true)}
-        </div>
-        {isCombined ? (
-          <div className="space-y-4">
-            {field('streetAddress', t('streetAddress'), true, 'text', '123 Main Street')}
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-4">
-            <div className="col-span-2">{field('streetName', t('street'), true)}</div>
-            <div>{field('streetNumber', t('number'))}</div>
-          </div>
-        )}
-        <div className="grid grid-cols-3 gap-4">
-          <div>{field('city', t('city'), true)}</div>
-          <div>{field('state', t('state'))}</div>
-          <div>{field('postalCode', t('postalCode'), true)}</div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-charcoal mb-1 block text-xs font-medium">{t('country')}</label>
-            <select
-              value={form.country}
-              onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
-              className="border-border focus:border-charcoal w-full rounded-sm border bg-white px-3 py-2 text-sm focus:outline-none"
-            >
-              <option value="US">{t('countryUS')}</option>
-              <option value="GB">{t('countryGB')}</option>
-              <option value="DE">{t('countryDE')}</option>
-            </select>
-          </div>
-          <div>{field('phone', t('phone'), false, 'tel')}</div>
-        </div>
+        <AddressFields
+          value={form as AddressFormValues}
+          onChange={(v) => setForm((prev) => ({ ...prev, ...v }))}
+          errors={{ postalCode: postalCodeError }}
+          onError={(_, msg) => setPostalCodeError(msg)}
+          additionalAddressInfoLabel={tFields('additionalAddressInfo')}
+          additionalAddressInfoPlaceholder={tFields('additionalAddressInfoPlaceholder')}
+        />
 
         <div>
           <label className="text-charcoal mb-2 block text-xs font-medium">
@@ -204,7 +151,7 @@ function AddressForm({
         <div className="flex gap-3">
           <button
             type="submit"
-            disabled={isSaving}
+            disabled={isSaving || !!postalCodeError}
             className="bg-charcoal hover:bg-charcoal/80 rounded-sm px-5 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             {isSaving ? t('savingAddress') : t('saveAddress')}
@@ -359,7 +306,7 @@ export default function AddressesPage() {
                     {addr.firstName} {addr.lastName}
                   </p>
                   <p className="text-charcoal-light">
-                    {formatStreetAddress(addr.streetNumber, addr.streetName)}
+                    {formatStreetAddress(addr.streetNumber, addr.streetName, addr.country)}
                   </p>
                   <p className="text-charcoal-light">
                     {addr.city}

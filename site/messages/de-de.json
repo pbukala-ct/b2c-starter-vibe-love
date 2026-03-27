@@ -166,6 +166,8 @@
     "stateRegion": "Bundesland / Region",
     "country": "Land",
     "email": "E-Mail",
+    "invalidPostalCode": "Ungültige Postleitzahl für dieses Land",
+    "invalidEmail": "Ungültige E-Mail-Adresse",
     "cardNumber": "Kartennummer",
     "cardholderName": "Name des Karteninhabers",
     "cardholderNamePlaceholder": "Name wie auf der Karte",
@@ -399,6 +401,24 @@
     "noProducts": "Keine Produkte gefunden",
     "noProductsHint": "Versuchen Sie, Ihre Filter oder Suchbegriffe anzupassen",
     "productCount": "{count, plural, one {# Produkt} other {# Produkte}}"
+  },
+  "addressFields": {
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "streetAddress": "Straße und Hausnummer",
+    "streetAddressPlaceholder": "z. B. Musterstraße 1",
+    "streetName": "Straßenname",
+    "streetNumber": "Hausnummer",
+    "additionalAddressInfo": "Adresszusatz (optional)",
+    "additionalAddressInfoPlaceholder": "z. B. Wohnung 4B",
+    "city": "Stadt",
+    "state": "Bundesland / Region",
+    "postalCode": "Postleitzahl",
+    "country": "Land",
+    "invalidPostalCode": "Ungültige Postleitzahl für dieses Land",
+    "phone": "Telefon",
+    "email": "E-Mail",
+    "invalidEmail": "Ungültige E-Mail-Adresse"
   },
   "home": {
     "curatedForModernLiving": "Kuratiert für modernes Wohnen",

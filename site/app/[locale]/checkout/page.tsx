@@ -1,37 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useCartSWR } from '@/hooks/useCartSWR';
 import { useAccount } from '@/hooks/useAccount';
 import { useShippingMethods } from '@/hooks/useShippingMethods';
-import { useLocale } from '@/context/LocaleContext';
+import { useLocale, useCountryConfig } from '@/context/LocaleContext';
 import {
   formatMoney,
   getLocalizedString,
-  isCombinedStreetField,
   formatStreetAddress,
-  parseStreetAddress,
+  toCtAddress,
+  DEFAULT_LOCALE,
 } from '@/lib/utils';
 import Image from 'next/image';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import AddressFields from '@/components/address/AddressFields';
+import type { AddressFormValues } from '@/components/address/AddressFields';
 import { useTranslations } from 'next-intl';
 
-interface Address {
-  key: string;
-  firstName: string;
-  lastName: string;
-  streetName: string;
-  streetNumber: string;
-  streetAddress: string; // combined field for US-style input
-  additionalAddressInfo?: string;
-  city: string;
-  postalCode: string;
-  state?: string;
-  country: string;
-  email?: string;
-}
+type Address = AddressFormValues & { key: string };
 
 interface SavedAddress {
   id: string;
@@ -55,10 +44,22 @@ interface ItemShipping {
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const params = useParams();
   const { data: cart, mutate: mutateCart } = useCartSWR();
   const { data: user } = useAccount();
   const isLoggedIn = !!user;
   const { currency, country, locale, localePath } = useLocale();
+  const countryConfig = useCountryConfig();
+
+  // Derive country from URL locale param (e.g. 'en-gb' → 'GB') so the form
+  // always matches the current URL, even if the cookie lags behind.
+  const urlLocaleParam = (params.locale as string) || '';
+  const countryFromUrl =
+    Object.entries(countryConfig).find(
+      ([, cfg]) => (cfg as { locale: string }).locale.toLowerCase() === urlLocaleParam.toLowerCase()
+    )?.[0] ??
+    country ??
+    DEFAULT_LOCALE.country;
   const { data: shippingMethodsData = [] } = useShippingMethods();
   const t = useTranslations('checkout');
   const [submitting, setSubmitting] = useState(false);
@@ -67,17 +68,22 @@ export default function CheckoutPage() {
   // Shipping addresses (for split shipment: one per shipping group)
   const [primaryAddr, setPrimaryAddr] = useState<Address>({
     key: 'addr-primary',
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    streetName: '',
-    streetNumber: '',
-    streetAddress: '',
-    additionalAddressInfo: '',
-    city: '',
-    postalCode: '',
-    state: '',
-    country: country || 'US',
+    firstName: cart?.shippingAddress?.firstName || user?.firstName || '',
+    lastName: cart?.shippingAddress?.lastName || user?.lastName || '',
+    streetName: cart?.shippingAddress?.streetName || '',
+    streetNumber: cart?.shippingAddress?.streetNumber || '',
+    streetAddress: formatStreetAddress(
+      cart?.shippingAddress?.streetNumber,
+      cart?.shippingAddress?.streetName,
+      cart?.shippingAddress?.country
+    ),
+    additionalAddressInfo: cart?.shippingAddress?.additionalAddressInfo || '',
+    city: cart?.shippingAddress?.city || '',
+    postalCode: cart?.shippingAddress?.postalCode || '',
+    state: cart?.shippingAddress?.state || '',
+    country: cart?.shippingAddress?.country || countryFromUrl,
     email: user?.email || '',
+    phone: cart?.shippingAddress?.phone || '',
   });
 
   const [additionalAddresses, setAdditionalAddresses] = useState<Address[]>([]);
@@ -92,6 +98,8 @@ export default function CheckoutPage() {
   const [shippingMethods, setShippingMethods] = useState(shippingMethodsData);
   const [selectedShippingMethodId, setSelectedShippingMethodId] = useState<string>('');
 
+  const [selectedBillingSavedAddressId, setSelectedBillingSavedAddressId] = useState<string>('');
+
   // Billing address
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
   const [billingAddr, setBillingAddr] = useState<Address>({
@@ -105,8 +113,13 @@ export default function CheckoutPage() {
     city: '',
     postalCode: '',
     state: '',
-    country: country || 'US',
+    country: countryFromUrl,
   });
+
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const setFieldError = (key: string, msg: string) =>
+    setFieldErrors((prev) => ({ ...prev, [key]: msg }));
 
   // Payment
   const [payment, setPayment] = useState({
@@ -127,10 +140,65 @@ export default function CheckoutPage() {
   }, [shippingMethodsData, selectedShippingMethodId]);
 
   useEffect(() => {
+    if (!selectedShippingMethodId) return;
+    fetch('/api/cart', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shippingMethodId: selectedShippingMethodId }),
+    })
+      .then((r) => r.json())
+      .then((data) => mutateCart(data.cart, { revalidate: false }))
+      .catch(() => {});
+  }, [selectedShippingMethodId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     if (isLoggedIn) {
       fetch('/api/account/addresses')
         .then((r) => r.json())
-        .then((data) => setSavedAddresses(data.addresses || []))
+        .then((data) => {
+          const addresses: SavedAddress[] = data.addresses || [];
+          setSavedAddresses(addresses);
+
+          const cartAddr = cart?.shippingAddress;
+          if (cartAddr?.streetName && addresses.length > 0) {
+            // Cart already has an address — check if it matches a saved one
+            const norm = (s?: string) => (s || '').trim().toLowerCase();
+            const cartMatch = addresses.find(
+              (a) =>
+                norm(a.streetName) === norm(cartAddr.streetName) &&
+                norm(a.streetNumber) === norm(cartAddr.streetNumber) &&
+                norm(a.city) === norm(cartAddr.city) &&
+                norm(a.postalCode) === norm(cartAddr.postalCode) &&
+                norm(a.country) === norm(cartAddr.country)
+            );
+            if (cartMatch) {
+              setSelectedSavedAddressId(cartMatch.id);
+            }
+          } else if (!cartAddr?.streetName && addresses.length > 0) {
+            // No cart address — auto-select the one matching the locale country
+            const match = addresses.find((a) => a.country === country);
+            if (match) {
+              setSelectedSavedAddressId(match.id);
+              setPrimaryAddr((prev) => ({
+                ...prev,
+                firstName: match.firstName,
+                lastName: match.lastName,
+                streetName: match.streetName,
+                streetNumber: match.streetNumber || '',
+                streetAddress: formatStreetAddress(
+                  match.streetNumber,
+                  match.streetName,
+                  match.country
+                ),
+                additionalAddressInfo: match.additionalAddressInfo || '',
+                city: match.city,
+                state: match.state || '',
+                postalCode: match.postalCode,
+                country: match.country,
+              }));
+            }
+          }
+        })
         .catch(() => {});
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -149,6 +217,84 @@ export default function CheckoutPage() {
     }
   }, [cart, locale]);
 
+  // Debounced cart shipping address update when user fills in a new address manually
+  useEffect(() => {
+    if (selectedSavedAddressId) return;
+    const {
+      firstName,
+      lastName,
+      streetAddress,
+      streetName,
+      city,
+      postalCode,
+      country: c,
+    } = primaryAddr;
+    const hasStreet = streetAddress || streetName;
+    if (!firstName || !lastName || !hasStreet || !city || !postalCode || !c) return;
+    const timer = setTimeout(() => {
+      fetch('/api/cart', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shippingAddress: toCtAddress(primaryAddr) }),
+      })
+        .then((r) => r.json())
+        .then((data) => mutateCart(data.cart, { revalidate: false }))
+        .catch(() => {});
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [primaryAddr, selectedSavedAddressId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Debounced cart billing address update when user fills in a new billing address manually
+  useEffect(() => {
+    if (billingSameAsShipping || selectedBillingSavedAddressId) return;
+    const {
+      firstName,
+      lastName,
+      streetAddress,
+      streetName,
+      city,
+      postalCode,
+      country: c,
+    } = billingAddr;
+    const hasStreet = streetAddress || streetName;
+    if (!firstName || !lastName || !hasStreet || !city || !postalCode || !c) return;
+    const timer = setTimeout(() => {
+      fetch('/api/cart', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ billingAddress: toCtAddress(billingAddr) }),
+      })
+        .then((r) => r.json())
+        .then((data) => mutateCart(data.cart, { revalidate: false }))
+        .catch(() => {});
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [billingAddr, billingSameAsShipping, selectedBillingSavedAddressId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When "same as shipping" is checked, mirror the shipping address to billing on the cart
+  useEffect(() => {
+    if (!billingSameAsShipping) return;
+    const {
+      firstName,
+      lastName,
+      streetAddress,
+      streetName,
+      city,
+      postalCode,
+      country: c,
+    } = primaryAddr;
+    const hasStreet = streetAddress || streetName;
+    if (!firstName || !lastName || !hasStreet || !city || !postalCode || !c) return;
+    fetch('/api/cart', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ billingAddress: toCtAddress(primaryAddr) }),
+    })
+      .then((r) => r.json())
+      .then((data) => mutateCart(data.cart, { revalidate: false }))
+      .catch(() => {});
+  }, [billingSameAsShipping, primaryAddr]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Auto-fill dummy credit card
   const autoFillCard = () => {
     setPayment({
@@ -159,8 +305,15 @@ export default function CheckoutPage() {
     });
   };
 
-  const handleAddressChange = (field: keyof Address, value: string) => {
-    setPrimaryAddr((prev) => ({ ...prev, [field]: value }));
+  const patchCartShippingAddress = (addr: SavedAddress) => {
+    fetch('/api/cart', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shippingAddress: toCtAddress(addr) }),
+    })
+      .then((r) => r.json())
+      .then((data) => mutateCart(data.cart, { revalidate: false }))
+      .catch(() => {});
   };
 
   const applySavedAddress = (id: string) => {
@@ -173,13 +326,42 @@ export default function CheckoutPage() {
         lastName: saved.lastName,
         streetName: saved.streetName,
         streetNumber: saved.streetNumber || '',
-        streetAddress: formatStreetAddress(saved.streetNumber, saved.streetName),
+        streetAddress: formatStreetAddress(saved.streetNumber, saved.streetName, saved.country),
         additionalAddressInfo: saved.additionalAddressInfo || '',
         city: saved.city,
         state: saved.state || '',
         postalCode: saved.postalCode,
         country: saved.country,
       }));
+      patchCartShippingAddress(saved);
+    }
+  };
+
+  const applyBillingSavedAddress = (id: string) => {
+    setSelectedBillingSavedAddressId(id);
+    const saved = savedAddresses.find((a) => a.id === id);
+    if (saved) {
+      setBillingAddr((prev) => ({
+        ...prev,
+        firstName: saved.firstName,
+        lastName: saved.lastName,
+        streetName: saved.streetName,
+        streetNumber: saved.streetNumber || '',
+        streetAddress: formatStreetAddress(saved.streetNumber, saved.streetName, saved.country),
+        additionalAddressInfo: saved.additionalAddressInfo || '',
+        city: saved.city,
+        state: saved.state || '',
+        postalCode: saved.postalCode,
+        country: saved.country,
+      }));
+      fetch('/api/cart', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ billingAddress: toCtAddress(saved) }),
+      })
+        .then((r) => r.json())
+        .then((data) => mutateCart(data.cart, { revalidate: false }))
+        .catch(() => {});
     }
   };
 
@@ -198,15 +380,9 @@ export default function CheckoutPage() {
         city: '',
         postalCode: '',
         state: '',
-        country: country || 'US',
+        country: countryFromUrl,
       },
     ]);
-  };
-
-  const updateSplitAddress = (index: number, field: keyof Address, value: string) => {
-    setAdditionalAddresses((prev) =>
-      prev.map((a, i) => (i === index ? { ...a, [field]: value } : a))
-    );
   };
 
   const updateItemAddressQty = (lineItemId: string, addressKey: string, qty: number) => {
@@ -228,26 +404,11 @@ export default function CheckoutPage() {
     );
   };
 
-  /** Convert a form Address to the CT API shape (separate streetNumber/streetName) */
-  const toApiAddress = (addr: Address) => {
-    const isCombined = isCombinedStreetField(addr.country);
-    const street = isCombined
-      ? parseStreetAddress(addr.streetAddress)
-      : { streetNumber: addr.streetNumber, streetName: addr.streetName };
-    return {
-      key: addr.key,
-      firstName: addr.firstName,
-      lastName: addr.lastName,
-      streetName: street.streetName,
-      streetNumber: street.streetNumber,
-      additionalAddressInfo: addr.additionalAddressInfo || undefined,
-      city: addr.city,
-      postalCode: addr.postalCode,
-      state: addr.state || undefined,
-      country: addr.country,
-      email: addr.email || undefined,
-    };
-  };
+  const toApiAddress = (addr: Address) => ({
+    key: addr.key,
+    email: addr.email || undefined,
+    ...toCtAddress(addr),
+  });
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -351,105 +512,78 @@ export default function CheckoutPage() {
                   {savedAddresses.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.firstName} {a.lastName} —{' '}
-                      {formatStreetAddress(a.streetNumber, a.streetName)}, {a.city}
+                      {formatStreetAddress(a.streetNumber, a.streetName, a.country)}, {a.city}
                     </option>
                   ))}
                 </select>
               </div>
             )}
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label={t('firstName')}
-                value={primaryAddr.firstName}
-                onChange={(e) => handleAddressChange('firstName', e.target.value)}
-                required
+            {!selectedSavedAddressId && (
+              <AddressFields
+                value={primaryAddr}
+                onChange={(v) => setPrimaryAddr((prev) => ({ ...prev, ...v }))}
+                errors={{ postalCode: fieldErrors.primaryPostalCode, email: fieldErrors.email }}
+                onError={(field, msg) =>
+                  setFieldError(
+                    field === 'email'
+                      ? 'email'
+                      : 'primary' + field[0].toUpperCase() + field.slice(1),
+                    msg
+                  )
+                }
               />
-              <Input
-                label={t('lastName')}
-                value={primaryAddr.lastName}
-                onChange={(e) => handleAddressChange('lastName', e.target.value)}
-                required
+            )}
+          </div>
+
+          {/* Billing Address */}
+          <div>
+            <h2 className="text-charcoal mb-4 text-lg font-semibold">{t('billingAddress')}</h2>
+            <div className="mb-4 flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="billing-same"
+                checked={billingSameAsShipping}
+                onChange={(e) => setBillingSameAsShipping(e.target.checked)}
+                className="accent-charcoal"
               />
-              {isCombinedStreetField(primaryAddr.country) ? (
-                <>
-                  <Input
-                    label={t('streetAddress')}
-                    value={primaryAddr.streetAddress}
-                    onChange={(e) => handleAddressChange('streetAddress', e.target.value)}
-                    className="col-span-2"
-                    required
-                    placeholder={t('streetAddressPlaceholder')}
-                  />
-                  <Input
-                    label={t('additionalAddressInfo')}
-                    value={primaryAddr.additionalAddressInfo || ''}
-                    onChange={(e) => handleAddressChange('additionalAddressInfo', e.target.value)}
-                    className="col-span-2"
-                    placeholder={t('additionalAddressInfoPlaceholder')}
-                  />
-                </>
-              ) : (
-                <>
-                  <Input
-                    label={t('streetName')}
-                    value={primaryAddr.streetName}
-                    onChange={(e) => handleAddressChange('streetName', e.target.value)}
-                    className="col-span-2"
-                    required
-                  />
-                  <Input
-                    label={t('streetNumber')}
-                    value={primaryAddr.streetNumber}
-                    onChange={(e) => handleAddressChange('streetNumber', e.target.value)}
-                    required
-                  />
-                  <Input
-                    label={t('additionalAddressInfo')}
-                    value={primaryAddr.additionalAddressInfo || ''}
-                    onChange={(e) => handleAddressChange('additionalAddressInfo', e.target.value)}
-                    placeholder={t('additionalAddressInfoPlaceholder')}
-                  />
-                </>
-              )}
-              <Input
-                label={t('city')}
-                value={primaryAddr.city}
-                onChange={(e) => handleAddressChange('city', e.target.value)}
-                required
-              />
-              <Input
-                label={t('zipPostalCode')}
-                value={primaryAddr.postalCode}
-                onChange={(e) => handleAddressChange('postalCode', e.target.value)}
-                required
-              />
-              <Input
-                label={t('stateRegion')}
-                value={primaryAddr.state || ''}
-                onChange={(e) => handleAddressChange('state', e.target.value)}
-              />
-              <div className="flex flex-col gap-1">
-                <label className="text-charcoal-light text-xs font-medium tracking-wider uppercase">
-                  {t('country')}
-                </label>
-                <select
-                  value={primaryAddr.country}
-                  onChange={(e) => handleAddressChange('country', e.target.value)}
-                  className="border-border focus:border-charcoal w-full rounded-sm border bg-white px-3 py-2.5 text-sm focus:outline-none"
-                >
-                  <option value="US">{t('countryUS')}</option>
-                  <option value="GB">{t('countryGB')}</option>
-                  <option value="DE">{t('countryDE')}</option>
-                </select>
-              </div>
-              <Input
-                label={t('email')}
-                type="email"
-                value={primaryAddr.email || ''}
-                onChange={(e) => handleAddressChange('email', e.target.value)}
-                className="col-span-2"
-              />
+              <label htmlFor="billing-same" className="text-charcoal cursor-pointer text-sm">
+                {t('billingSameAsShipping')}
+              </label>
             </div>
+            {!billingSameAsShipping && (
+              <div className="space-y-4">
+                {savedAddresses.length > 0 && (
+                  <div>
+                    <label className="text-charcoal-light mb-1.5 block text-xs font-medium tracking-wider uppercase">
+                      {t('useSavedAddress')}
+                    </label>
+                    <select
+                      value={selectedBillingSavedAddressId}
+                      onChange={(e) => applyBillingSavedAddress(e.target.value)}
+                      className="border-border focus:border-charcoal w-full rounded-sm border bg-white px-3 py-2.5 text-sm focus:outline-none"
+                    >
+                      <option value="">{t('enterNewAddress')}</option>
+                      {savedAddresses.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.firstName} {a.lastName} —{' '}
+                          {formatStreetAddress(a.streetNumber, a.streetName, a.country)}, {a.city}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {!selectedBillingSavedAddressId && (
+                  <AddressFields
+                    value={billingAddr}
+                    onChange={(v) => setBillingAddr((prev) => ({ ...prev, ...v }))}
+                    errors={{ postalCode: fieldErrors.billingPostalCode }}
+                    onError={(field, msg) =>
+                      setFieldError('billing' + field[0].toUpperCase() + field.slice(1), msg)
+                    }
+                  />
+                )}
+              </div>
+            )}
           </div>
 
           {/* Split Shipment */}
@@ -478,76 +612,14 @@ export default function CheckoutPage() {
                     <h3 className="text-charcoal text-sm font-medium">
                       {t('address', { num: index + 2 })}
                     </h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Input
-                        label={t('firstName')}
-                        value={addr.firstName}
-                        onChange={(e) => updateSplitAddress(index, 'firstName', e.target.value)}
-                      />
-                      <Input
-                        label={t('lastName')}
-                        value={addr.lastName}
-                        onChange={(e) => updateSplitAddress(index, 'lastName', e.target.value)}
-                      />
-                      {isCombinedStreetField(addr.country) ? (
-                        <>
-                          <Input
-                            label={t('streetAddress')}
-                            value={addr.streetAddress}
-                            onChange={(e) =>
-                              updateSplitAddress(index, 'streetAddress', e.target.value)
-                            }
-                            className="col-span-2"
-                            placeholder={t('streetAddressPlaceholder')}
-                          />
-                          <Input
-                            label={t('additionalAddressInfo')}
-                            value={addr.additionalAddressInfo || ''}
-                            onChange={(e) =>
-                              updateSplitAddress(index, 'additionalAddressInfo', e.target.value)
-                            }
-                            className="col-span-2"
-                            placeholder={t('additionalAddressInfoPlaceholder')}
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <Input
-                            label={t('streetName')}
-                            value={addr.streetName}
-                            onChange={(e) =>
-                              updateSplitAddress(index, 'streetName', e.target.value)
-                            }
-                            className="col-span-2"
-                          />
-                          <Input
-                            label={t('streetNumber')}
-                            value={addr.streetNumber}
-                            onChange={(e) =>
-                              updateSplitAddress(index, 'streetNumber', e.target.value)
-                            }
-                          />
-                          <Input
-                            label={t('additionalAddressInfo')}
-                            value={addr.additionalAddressInfo || ''}
-                            onChange={(e) =>
-                              updateSplitAddress(index, 'additionalAddressInfo', e.target.value)
-                            }
-                            placeholder={t('additionalAddressInfoPlaceholder')}
-                          />
-                        </>
-                      )}
-                      <Input
-                        label={t('city')}
-                        value={addr.city}
-                        onChange={(e) => updateSplitAddress(index, 'city', e.target.value)}
-                      />
-                      <Input
-                        label={t('zipCode')}
-                        value={addr.postalCode}
-                        onChange={(e) => updateSplitAddress(index, 'postalCode', e.target.value)}
-                      />
-                    </div>
+                    <AddressFields
+                      value={addr}
+                      onChange={(v) =>
+                        setAdditionalAddresses((prev) =>
+                          prev.map((a, i) => (i === index ? { ...a, ...v } : a))
+                        )
+                      }
+                    />
                   </div>
                 ))}
 
@@ -671,121 +743,6 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* Billing Address */}
-          <div>
-            <h2 className="text-charcoal mb-4 text-lg font-semibold">{t('billingAddress')}</h2>
-            <div className="mb-4 flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="billing-same"
-                checked={billingSameAsShipping}
-                onChange={(e) => setBillingSameAsShipping(e.target.checked)}
-                className="accent-charcoal"
-              />
-              <label htmlFor="billing-same" className="text-charcoal cursor-pointer text-sm">
-                {t('billingSameAsShipping')}
-              </label>
-            </div>
-            {!billingSameAsShipping && (
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label={t('firstName')}
-                  value={billingAddr.firstName}
-                  onChange={(e) => setBillingAddr((p) => ({ ...p, firstName: e.target.value }))}
-                  required
-                />
-                <Input
-                  label={t('lastName')}
-                  value={billingAddr.lastName}
-                  onChange={(e) => setBillingAddr((p) => ({ ...p, lastName: e.target.value }))}
-                  required
-                />
-                {isCombinedStreetField(billingAddr.country) ? (
-                  <>
-                    <Input
-                      label={t('streetAddress')}
-                      value={billingAddr.streetAddress}
-                      onChange={(e) =>
-                        setBillingAddr((p) => ({ ...p, streetAddress: e.target.value }))
-                      }
-                      className="col-span-2"
-                      required
-                      placeholder={t('streetAddressPlaceholder')}
-                    />
-                    <Input
-                      label={t('additionalAddressInfo')}
-                      value={billingAddr.additionalAddressInfo || ''}
-                      onChange={(e) =>
-                        setBillingAddr((p) => ({ ...p, additionalAddressInfo: e.target.value }))
-                      }
-                      className="col-span-2"
-                      placeholder={t('additionalAddressInfoPlaceholder')}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <Input
-                      label={t('streetName')}
-                      value={billingAddr.streetName}
-                      onChange={(e) =>
-                        setBillingAddr((p) => ({ ...p, streetName: e.target.value }))
-                      }
-                      className="col-span-2"
-                      required
-                    />
-                    <Input
-                      label={t('streetNumber')}
-                      value={billingAddr.streetNumber}
-                      onChange={(e) =>
-                        setBillingAddr((p) => ({ ...p, streetNumber: e.target.value }))
-                      }
-                      required
-                    />
-                    <Input
-                      label={t('additionalAddressInfo')}
-                      value={billingAddr.additionalAddressInfo || ''}
-                      onChange={(e) =>
-                        setBillingAddr((p) => ({ ...p, additionalAddressInfo: e.target.value }))
-                      }
-                      placeholder={t('additionalAddressInfoPlaceholder')}
-                    />
-                  </>
-                )}
-                <Input
-                  label={t('city')}
-                  value={billingAddr.city}
-                  onChange={(e) => setBillingAddr((p) => ({ ...p, city: e.target.value }))}
-                  required
-                />
-                <Input
-                  label={t('zipPostalCode')}
-                  value={billingAddr.postalCode}
-                  onChange={(e) => setBillingAddr((p) => ({ ...p, postalCode: e.target.value }))}
-                  required
-                />
-                <Input
-                  label={t('stateRegion')}
-                  value={billingAddr.state || ''}
-                  onChange={(e) => setBillingAddr((p) => ({ ...p, state: e.target.value }))}
-                />
-                <div className="flex flex-col gap-1">
-                  <label className="text-charcoal-light text-xs font-medium tracking-wider uppercase">
-                    {t('country')}
-                  </label>
-                  <select
-                    value={billingAddr.country}
-                    onChange={(e) => setBillingAddr((p) => ({ ...p, country: e.target.value }))}
-                    className="border-border focus:border-charcoal w-full rounded-sm border bg-white px-3 py-2.5 text-sm focus:outline-none"
-                  >
-                    <option value="US">{t('countryUS')}</option>
-                    <option value="GB">{t('countryGB')}</option>
-                    <option value="DE">{t('countryDE')}</option>
-                  </select>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Payment */}
           <div>
             <div className="mb-4 flex items-center justify-between">
@@ -842,11 +799,10 @@ export default function CheckoutPage() {
             isLoading={submitting}
             disabled={
               !primaryAddr.firstName ||
-              !(isCombinedStreetField(primaryAddr.country)
-                ? primaryAddr.streetAddress
-                : primaryAddr.streetName) ||
+              !(primaryAddr.streetAddress || primaryAddr.streetName) ||
               !primaryAddr.city ||
-              !payment.cardNumber
+              !payment.cardNumber ||
+              Object.values(fieldErrors).some(Boolean)
             }
           >
             Place Order • {formatMoney(cart.totalPrice.centAmount, cart.totalPrice.currencyCode)}

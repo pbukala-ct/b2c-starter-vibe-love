@@ -4,6 +4,17 @@ Using the browser, run through the following tests.  Fix any found errors and re
   a. As a registered user, buy a random collection of products and check out
   b. make sure new order shows up under my account -> my orders
 
+1b. Checkout — saved address and real-time cart sync (registered user)
+  a. Sign in and add a product to the cart; go to checkout
+  b. Verify the shipping address dropdown shows saved addresses
+  c. If the cart already has an address matching a saved address, verify that address is pre-selected
+  d. Select a different saved address from the dropdown; verify the form hides and the address is applied
+  e. Select "Enter new address"; fill in the form fields; verify the shipping address is set on the cart
+     after a short pause (check that navigating away and back pre-fills the same address)
+  f. Select a shipping method; verify it is set on the cart immediately
+  g. Uncheck "Same billing address"; verify billing dropdown appears; select a saved billing address
+  h. Complete checkout and verify the order appears under my orders
+
 2. Create order - anonymous
   a. As anonymous (not logged in) user, buy a random collection of products and check out
 
@@ -46,13 +57,15 @@ Using the browser, run through the following tests.  Fix any found errors and re
 8. My Account — Addresses
   a. Sign in as registered user
   b. Go to My Account → Addresses
-  c. Click "Add Address", fill in all fields (use nickname "Test Addr")
-  d. Verify the new address appears in the list
-  e. Click "Edit" on the new address
-  f. Change the city field; verify Default Shipping and Default Billing pills
+  c. Click "Add Address"; verify the country field defaults to the current locale's country
+  d. Fill in all fields and save
+  e. Verify the new address appears in the list with the correct street format
+     (US: "123 Main St"; DE/GB: "Musterstraße 1" style — name before number)
+  f. Click "Edit" on the new address
+  g. Change the city field; verify Default Shipping and Default Billing pills
      can each be toggled independently (one on, both on, neither on)
-  g. Save and verify the updated city appears in the card
-  h. Click "Remove" on the test address and verify it disappears from the list
+  h. Save and verify the updated city appears in the card
+  i. Click "Remove" on the test address and verify it disappears from the list
 
 9. Product Image Carousel
   a. Navigate to any product detail page that has multiple images

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useAccount } from '@/hooks/useAccount';
 import { mutate } from 'swr';
-import { KEY_ACCOUNT } from '@/lib/cache-keys';
+import { KEY_ACCOUNT, KEY_CART, KEY_WISHLIST } from '@/lib/cache-keys';
 import { useRouter } from 'next/navigation';
 import MegaMenu from './MegaMenu';
 import MiniCart from './MiniCart';
@@ -34,6 +34,8 @@ export default function Header({ categories }: HeaderProps) {
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     mutate(KEY_ACCOUNT, null, { revalidate: false });
+    mutate(KEY_CART, null, { revalidate: false });
+    mutate(KEY_WISHLIST, null, { revalidate: false });
     router.push(localePath('/'));
     router.refresh();
   };
