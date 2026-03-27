@@ -78,3 +78,5 @@ You have access to the following skills to implement specific features
 ### Generic guideline skills
 1. Add API: Guidelines to follow when creating a new api call [skill](./.claude/skills/add-api/SKILL.md)
 2. Add new country: Guidelines to follow when adding a new country/locale/language [skill](./.claude/skills/add-country/SKILL.md)
+3. Netlify: Provision a new Netlify site under the "cofe-pre-sales" team and configure environment variables [skill](./.claude/skills/netlify/SKILL.md)
+
