@@ -43,9 +43,11 @@ export async function PATCH(req: NextRequest) {
 
   const { shippingAddress, billingAddress, shippingMethodId } = await req.json();
   let cart = await getCart(session.cartId);
-  if (shippingAddress) cart = await setShippingAddress(session.cartId, cart.version, shippingAddress);
+  if (shippingAddress)
+    cart = await setShippingAddress(session.cartId, cart.version, shippingAddress);
   if (billingAddress) cart = await setBillingAddress(session.cartId, cart.version, billingAddress);
-  if (shippingMethodId) cart = await setShippingMethod(session.cartId, cart.version, shippingMethodId);
+  if (shippingMethodId)
+    cart = await setShippingMethod(session.cartId, cart.version, shippingMethodId);
   return NextResponse.json({ cart });
 }
 
