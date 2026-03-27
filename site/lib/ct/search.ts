@@ -237,7 +237,6 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
   // CT returns a query_shard_exception. Retry without the custom sort so the page still loads.
   try {
     const { body: result } = await apiRoot.products().search().post({ body: body }).execute();
-    console.log(result.results[4]);
     return toSearchResult(result);
   } catch (err: unknown) {
     const msg =
