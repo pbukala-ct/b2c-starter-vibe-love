@@ -21,7 +21,7 @@ function mapPrice(p: CtPrice): Price {
   };
 }
 
-function mapVariant(v: CtProductVariant): Variant {
+function mapVariant(v: CtProductVariant, matchingIds: Set<number> | null): Variant {
   return {
     id: v.id,
     sku: v.sku ?? '',
@@ -30,11 +30,11 @@ function mapVariant(v: CtProductVariant): Variant {
     prices: (v.prices ?? []).map(mapPrice),
     attributes: (v.attributes ?? []).map((a) => ({ name: a.name, value: a.value })),
     availability: v.availability ? { isOnStock: v.availability.isOnStock } : undefined,
-    isMatchingVariant: v.isMatchingVariant,
+    isMatchingVariant: matchingIds ? matchingIds.has(v.id) : undefined,
   };
 }
 
-export function mapProduct(p: ProductProjection): Product {
+export function mapProduct(p: ProductProjection, matchingIds: Set<number> | null = null): Product {
   return {
     id: p.id,
     key: p.key,
@@ -42,7 +42,10 @@ export function mapProduct(p: ProductProjection): Product {
     slug: p.slug as Record<string, string>,
     description: p.description as Record<string, string> | undefined,
     categories: (p.categories ?? []).map((c) => ({ id: c.id })),
-    variants: [mapVariant(p.masterVariant), ...(p.variants ?? []).map(mapVariant)],
+    variants: [
+      mapVariant(p.masterVariant, matchingIds),
+      ...(p.variants ?? []).map((v) => mapVariant(v, matchingIds)),
+    ],
     metaTitle: p.metaTitle as Record<string, string> | undefined,
     metaDescription: p.metaDescription as Record<string, string> | undefined,
     metaKeywords: p.metaKeywords as Record<string, string> | undefined,

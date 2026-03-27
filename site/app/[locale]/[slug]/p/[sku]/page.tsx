@@ -113,9 +113,7 @@ export default async function ProductPage({ params }: PageProps) {
   // source that carries the discounted field. variant.prices entries are raw and never have it.
   const regularPrice =
     variant?.price ||
-    variant?.prices?.find(
-      (p: Price) => !p.recurrencePolicy && p.currencyCode === currency
-    );
+    variant?.prices?.find((p: Price) => !p.recurrencePolicy && p.currencyCode === currency);
   const displayPrice = regularPrice?.discounted ?? regularPrice;
   const discountName = regularPrice?.discounted?.discountName
     ? getLocalizedString(regularPrice.discounted.discountName, locale)

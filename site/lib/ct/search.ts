@@ -3,8 +3,6 @@ import { apiRoot } from './client';
 import { DEFAULT_LOCALE } from '@/lib/utils';
 import type {
   ProductPagedSearchResponse,
-  ProductProjection,
-  ProductSearchFacetResult,
   ProductSearchRequest,
   SearchSorting,
 } from '@commercetools/platform-sdk';
@@ -16,7 +14,8 @@ import {
 import { getExtraFacets, FACET_BLOCKLIST, FACET_RENDERER_MAP } from './facet-config';
 import { facetDefinitionToFacetValue } from './facets';
 import { mapProduct } from '@/lib/mappers/product';
-import type { Product } from '@/lib/types';
+import { mapFacets } from '@/lib/mappers/facet';
+import type { Product, FacetResult } from '@/lib/types';
 
 export type { FacetDefinition } from './facets';
 
@@ -43,7 +42,7 @@ export interface SearchResult {
   offset: number;
   limit: number;
   products: Product[];
-  facets: ProductSearchFacetResult[];
+  facets: FacetResult[];
   facetDefinitions: FacetDefinition[];
 }
 
@@ -225,18 +224,12 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
         const projection = r.productProjection;
         if (!projection) return undefined;
         const mv = r.matchingVariants;
-        if (mv && !mv.allMatched) {
-          const matchingIds = new Set(mv.matchedVariants.map((v) => v.id));
-          (projection.masterVariant as ProductProjection['masterVariant'] & { isMatchingVariant?: boolean }).isMatchingVariant =
-            matchingIds.has(projection.masterVariant.id);
-          (projection.variants ?? []).forEach((v) => {
-            (v as typeof v & { isMatchingVariant?: boolean }).isMatchingVariant = matchingIds.has(v.id);
-          });
-        }
-        return mapProduct(projection);
+        const matchingIds =
+          mv && !mv.allMatched ? new Set(mv.matchedVariants.map((v) => v.id)) : null;
+        return mapProduct(projection, matchingIds);
       })
       .filter((p) => p !== undefined),
-    facets: raw.facets ?? [],
+    facets: mapFacets(raw.facets ?? []),
     facetDefinitions: resolvedFacetDefinitions,
   });
 

@@ -3,7 +3,7 @@
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import type { ProductSearchFacetResult } from '@commercetools/platform-sdk';
+import type { FacetResult } from '@/lib/types';
 import type { FacetDefinition, SortValues } from '@/lib/ct/search';
 import { BOOLEAN_FACET_ACTIVE_VALUE, FACET_RENDERER_MAP } from '@/lib/ct/facet-config';
 import ColorFacet from './facets/ColorFacet';
@@ -41,15 +41,9 @@ function formatFacetLabel(name: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-type BucketFacet = { name: string; buckets: { key: string; count: number }[] };
-
-function isBucketFacet(f: ProductSearchFacetResult): f is BucketFacet {
-  return 'buckets' in f;
-}
-
 interface ProductFiltersProps {
   currentSort?: SortValues;
-  facets?: ProductSearchFacetResult[];
+  facets?: FacetResult[];
   facetDefinitions?: FacetDefinition[];
 }
 
@@ -87,7 +81,7 @@ export default function ProductFilters({
     [router, pathname, searchParams]
   );
 
-  const bucketFacets = facets.filter(isBucketFacet).filter((f) => f.buckets.length > 0);
+  const bucketFacets = facets.filter((f) => f.buckets.length > 0);
 
   const activeFacetParams = bucketFacets.map((f) => {
     const config = FACET_RENDERER_MAP[f.name];

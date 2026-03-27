@@ -37,6 +37,11 @@ export interface Product {
   metaKeywords?: Record<string, string>;
 }
 
+export interface FacetResult {
+  name: string;
+  buckets: Array<{ key: string; count: number }>;
+}
+
 export interface Category {
   id: string;
   name: Record<string, string>;
