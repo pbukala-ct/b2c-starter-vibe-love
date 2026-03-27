@@ -14,6 +14,7 @@
  */
 
 import { createInterface } from 'readline';
+import { execSync } from 'child_process';
 
 const NETLIFY_API = 'https://api.netlify.com/api/v1';
 const TEAM_SLUG = 'cofe-pre-sales';
@@ -32,6 +33,18 @@ async function askSecret(question) {
   // Node readline doesn't have built-in hidden input; show the prompt and mask nothing
   // (terminals will echo the input — acceptable for a local setup script)
   return ask(question);
+}
+
+// ---------- Git helpers ----------
+
+function detectGitRemote() {
+  try {
+    const url = execSync('git remote get-url origin', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+    const match = url.match(/github\.com[:/](.+?)(?:\.git)?$/);
+    return match?.[1] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 // ---------- Netlify API helpers ----------
@@ -90,11 +103,10 @@ async function main() {
   }
   console.log(` ✓ found (id: ${account.id})`);
 
-  // 4. Create the site
+  // 4. Create the site under the team account
   process.stdout.write(`Creating Netlify site '${siteName}'...`);
-  const site = await netlify(token, 'POST', '/sites', {
+  const site = await netlify(token, 'POST', `/${account.slug}/sites`, {
     name: siteName,
-    account_id: account.id,
   });
   console.log(` ✓ created (id: ${site.id})`);
 
@@ -118,28 +130,68 @@ async function main() {
     if (value) env[key] = value;
   }
 
-  // 6. Set environment variables on the site
+  // 6. Set environment variables via the new Env Vars API
   if (Object.keys(env).length > 0) {
     process.stdout.write('\nSetting environment variables...');
-    await netlify(token, 'PATCH', `/sites/${site.id}`, {
-      build_settings: { env },
-    });
+    const envPayload = Object.entries(env).map(([key, value]) => ({
+      key,
+      scopes: ['builds', 'functions', 'runtime'],
+      values: [{ context: 'all', value }],
+    }));
+    await netlify(token, 'POST', `/accounts/${account.id}/env?site_id=${site.id}`, envPayload);
     console.log(' ✓ done');
   } else {
     console.log('\nNo environment variables provided — skipping.');
   }
 
-  // 7. Summary
+  // 7. GitHub repo connection
+  const connectGit = (await ask('\nConnect to a GitHub repo for auto-publishing? (y/N): ')).toLowerCase();
+  let linkedRepo = null;
+  if (connectGit === 'y' || connectGit === 'yes') {
+    const detectedRepo = detectGitRemote();
+    let repoPath;
+
+    if (detectedRepo) {
+      const useDetected = (await ask(`  Use current git remote (${detectedRepo})? (Y/n): `)).toLowerCase();
+      repoPath = (useDetected !== 'n' && useDetected !== 'no') ? detectedRepo : null;
+    }
+
+    if (!repoPath) {
+      repoPath = await ask('  GitHub repo (owner/repo, e.g. acme/my-store): ');
+    }
+
+    if (repoPath) {
+      const branch = (await ask('  Branch (press Enter for main): ')) || 'main';
+      process.stdout.write(`  Linking ${repoPath} @ ${branch}...`);
+      await netlify(token, 'PATCH', `/sites/${site.id}`, {
+        repo: {
+          provider: 'github',
+          repo: repoPath,
+          branch,
+          cmd: 'npm run build',
+          dir: 'site/.next',
+          base: 'site',
+        },
+      });
+      console.log(' ✓ done');
+      linkedRepo = repoPath;
+    }
+  }
+
+  // 8. Summary
   const siteUrl = site.ssl_url || site.url || `https://${siteName}.netlify.app`;
   const adminUrl = `https://app.netlify.com/sites/${site.name || siteName}`;
+
+  const nextStep = linkedRepo
+    ? `Your repo (${linkedRepo}) is linked — every push to the configured branch will trigger a deploy.`
+    : `Connect your GitHub repo in the Netlify UI to enable automatic deploys:\n  ${adminUrl}/settings/deploys`;
 
   console.log(`
 ✅ Netlify site ready!
    Site URL:  ${siteUrl}
    Admin URL: ${adminUrl}
 
-Next step: Connect your GitHub repo in the Netlify UI to enable automatic deploys.
-  ${adminUrl}/settings/deploys
+${nextStep}
 `);
 }
 
