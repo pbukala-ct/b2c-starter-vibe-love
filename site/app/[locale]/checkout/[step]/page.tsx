@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useCartSWR } from '@/hooks/useCartSWR';
 import { useAccount } from '@/hooks/useAccount';
@@ -114,6 +114,26 @@ export default function CheckoutStepPage() {
     cardCvc: '',
   });
 
+  const cartRef = useRef(cart);
+  useEffect(() => {
+    cartRef.current = cart;
+  }, [cart]);
+
+  type CartAddress = NonNullable<typeof cart>['shippingAddress'];
+  function ctAddrEq(cartAddr: CartAddress, next: ReturnType<typeof toCtAddress>): boolean {
+    if (!cartAddr) return false;
+    const eq = (a?: string, b?: string) => (a || '') === (b || '');
+    return (
+      eq(cartAddr.firstName, next.firstName) &&
+      eq(cartAddr.lastName, next.lastName) &&
+      eq(cartAddr.streetName, next.streetName) &&
+      eq(cartAddr.streetNumber, next.streetNumber) &&
+      eq(cartAddr.city, next.city) &&
+      eq(cartAddr.postalCode, next.postalCode) &&
+      eq(cartAddr.country, next.country)
+    );
+  }
+
   // Skip guard: redirect if the current step's prerequisites are not met
   useEffect(() => {
     if (cart === undefined) return;
@@ -142,6 +162,8 @@ export default function CheckoutStepPage() {
 
   useEffect(() => {
     if (!selectedShippingMethodId) return;
+    if (activeStep !== 2) return;
+    if (cartRef.current?.shippingInfo?.shippingMethod?.id === selectedShippingMethodId) return;
     fetch('/api/cart', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -150,7 +172,7 @@ export default function CheckoutStepPage() {
       .then((r) => r.json())
       .then((data) => mutateCart(data.cart, { revalidate: false }))
       .catch(() => {});
-  }, [selectedShippingMethodId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedShippingMethodId, activeStep]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -229,6 +251,7 @@ export default function CheckoutStepPage() {
     } = primaryAddr;
     const hasStreet = streetAddress || streetName;
     if (!firstName || !lastName || !hasStreet || !city || !postalCode || !c) return;
+    if (ctAddrEq(cartRef.current?.shippingAddress, toCtAddress(primaryAddr))) return;
     const timer = setTimeout(() => {
       fetch('/api/cart', {
         method: 'PATCH',
@@ -256,6 +279,7 @@ export default function CheckoutStepPage() {
     } = billingAddr;
     const hasStreet = streetAddress || streetName;
     if (!firstName || !lastName || !hasStreet || !city || !postalCode || !c) return;
+    if (ctAddrEq(cartRef.current?.billingAddress, toCtAddress(billingAddr))) return;
     const timer = setTimeout(() => {
       fetch('/api/cart', {
         method: 'PATCH',
@@ -283,6 +307,7 @@ export default function CheckoutStepPage() {
     } = primaryAddr;
     const hasStreet = streetAddress || streetName;
     if (!firstName || !lastName || !hasStreet || !city || !postalCode || !c) return;
+    if (ctAddrEq(cartRef.current?.billingAddress, toCtAddress(primaryAddr))) return;
     fetch('/api/cart', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -403,6 +428,36 @@ export default function CheckoutStepPage() {
     email: addr.email || undefined,
     ...toCtAddress(addr),
   });
+
+  const handleContinueToShipping = async () => {
+    const shippingSource = selectedSavedAddressId
+      ? savedAddresses.find((a) => a.id === selectedSavedAddressId)
+      : primaryAddr;
+    const billingSource = billingSameAsShipping
+      ? shippingSource
+      : selectedBillingSavedAddressId
+        ? savedAddresses.find((a) => a.id === selectedBillingSavedAddressId)
+        : billingAddr;
+
+    const body: Record<string, unknown> = {};
+    if (shippingSource && !ctAddrEq(cartRef.current?.shippingAddress, toCtAddress(shippingSource))) {
+      body.shippingAddress = toCtAddress(shippingSource);
+    }
+    if (billingSource && !ctAddrEq(cartRef.current?.billingAddress, toCtAddress(billingSource))) {
+      body.billingAddress = toCtAddress(billingSource);
+    }
+
+    if (Object.keys(body).length > 0) {
+      const data = await fetch('/api/cart', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }).then((r) => r.json());
+      await mutateCart(data.cart, { revalidate: false });
+    }
+
+    goToStep(2);
+  };
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -587,7 +642,7 @@ export default function CheckoutStepPage() {
               onUpdateItemQty={updateItemAddressQty}
               fieldErrors={fieldErrors}
               onFieldError={setFieldError}
-              onContinue={() => goToStep(2)}
+              onContinue={handleContinueToShipping}
             />
           </CheckoutStep>
 
