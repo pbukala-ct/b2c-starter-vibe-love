@@ -46,6 +46,20 @@ export interface Cart {
     country?: string;
     phone?: string;
   };
+  billingAddress?: {
+    firstName?: string;
+    lastName?: string;
+    streetName?: string;
+    streetNumber?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+  };
+  shippingInfo?: {
+    shippingMethodName?: string;
+    shippingMethod?: { id: string };
+  };
   shipping?: unknown[];
   itemShippingAddresses?: unknown[];
   customerId?: string;

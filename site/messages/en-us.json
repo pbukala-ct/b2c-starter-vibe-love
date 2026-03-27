@@ -179,7 +179,10 @@
     "shipTo": "Ship to: {name} —",
     "signInPrompt": "Have an account?",
     "signInLink": "Sign in",
-    "miniLoginTitle": "Sign in for faster checkout"
+    "miniLoginTitle": "Sign in for faster checkout",
+    "continueToShipping": "Continue to Shipping",
+    "continueToPayment": "Continue to Payment",
+    "edit": "Edit"
   },
   "pdp": {
     "oneTimePurchase": "One-time purchase",
