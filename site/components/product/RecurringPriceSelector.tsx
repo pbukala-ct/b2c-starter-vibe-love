@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useFormatters } from '@/hooks/useFormatters';
-import { Price } from '@commercetools/platform-sdk';
+import type { Price } from '@/lib/types';
 
 interface RecurrencePolicy {
   id: string;
@@ -105,7 +105,7 @@ export function RecurringPriceSelector({
             {recurringPrices.map((price) => {
               const id = price.recurrencePolicy?.id ?? '';
               const label = getPolicyName(price);
-              const priceStr = formatMoney(price.value.centAmount, price.value.currencyCode);
+              const priceStr = formatMoney(price.centAmount, price.currencyCode);
               return (
                 <option key={id} value={id}>
                   {label} — {priceStr}

@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 import { useRecurrencePoliciesList } from '@/hooks/useRecurrencePolicies';
 import { RecurringPriceSelector } from './RecurringPriceSelector';
 import { useTranslations } from 'next-intl';
-import { Price } from '@commercetools/platform-sdk';
+import type { Price } from '@/lib/types';
 
 interface SubscribeAndSaveProps {
   productId: string;
@@ -35,7 +35,7 @@ export default function SubscribeAndSave({
 
   // Filter recurring prices for current currency/country
   const availableRecurringPrices = recurringPrices.filter(
-    (p) => p.value.currencyCode === currency && (!p.country || p.country === country)
+    (p) => p.currencyCode === currency && (!p.country || p.country === country)
   );
 
   const handleAddToCart = async () => {
@@ -84,7 +84,7 @@ export default function SubscribeAndSave({
   return (
     <div className="space-y-4">
       <RecurringPriceSelector
-        oneTimePrice={regularPrice.value}
+        oneTimePrice={regularPrice}
         recurringPrices={availableRecurringPrices}
         policies={recurrencePolicies}
         value={selection}

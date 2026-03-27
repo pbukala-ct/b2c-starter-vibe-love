@@ -19,7 +19,7 @@ import {
 } from '@/lib/ct/variant-config';
 import { getAttributeLabels } from '@/lib/ct/facets';
 import { Metadata } from 'next';
-import { Price } from '@commercetools/platform-sdk';
+import type { Price } from '@/lib/types';
 
 interface PageProps {
   params: Promise<{ slug: string; sku: string }>;
@@ -80,7 +80,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { currency, locale, country } = await getLocale();
   const product = await getProductBySku(sku, locale, currency, country);
   if (!product) return { title: 'Product Not Found' };
-  return { title: getLocalizedString(product.name, locale) };
+  return {
+    title:
+      getLocalizedString(product.metaTitle, locale) || getLocalizedString(product.name, locale),
+    description: getLocalizedString(product.metaDescription, locale) || undefined,
+    keywords: getLocalizedString(product.metaKeywords, locale) || undefined,
+  };
 }
 
 export default async function ProductPage({ params }: PageProps) {
@@ -96,23 +101,24 @@ export default async function ProductPage({ params }: PageProps) {
   ]);
   if (!product) notFound();
 
-  const allVariants = [product.masterVariant, ...(product.variants || [])];
-  const variant = allVariants.find((v) => v?.sku === sku) || product.masterVariant;
+  const variant = product.variants.find((v) => v?.sku === sku) || product.variants[0];
 
   const name = getLocalizedString(product.name, locale);
   const description = getLocalizedString(product.description, locale);
-  const images = variant?.images || product.masterVariant?.images || [];
-  const attrs = variant?.attributes || product.masterVariant?.attributes || [];
+  const images = variant?.images || product.variants[0]?.images || [];
+  const attrs = variant?.attributes || product.variants[0]?.attributes || [];
   const getAttr = (n: string) => attrs.find((a: { name: string }) => a.name === n)?.value;
 
   // variant.price is the CT-embedded price (currency/country selected by CT) and is the only
   // source that carries the discounted field. variant.prices entries are raw and never have it.
   const regularPrice =
     variant?.price ||
-    variant?.prices?.find((p: Price) => !p.recurrencePolicy && p.value.currencyCode === currency);
-  const displayPrice = regularPrice?.discounted?.value ?? regularPrice?.value;
-  const discountName = regularPrice?.discounted?.discount?.obj?.name
-    ? getLocalizedString(regularPrice.discounted.discount.obj.name, locale)
+    variant?.prices?.find(
+      (p: Price) => !p.recurrencePolicy && p.currencyCode === currency
+    );
+  const displayPrice = regularPrice?.discounted ?? regularPrice;
+  const discountName = regularPrice?.discounted?.discountName
+    ? getLocalizedString(regularPrice.discounted.discountName, locale)
     : null;
   const recurringPrices = variant?.prices?.filter((p: Price) => !!p.recurrencePolicy) || [];
   const recurrencePolicies = policiesResult.results || [];
@@ -138,7 +144,7 @@ export default async function ProductPage({ params }: PageProps) {
   }
 
   // --- Variant selector data ---
-  const serializedVariants: SerializedVariant[] = allVariants
+  const serializedVariants: SerializedVariant[] = product.variants
     .filter((v) => v?.sku)
     .map((v) => {
       const variantAttrs = v!.attributes || [];
@@ -262,7 +268,7 @@ export default async function ProductPage({ params }: PageProps) {
                   </p>
                   {regularPrice.discounted && (
                     <p className="text-charcoal-light text-lg line-through">
-                      {formatMoney(regularPrice.value.centAmount, regularPrice.value.currencyCode)}
+                      {formatMoney(regularPrice.centAmount, regularPrice.currencyCode)}
                     </p>
                   )}
                 </div>
@@ -280,7 +286,7 @@ export default async function ProductPage({ params }: PageProps) {
           {regularPrice && (
             <PDPActions
               productId={product.id}
-              variantId={variant?.id || product.masterVariant.id}
+              variantId={variant?.id || product.variants[0].id}
               regularPrice={regularPrice}
               recurringPrices={recurringPrices}
               isSubscriptionEligible={isSubscriptionEligible && recurrencePolicies.length > 0}

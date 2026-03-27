@@ -4,23 +4,18 @@ import Image from 'next/image';
 import { useMemo, useRef, useState } from 'react';
 import { transformDetailImageUrl, transformThumbnailImageUrl } from '@/lib/ct/image-config';
 
-interface ProductImage {
-  url: string;
-  label?: string;
-}
-
 interface ProductImageCarouselProps {
-  images: ProductImage[];
+  images: string[];
   name: string;
 }
 
 export default function ProductImageCarousel({ images, name }: ProductImageCarouselProps) {
   const transformedImages = useMemo(
-    () => images.map((img) => ({ ...img, url: transformDetailImageUrl(img.url) })),
+    () => images.map((url) => transformDetailImageUrl(url)),
     [images]
   );
   const thumbnailImages = useMemo(
-    () => images.map((img) => ({ ...img, url: transformThumbnailImageUrl(img.url) })),
+    () => images.map((url) => transformThumbnailImageUrl(url)),
     [images]
   );
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -73,7 +68,7 @@ export default function ProductImageCarousel({ images, name }: ProductImageCarou
     return (
       <div className="relative aspect-3/4 overflow-hidden rounded-sm bg-white">
         <Image
-          src={transformedImages[0].url}
+          src={transformedImages[0]}
           alt={name}
           fill
           className="object-contain"
@@ -94,15 +89,15 @@ export default function ProductImageCarousel({ images, name }: ProductImageCarou
           className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth [grid-area:1/1] [&::-webkit-scrollbar]:hidden"
           style={{ scrollbarWidth: 'none' }}
         >
-          {transformedImages.map((img, i) => (
+          {transformedImages.map((url, i) => (
             <div
-              key={img.url}
+              key={url}
               data-carousel-item
               className="relative aspect-3/4 w-[calc(50%-6px)] shrink-0 snap-start overflow-hidden rounded-sm bg-white"
             >
               <Image
-                src={img.url}
-                alt={img.label || `${name} ${i + 1}`}
+                src={url}
+                alt={`${name} ${i + 1}`}
                 fill
                 className="object-contain"
                 sizes="(max-width: 1024px) 50vw, 25vw"
@@ -143,9 +138,9 @@ export default function ProductImageCarousel({ images, name }: ProductImageCarou
         className="flex gap-2 overflow-x-auto px-px py-px [&::-webkit-scrollbar]:hidden"
         style={{ scrollbarWidth: 'none' }}
       >
-        {thumbnailImages.map((img, i) => (
+        {thumbnailImages.map((url, i) => (
           <button
-            key={img.url}
+            key={url}
             onClick={() => scrollToIndex(i)}
             aria-label={`View image ${i + 1}`}
             className={`relative aspect-3/4 w-14 shrink-0 cursor-pointer overflow-hidden rounded-sm transition-opacity ${
@@ -153,7 +148,7 @@ export default function ProductImageCarousel({ images, name }: ProductImageCarou
             }`}
           >
             <Image
-              src={img.url}
+              src={url}
               alt={`${name} ${i + 1}`}
               fill
               className="object-contain"

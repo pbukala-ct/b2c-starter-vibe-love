@@ -8,15 +8,14 @@ import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { transformListingImageUrl } from '@/lib/ct/image-config';
-import { ProductProjection, ProductVariant } from '@commercetools/platform-sdk';
+import type { Product, Variant } from '@/lib/types';
 
 interface ProductCardProps {
-  product: ProductProjection;
+  product: Product;
 }
 
-function findDisplayVariant(product: ProductProjection): ProductVariant {
-  const allVariants = [product.masterVariant, ...(product.variants || [])];
-  return allVariants.find((v) => v.isMatchingVariant) ?? product.masterVariant;
+function findDisplayVariant(product: Product): Variant {
+  return product.variants.find((v) => v.isMatchingVariant) ?? product.variants[0];
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
@@ -30,15 +29,15 @@ export default function ProductCard({ product }: ProductCardProps) {
   const slug = getLocalizedString(product.slug) || product.key || product.id;
   const displayVariant = findDisplayVariant(product);
   const sku = displayVariant?.sku || product.id;
-  const image = displayVariant?.images?.[0]?.url
-    ? transformListingImageUrl(displayVariant.images[0].url)
+  const image = displayVariant?.images?.[0]
+    ? transformListingImageUrl(displayVariant.images[0])
     : undefined;
   const price = displayVariant?.price;
-  const discountedPrice = price?.discounted?.value;
-  const discountName = price?.discounted?.discount?.obj?.name
-    ? getLocalizedString(price.discounted.discount.obj.name)
+  const discountedPrice = price?.discounted;
+  const discountName = price?.discounted?.discountName
+    ? getLocalizedString(price.discounted.discountName)
     : null;
-  const hasSubscription = displayVariant?.recurrencePrices?.some((p) => p.recurrencePolicy);
+  const hasSubscription = displayVariant?.prices?.some((p) => p.recurrencePolicy);
   // === false: treat missing availability data as in-stock; only explicitly false means sold out
   const isSoldOut = displayVariant?.availability?.isOnStock === false;
 
@@ -124,12 +123,12 @@ export default function ProductCard({ product }: ProductCardProps) {
                   {formatMoney(discountedPrice.centAmount, discountedPrice.currencyCode)}
                 </span>
                 <span className="text-charcoal-light line-through">
-                  {formatMoney(price.value.centAmount, price.value.currencyCode)}
+                  {formatMoney(price.centAmount, price.currencyCode)}
                 </span>
               </>
             ) : (
               <span className="text-charcoal-light">
-                {formatMoney(price.value.centAmount, price.value.currencyCode)}
+                {formatMoney(price.centAmount, price.currencyCode)}
               </span>
             )}
           </p>

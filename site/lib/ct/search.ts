@@ -15,6 +15,8 @@ import {
 } from './facets';
 import { getExtraFacets, FACET_BLOCKLIST, FACET_RENDERER_MAP } from './facet-config';
 import { facetDefinitionToFacetValue } from './facets';
+import { mapProduct } from '@/lib/mappers/product';
+import type { Product } from '@/lib/types';
 
 export type { FacetDefinition } from './facets';
 
@@ -40,7 +42,7 @@ export interface SearchResult {
   total: number;
   offset: number;
   limit: number;
-  products: ProductProjection[];
+  products: Product[];
   facets: ProductSearchFacetResult[];
   facetDefinitions: FacetDefinition[];
 }
@@ -223,19 +225,15 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
         const projection = r.productProjection;
         if (!projection) return undefined;
         const mv = r.matchingVariants;
-        if (!mv || mv.allMatched) return projection;
-        const matchingIds = new Set(mv.matchedVariants.map((v) => v.id));
-        return {
-          ...projection,
-          masterVariant: {
-            ...projection.masterVariant,
-            isMatchingVariant: matchingIds.has(projection.masterVariant.id),
-          },
-          variants: (projection.variants ?? []).map((v) => ({
-            ...v,
-            isMatchingVariant: matchingIds.has(v.id),
-          })),
-        };
+        if (mv && !mv.allMatched) {
+          const matchingIds = new Set(mv.matchedVariants.map((v) => v.id));
+          (projection.masterVariant as ProductProjection['masterVariant'] & { isMatchingVariant?: boolean }).isMatchingVariant =
+            matchingIds.has(projection.masterVariant.id);
+          (projection.variants ?? []).forEach((v) => {
+            (v as typeof v & { isMatchingVariant?: boolean }).isMatchingVariant = matchingIds.has(v.id);
+          });
+        }
+        return mapProduct(projection);
       })
       .filter((p) => p !== undefined),
     facets: raw.facets ?? [],
@@ -271,7 +269,7 @@ export async function getProductBySku(
   locale: string,
   currency: string,
   country: string
-): Promise<ProductProjection | null> {
+): Promise<Product | null> {
   try {
     const { body } = await apiRoot
       .products()
@@ -292,7 +290,8 @@ export async function getProductBySku(
         },
       })
       .execute();
-    return body.results[0]?.productProjection ?? null;
+    const projection = body.results[0]?.productProjection;
+    return projection ? mapProduct(projection) : null;
   } catch {
     return null;
   }
