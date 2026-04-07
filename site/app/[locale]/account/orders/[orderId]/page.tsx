@@ -1,11 +1,10 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { use } from 'react';
 import { useOrder } from '@/hooks/useOrders';
 import { useFormatters } from '@/hooks/useFormatters';
 import { formatStreetAddress } from '@/lib/utils';
-import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
 import type { Order } from '@/hooks/useOrders';
 
@@ -13,7 +12,6 @@ type LineItem = Order['lineItems'][number];
 
 export default function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = use(params);
-  const { localePath } = useLocale();
   const t = useTranslations('orderDetail');
   const { formatMoney, getLocalizedString, formatDate } = useFormatters();
   const { data: order, isLoading } = useOrder(orderId);
@@ -35,7 +33,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
     return (
       <div>
         <h1 className="text-charcoal mb-6 text-2xl font-semibold">{t('orderNotFound')}</h1>
-        <Link href={localePath('/account/orders')} className="text-terra text-sm hover:underline">
+        <Link href="/account/orders" className="text-terra text-sm hover:underline">
           {t('backToOrdersList')}
         </Link>
       </div>
@@ -77,7 +75,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
     <div>
       <div className="mb-6 flex items-center gap-3">
         <Link
-          href={localePath('/account/orders')}
+          href="/account/orders"
           className="text-charcoal-light hover:text-charcoal text-sm"
         >
           {t('backToOrders')}

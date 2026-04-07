@@ -1,9 +1,8 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { useOrders } from '@/hooks/useOrders';
 import { useFormatters } from '@/hooks/useFormatters';
-import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
 
 const STATE_COLORS: Record<string, string> = {
@@ -14,7 +13,6 @@ const STATE_COLORS: Record<string, string> = {
 };
 
 export default function OrdersPage() {
-  const { localePath } = useLocale();
   const t = useTranslations('orders');
   const { formatMoney, getLocalizedString, formatDate } = useFormatters();
   const { data: orders = [], isLoading } = useOrders();
@@ -47,7 +45,7 @@ export default function OrdersPage() {
         <div className="border-border rounded-sm border bg-white p-12 text-center">
           <p className="text-charcoal-light mb-4">{t('noOrders')}</p>
           <Link
-            href={localePath('/')}
+            href="/"
             className="bg-charcoal hover:bg-charcoal/80 inline-block rounded-sm px-6 py-2.5 text-sm font-medium text-white transition-colors"
           >
             {t('startShopping')}
@@ -82,7 +80,7 @@ export default function OrdersPage() {
                     {formatMoney(order.totalPrice.centAmount, order.totalPrice.currencyCode)}
                   </p>
                   <Link
-                    href={localePath(`/account/orders/${order.id}`)}
+                    href={`/account/orders/${order.id}`}
                     className="text-terra text-xs hover:underline"
                   >
                     {t('viewDetails')}

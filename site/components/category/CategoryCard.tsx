@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { getLocalizedString } from '@/lib/utils';
@@ -16,11 +16,10 @@ export default function CategoryCard({ category, locale, image }: CategoryCardPr
   const tCommon = useTranslations('common');
   const name = getLocalizedString(category.name, locale);
   const slug = getLocalizedString(category.slug, locale);
-  const href = `/${locale.toLowerCase()}/category/${slug}`;
 
   return (
     <Link
-      href={href}
+      href={`/category/${slug}`}
       className="group bg-cream-dark relative aspect-square overflow-hidden rounded-sm"
     >
       {image && (

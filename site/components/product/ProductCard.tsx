@@ -1,9 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { useFormatters } from '@/hooks/useFormatters';
-import { useLocale } from '@/context/LocaleContext';
 import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
@@ -19,7 +18,6 @@ function findDisplayVariant(product: Product): Variant {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { localePath } = useLocale();
   const { formatMoney, getLocalizedString } = useFormatters();
   const { addToCartAndShow } = useCart();
   const [adding, setAdding] = useState(false);
@@ -61,7 +59,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link href={localePath(`/${slug}/p/${sku}`)} className="group block">
+    <Link href={`/${slug}/p/${sku}`} className="group block">
       <div className="bg-cream-dark relative mb-3 aspect-square overflow-hidden rounded-sm">
         {image ? (
           <Image

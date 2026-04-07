@@ -2,9 +2,8 @@ import { searchProducts, parseSortParam } from '@/lib/ct/search';
 import ProductGrid from '@/components/product/ProductGrid';
 import ProductFilters from '@/components/product/ProductFilters';
 import { getLocale } from '@/lib/session';
-import { toUrlLocale } from '@/lib/utils';
 import { Suspense } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { Metadata } from 'next';
 
 interface PageProps {
@@ -16,7 +15,6 @@ export const metadata: Metadata = { title: 'Search' };
 export default async function SearchPage({ searchParams }: PageProps) {
   const sp = await searchParams;
   const { country, currency, locale } = await getLocale();
-  const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
   const limit = 24;
 
   const { q, sort, offset: offsetParam, ...rawFacetFilters } = sp;
@@ -50,7 +48,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
       <nav className="text-charcoal-light mb-6 flex items-center gap-2 text-xs">
-        <Link href={lp('/')} className="hover:text-terra">
+        <Link href="/" className="hover:text-terra">
           Home
         </Link>
         <span>/</span>

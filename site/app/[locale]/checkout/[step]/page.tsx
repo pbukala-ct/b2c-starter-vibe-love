@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/routing';
 import { useCartSWR } from '@/hooks/useCartSWR';
 import { useAccount } from '@/hooks/useAccount';
 import { useShippingMethods } from '@/hooks/useShippingMethods';
@@ -30,14 +31,14 @@ export default function CheckoutStepPage() {
   const { data: cart, mutate: mutateCart } = useCartSWR();
   const { data: user } = useAccount();
   const isLoggedIn = !!user;
-  const { currency, country, locale, localePath } = useLocale();
+  const { currency, country, locale } = useLocale();
   const countryConfig = useCountryConfig();
 
   const urlLocaleParam = (params.locale as string) || '';
   const step = (params.step as string) || 'addresses';
   const activeStep: 1 | 2 | 3 = STEP_NUMBERS[step] ?? 1;
 
-  const goToStep = (n: 1 | 2 | 3) => router.push(localePath(`/checkout/${STEP_NAMES[n]}`));
+  const goToStep = (n: 1 | 2 | 3) => router.push(`/checkout/${STEP_NAMES[n]}`);
 
   // Derive country from URL locale param so the form matches the current URL
   const countryFromUrl =
@@ -140,11 +141,11 @@ export default function CheckoutStepPage() {
     const hasAddr = !!(cart?.shippingAddress?.streetName && cart?.billingAddress?.streetName);
     const hasMethod = !!cart?.shippingInfo;
     if (step === 'shipping' && !hasAddr) {
-      router.replace(localePath('/checkout/addresses'));
+      router.replace('/checkout/addresses');
     } else if (step === 'payment' && !hasAddr) {
-      router.replace(localePath('/checkout/addresses'));
+      router.replace('/checkout/addresses');
     } else if (step === 'payment' && !hasMethod) {
-      router.replace(localePath('/checkout/shipping'));
+      router.replace('/checkout/shipping');
     }
   }, [cart]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -498,7 +499,7 @@ export default function CheckoutStepPage() {
       }
 
       mutateCart(null, { revalidate: false });
-      router.push(localePath(`/checkout/confirmation/${data.orderId}`));
+      router.push(`/checkout/confirmation/${data.orderId}`);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Checkout failed');
     } finally {
@@ -511,9 +512,9 @@ export default function CheckoutStepPage() {
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
         <p className="text-charcoal-light">
           {t('emptyCart')}{' '}
-          <a href={localePath('/')} className="text-terra hover:underline">
+          <Link href="/" className="text-terra hover:underline">
             {t('continueShopping')}
-          </a>
+          </Link>
         </p>
       </div>
     );
@@ -598,12 +599,12 @@ export default function CheckoutStepPage() {
           {!isLoggedIn && (
             <div className="bg-cream border-border rounded-sm border p-4 text-sm">
               <span className="text-charcoal-light">{t('guestNotice')} </span>
-              <a
-                href={localePath('/login') + '?redirect=' + localePath('/checkout')}
+              <Link
+                href="/login?redirect=/checkout"
                 className="text-terra hover:underline"
               >
                 {t('signIn')}
-              </a>
+              </Link>
               <span className="text-charcoal-light"> {t('signInForFaster')}</span>
             </div>
           )}

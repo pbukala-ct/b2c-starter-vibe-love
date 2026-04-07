@@ -30,7 +30,19 @@ export const COUNTRY_CONFIG = {
 
 ## Files that need manual changes
 
-### 1. `site/messages/` — add translations
+### 1. `site/i18n/routing.ts` — add locale to routing config
+
+The next-intl routing config drives the locale-aware `Link`, `useRouter`, and `usePathname` used throughout the app. Add the new URL locale to the `locales` array:
+
+```typescript
+export const routing = defineRouting({
+  locales: ['en-us', 'en-gb', 'de-de', 'fr-fr'],  // ← add here
+  defaultLocale: 'en-us',
+  localePrefix: 'always',
+});
+```
+
+### 2. `site/messages/` — add translations
 
 Message files are named after the URL locale (lowercase, hyphenated). If the new locale uses a new language, add a message file:
 
@@ -59,10 +71,26 @@ CT carts and orders are created per currency. If the new currency is not already
 
 No code changes needed — the API routes read currency/country from `getLocale()` which already flows from `COUNTRY_CONFIG`.
 
+### 5. `site/config/hero.json` — add hero translations
+
+Every text field in the hero config is a locale map. Add an entry for the new locale in each field:
+
+```json
+"eyebrow": {
+  "en-US": "Curated for Modern Living",
+  "en-GB": "Curated for Modern Living",
+  "de-DE": "Kuratiert für modernes Wohnen",
+  "fr-FR": "Sélectionné pour la vie moderne"
+},
+```
+
+Do the same for `headingParts[].text`, `description`, and each button's `label`.
+
 ## Checklist
 
 - [ ] Add entry to `COUNTRY_CONFIG` in `site/lib/utils.ts`
+- [ ] Add URL locale to `locales` array in `site/i18n/routing.ts`
 - [ ] Add `site/messages/<lang>.json` if it's a new language
-- [ ] Add `<option>` to country selects in `site/app/[locale]/checkout/page.tsx`
+- [ ] Add locale entries to all fields in `site/config/hero.json`
 - [ ] Verify CT has prices and shipping methods for the new currency/country
 - [ ] Smoke-test: select the new country via the `CountrySelector`, add a product to cart, check currency displays correctly, go through checkout

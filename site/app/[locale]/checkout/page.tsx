@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useCartSWR } from '@/hooks/useCartSWR';
-import { useLocale } from '@/context/LocaleContext';
 
 export default function CheckoutIndexPage() {
   const router = useRouter();
   const { data: cart } = useCartSWR();
-  const { localePath } = useLocale();
 
   useEffect(() => {
     if (cart === undefined) return; // still loading
@@ -17,11 +15,11 @@ export default function CheckoutIndexPage() {
     const hasMethod = !!cart?.shippingInfo;
 
     if (hasAddr && hasMethod) {
-      router.replace(localePath('/checkout/payment'));
+      router.replace('/checkout/payment');
     } else if (hasAddr) {
-      router.replace(localePath('/checkout/shipping'));
+      router.replace('/checkout/shipping');
     } else {
-      router.replace(localePath('/checkout/addresses'));
+      router.replace('/checkout/addresses');
     }
   }, [cart]); // eslint-disable-line react-hooks/exhaustive-deps
 

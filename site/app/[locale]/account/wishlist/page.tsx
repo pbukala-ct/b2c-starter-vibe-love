@@ -5,9 +5,8 @@ import { useState } from 'react';
 import { useWishlist, useWishlistMutations } from '@/hooks/useWishlist';
 import { useFormatters } from '@/hooks/useFormatters';
 import { useCart } from '@/context/CartContext';
-import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import type { WishlistItem } from '@/hooks/useWishlist';
 
 function WishlistCard({
@@ -110,7 +109,6 @@ export default function WishlistPage() {
   const { data: wishlist, isLoading } = useWishlist();
   const { removeItem } = useWishlistMutations();
   const { addToCartAndShow } = useCart();
-  const { localePath } = useLocale();
   const { getLocalizedString } = useFormatters();
   const t = useTranslations('nav');
 
@@ -174,7 +172,7 @@ export default function WishlistPage() {
           </svg>
           <p className="text-charcoal-light mb-4">Your wishlist is empty.</p>
           <Link
-            href={localePath('/')}
+            href="/"
             className="bg-charcoal hover:bg-charcoal/80 inline-block rounded-sm px-6 py-2.5 text-sm font-medium text-white transition-colors"
           >
             Start Shopping
@@ -186,7 +184,7 @@ export default function WishlistPage() {
             const slug = item.productSlug
               ? getLocalizedString(item.productSlug as Record<string, string>)
               : undefined;
-            const productHref = slug ? localePath(`/products/${slug}`) : undefined;
+            const productHref = slug ? `/products/${slug}` : undefined;
             return (
               <WishlistCard
                 key={item.id}

@@ -1,10 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { CartLineItem } from '@/context/CartContext';
 import { useFormatters } from '@/hooks/useFormatters';
-import { useLocale } from '@/context/LocaleContext';
 import { useState } from 'react';
 import { useRecurrencePolicies } from '@/hooks/useRecurrencePolicies';
 import { useTranslations } from 'next-intl';
@@ -16,7 +15,6 @@ interface CartItemProps {
 }
 
 export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
-  const { localePath } = useLocale();
   const { formatMoney, getLocalizedString } = useFormatters();
   const policyMap = useRecurrencePolicies();
   const [qty, setQty] = useState(item.quantity);
@@ -63,7 +61,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
       {/* Details */}
       <div className="min-w-0 flex-1">
         <Link
-          href={localePath(`/${slug}/p/${sku}`)}
+          href={`/${slug}/p/${sku}`}
           className="text-charcoal hover:text-terra line-clamp-2 text-sm font-medium"
         >
           {name}

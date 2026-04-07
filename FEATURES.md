@@ -162,7 +162,7 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 ## Internationalization
 
 - Locale-prefixed URLs: `/en-us/...`, `/en-gb/...`, `/de-de/...`
-- Middleware auto-redirects non-locale paths based on `vibe-country` cookie (falls back to `en-us`)
+- `site/proxy.ts` auto-redirects non-locale paths based on `vibe-country` cookie (falls back to `en-us`)
 - Country selector navigates to locale-correct URL on switch
 - Country selector in header with flag emoji (US, GB, DE)
 - Currency switching (USD, GBP, EUR)
@@ -173,6 +173,13 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - ICU plural format for item counts and skip messages
 - Translation keys organized in JSON message files under `site/messages/` (`en-us.json`, `en-gb.json`, `de-de.json`) by namespace (common, nav, header, footer, product, cart, checkout, confirmation, account, orders, addresses, payments, subscriptions, auth, search, home)
 - Server components use `getTranslations()`, client components use `useTranslations()` hook
+- `site/i18n/routing.ts` — defines supported locales via `defineRouting` and exports locale-aware navigation primitives (`Link`, `useRouter`, `usePathname`, `redirect`, `getPathname`) via `createNavigation`; all components import `Link` from here instead of `next/link` — no manual locale prefix construction anywhere in the codebase
+
+## Homepage
+
+- Hero banner (`site/components/home/HeroBanner.tsx`) configured via `site/config/hero.json` — edit JSON to change background image, eyebrow text, heading parts (with optional `bold` and `newLine` flags), description, and CTA buttons; all text fields are locale maps (`en-US`, `en-GB`, `de-DE`)
+- Home page sections (`site/components/home/Section.tsx`) — reusable wrapper with title, optional "view all" CTA link, and a 4-column product/category grid
+- Category cards (`site/components/category/CategoryCard.tsx`) — resolves localized name and slug internally, builds locale-aware href via next-intl routing
 
 ## Authentication & Sessions
 

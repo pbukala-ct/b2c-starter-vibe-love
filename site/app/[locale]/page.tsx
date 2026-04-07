@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { searchProducts } from '@/lib/ct/search';
 import { getCategoryTree } from '@/lib/ct/categories';
 import ProductCard from '@/components/product/ProductCard';
@@ -11,7 +11,6 @@ import Section from '@/components/home/Section';
 
 export default async function HomePage() {
   const { country, currency, locale } = await getLocale();
-  const urlLocale = locale.toLowerCase();
   const t = await getTranslations('home');
   const tCommon = await getTranslations('common');
   const [newArrivals, featuredResult, categories] = await Promise.all([
@@ -55,7 +54,7 @@ export default async function HomePage() {
       {/* New Arrivals */}
       <Section
         title={'home.newArrivals'}
-        cta={{ title: 'common.viewAll', target: `/${urlLocale}/search?sort=createdAt` }}
+        cta={{ title: 'common.viewAll', target: '/search?sort=createdAt' }}
       >
         {newArrivals.products.map((p) => (
           <ProductCard key={p.id} product={p} />
@@ -72,7 +71,7 @@ export default async function HomePage() {
             {t('subscribeAndSaveDescription')}
           </p>
           <Link
-            href={`/${urlLocale}/search?subscriptionEligible=true`}
+            href="/search?subscriptionEligible=true"
             className="bg-sage hover:bg-sage/90 inline-block rounded-sm px-6 py-3 text-sm font-medium text-white transition-colors"
           >
             {t('shopSubscribeAndSave')}
@@ -84,7 +83,7 @@ export default async function HomePage() {
       <section className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
         <div className="mb-8 flex items-center justify-between">
           <h2 className="text-charcoal text-2xl font-semibold">{t('featuredProducts')}</h2>
-          <Link href={`/${urlLocale}/search`} className="text-terra text-sm hover:underline">
+          <Link href="/search" className="text-terra text-sm hover:underline">
             {tCommon('viewAll')}
           </Link>
         </div>

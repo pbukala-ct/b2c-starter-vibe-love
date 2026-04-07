@@ -1,5 +1,5 @@
 import { FC, PropsWithChildren } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { getTranslations } from 'next-intl/server';
 
 export type Props = PropsWithChildren<{

@@ -7,8 +7,6 @@ interface LocaleContextType {
   country: string;
   currency: string;
   locale: string;
-  urlLocale: string;
-  localePath: (path: string) => string;
   setCountry: (country: string) => Promise<void>;
 }
 
@@ -16,8 +14,6 @@ const LocaleContext = createContext<LocaleContextType>({
   country: DEFAULT_LOCALE.country,
   currency: DEFAULT_LOCALE.currency,
   locale: DEFAULT_LOCALE.locale,
-  urlLocale: toUrlLocale(DEFAULT_LOCALE.country),
-  localePath: (path) => `/${toUrlLocale(DEFAULT_LOCALE.country)}${path}`,
   setCountry: async () => {},
 });
 
@@ -43,14 +39,11 @@ export function LocaleProvider({
     });
     const newUrlLocale = toUrlLocale(newCountry);
     const currentPath = window.location.pathname;
-    // Strip existing locale prefix and navigate to new one
     const pathWithoutLocale = currentPath.replace(/^\/[a-z]{2}-[a-z]{2}(\/|$)/, '/');
     window.location.href = `/${newUrlLocale}${pathWithoutLocale === '/' ? '' : pathWithoutLocale}`;
   };
 
   const config = COUNTRY_CONFIG[country] || COUNTRY_CONFIG[DEFAULT_LOCALE.country];
-  const urlLocale = toUrlLocale(country);
-  const localePath = (path: string) => `/${urlLocale}${path.startsWith('/') ? path : `/${path}`}`;
 
   return (
     <LocaleContext.Provider
@@ -58,8 +51,6 @@ export function LocaleProvider({
         country,
         currency: config.currency,
         locale: config.locale,
-        urlLocale,
-        localePath,
         setCountry,
       }}
     >

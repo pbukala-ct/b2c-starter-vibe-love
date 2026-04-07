@@ -1,16 +1,14 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useLocale } from '@/context/LocaleContext';
+import { useSearchParams } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
 
 function ResetPasswordContent() {
   const t = useTranslations('auth');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { localePath } = useLocale();
   const [token, setToken] = useState(searchParams.get('token') ?? '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -37,7 +35,7 @@ function ResetPasswordContent() {
         const data = await res.json();
         setError(data.error || 'Failed to reset password. The token may be invalid or expired.');
       } else {
-        router.push(localePath('/login'));
+        router.push('/login');
       }
     } catch {
       setError('Something went wrong. Please try again.');
@@ -127,7 +125,7 @@ function ResetPasswordContent() {
 
           <div className="mt-6 text-center">
             <Link
-              href={localePath('/login')}
+              href="/login"
               className="text-terra text-sm font-medium hover:underline"
             >
               {t('loginInstead')}

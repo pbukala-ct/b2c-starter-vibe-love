@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Link, useRouter } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
 import { useAccount } from '@/hooks/useAccount';
 import { useSWRConfig } from 'swr';
 import { KEY_ACCOUNT, KEY_CART, KEY_WISHLIST } from '@/lib/cache-keys';
-import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
 
 export default function LoginPage() {
@@ -14,9 +13,8 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const { data: user } = useAccount();
   const { mutate } = useSWRConfig();
-  const { localePath } = useLocale();
   const t = useTranslations('auth');
-  const redirect = searchParams.get('redirect') || localePath('/account');
+  const redirect = searchParams.get('redirect') || '/account';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -119,7 +117,7 @@ export default function LoginPage() {
             <p className="text-charcoal-light text-sm">
               {t('noAccount')}{' '}
               <Link
-                href={`${localePath('/register')}${redirect !== localePath('/account') ? `?redirect=${redirect}` : ''}`}
+                href={`/register${redirect !== '/account' ? `?redirect=${redirect}` : ''}`}
                 className="text-terra font-medium hover:underline"
               >
                 {t('createOne')}
@@ -142,7 +140,7 @@ export default function LoginPage() {
 
           <div className="mt-3 text-center">
             <Link
-              href={localePath('/forgot-password')}
+              href="/forgot-password"
               className="text-charcoal-light text-xs hover:underline"
             >
               {t('forgotPassword')}

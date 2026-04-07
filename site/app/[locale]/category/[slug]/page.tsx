@@ -3,10 +3,10 @@ import { getCategoryBySlug, getCategoryTree } from '@/lib/ct/categories';
 import { searchProducts, parseSortParam } from '@/lib/ct/search';
 import ProductGrid from '@/components/product/ProductGrid';
 import ProductFilters from '@/components/product/ProductFilters';
-import { getLocalizedString, toUrlLocale } from '@/lib/utils';
+import { getLocalizedString } from '@/lib/utils';
 import { getLocale } from '@/lib/session';
 import { Suspense } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { Metadata } from 'next';
 
 interface PageProps {
@@ -31,7 +31,6 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const { slug } = await params;
   const sp = await searchParams;
   const { country, currency, locale } = await getLocale();
-  const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
 
   const [category, categoryTree] = await Promise.all([getCategoryBySlug(slug), getCategoryTree()]);
 
@@ -87,7 +86,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
       {/* Breadcrumb */}
       <nav className="text-charcoal-light mb-6 flex items-center gap-2 text-xs">
-        <Link href={lp('/')} className="hover:text-terra">
+        <Link href="/" className="hover:text-terra">
           Home
         </Link>
         {breadcrumb.map((crumb, i) => (
@@ -96,7 +95,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             {i === breadcrumb.length - 1 ? (
               <span className="text-charcoal">{crumb.name}</span>
             ) : (
-              <Link href={lp(`/category/${crumb.slug}`)} className="hover:text-terra">
+              <Link href={`/category/${crumb.slug}`} className="hover:text-terra">
                 {crumb.name}
               </Link>
             )}
@@ -124,7 +123,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={lp(`/category/${slug}`)}
+                    href={`/category/${slug}`}
                     className="text-charcoal hover:text-terra block py-1 text-sm font-medium"
                   >
                     All {name}
@@ -136,7 +135,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                   return (
                     <li key={child.id}>
                       <Link
-                        href={lp(`/category/${childSlug}`)}
+                        href={`/category/${childSlug}`}
                         className="text-charcoal-light hover:text-terra block py-1 text-sm"
                       >
                         {childName}

@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { useCart, Cart } from '@/context/CartContext';
 import { useCartSWR, useCartMutations } from '@/hooks/useCartSWR';
@@ -14,12 +14,10 @@ import { Drawer } from '@/components/ui/Drawer';
 function MiniCartFooter({
   cart,
   country,
-  localePath,
   onClose,
 }: {
   cart: Cart;
   country: string;
-  localePath: (path: string) => string;
   onClose: () => void;
 }) {
   const t = useTranslations('miniCart');
@@ -51,14 +49,14 @@ function MiniCartFooter({
       </div>
       <p className="text-charcoal-light text-xs">{t('shippingCalculated')}</p>
       <Link
-        href={localePath('/checkout')}
+        href="/checkout"
         onClick={onClose}
         className="bg-charcoal hover:bg-charcoal/80 block w-full rounded-sm py-3 text-center text-sm font-medium text-white transition-colors"
       >
         {t('checkout')}
       </Link>
       <Link
-        href={localePath('/cart')}
+        href="/cart"
         onClick={onClose}
         className="border-border text-charcoal hover:bg-cream block w-full rounded-sm border py-2.5 text-center text-sm font-medium transition-colors"
       >
@@ -72,7 +70,7 @@ export default function MiniCart() {
   const { showMiniCart, setShowMiniCart } = useCart();
   const { data: cart } = useCartSWR();
   const { removeLineItem } = useCartMutations();
-  const { country, localePath } = useLocale();
+  const { country } = useLocale();
   const { formatMoney, getLocalizedString } = useFormatters();
   const policyMap = useRecurrencePolicies();
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
@@ -107,7 +105,7 @@ export default function MiniCart() {
         </svg>
         <p className="text-charcoal-light">{t('empty')}</p>
         <Link
-          href={localePath('/')}
+          href="/"
           onClick={() => setShowMiniCart(false)}
           className="text-terra text-sm hover:underline"
         >
@@ -138,9 +136,7 @@ export default function MiniCart() {
               )}
               <div className="min-w-0 flex-1">
                 <Link
-                  href={localePath(
-                    `/${getLocalizedString(item.productSlug) || item.productKey || item.productId}/p/${item.variant?.sku || item.productId}`
-                  )}
+                  href={`/${getLocalizedString(item.productSlug) || item.productKey || item.productId}/p/${item.variant?.sku || item.productId}`}
                   onClick={() => setShowMiniCart(false)}
                   className="text-charcoal hover:text-terra line-clamp-2 text-sm font-medium"
                 >
@@ -206,7 +202,6 @@ export default function MiniCart() {
             <MiniCartFooter
               cart={cart}
               country={country}
-              localePath={localePath}
               onClose={() => setShowMiniCart(false)}
             />
           ) : undefined

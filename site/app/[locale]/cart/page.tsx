@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { useCartSWR, useCartMutations } from '@/hooks/useCartSWR';
 import { useLocale } from '@/context/LocaleContext';
 import { formatMoney } from '@/lib/utils';
@@ -10,7 +10,7 @@ import { useTranslations } from 'next-intl';
 export default function CartPage() {
   const { data: cart, isLoading } = useCartSWR();
   const { updateLineItem, removeLineItem } = useCartMutations();
-  const { country, localePath } = useLocale();
+  const { country } = useLocale();
   const t = useTranslations('cart');
 
   const handleUpdate = async (itemId: string, quantity: number) => {
@@ -48,7 +48,7 @@ export default function CartPage() {
         <h1 className="text-charcoal mb-3 text-2xl font-semibold">{t('empty')}</h1>
         <p className="text-charcoal-light mb-6">{t('emptyDescription')}</p>
         <Link
-          href={localePath('/')}
+          href="/"
           className="bg-charcoal hover:bg-charcoal/80 inline-block rounded-sm px-6 py-3 text-sm font-medium text-white transition-colors"
         >
           {t('continueShopping')}
@@ -118,13 +118,13 @@ export default function CartPage() {
             )}
 
             <Link
-              href={localePath('/checkout')}
+              href="/checkout"
               className="bg-charcoal hover:bg-charcoal/80 block w-full rounded-sm py-3.5 text-center text-sm font-medium text-white transition-colors"
             >
               {t('checkout')}
             </Link>
             <Link
-              href={localePath('/')}
+              href="/"
               className="text-charcoal-light hover:text-terra mt-3 block w-full text-center text-sm transition-colors"
             >
               {t('continueShopping')}

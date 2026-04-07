@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { getProductBySku } from '@/lib/ct/search';
 import { getCategoryById } from '@/lib/ct/categories';
 import { getRecurrencePolicies } from '@/lib/ct/auth';
-import { formatMoney, getLocalizedString, toUrlLocale } from '@/lib/utils';
+import { formatMoney, getLocalizedString } from '@/lib/utils';
 import { getLocale } from '@/lib/session';
 import { getTranslations } from 'next-intl/server';
 import PDPActions from '@/components/product/PDPActions';
@@ -91,7 +91,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ProductPage({ params }: PageProps) {
   const { sku, slug } = await params;
   const { country, currency, locale } = await getLocale();
-  const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
   const t = await getTranslations('product');
   const tCommon = await getTranslations('common');
   const [product, policiesResult, attributeLabels] = await Promise.all([
@@ -168,7 +167,7 @@ export default async function ProductPage({ params }: PageProps) {
   const currentVariant = serializedVariants.find((v) => v.sku === sku);
   const isSoldOut = !(currentVariant?.isAvailable ?? false);
   const currentAttrs = currentVariant?.attrs ?? {};
-  const urlPrefix = lp(`/${slug}/p/`);
+  const urlPrefix = `/${slug}/p/`;
 
   // Find attributes that vary across variants and are not blocked
   const attrValueSets: Record<string, Set<string>> = {};
@@ -235,13 +234,13 @@ export default async function ProductPage({ params }: PageProps) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
       <nav className="text-charcoal-light mb-6 flex items-center gap-2 text-xs">
-        <Link href={lp('/')} className="hover:text-terra">
+        <Link href="/" className="hover:text-terra">
           {tCommon('home')}
         </Link>
         {categorySlug && (
           <>
             <span>/</span>
-            <Link href={lp(`/category/${categorySlug}`)} className="hover:text-terra">
+            <Link href={`/category/${categorySlug}`} className="hover:text-terra">
               {categoryName}
             </Link>
           </>

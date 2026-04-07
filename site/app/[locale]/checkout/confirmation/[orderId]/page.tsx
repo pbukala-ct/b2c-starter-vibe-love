@@ -1,7 +1,7 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { getOrderById } from '@/lib/ct/auth';
 import { getSession, getLocale } from '@/lib/session';
-import { formatMoney, getLocalizedString, toUrlLocale } from '@/lib/utils';
+import { formatMoney, getLocalizedString } from '@/lib/utils';
 import { getTranslations } from 'next-intl/server';
 import { Metadata } from 'next';
 
@@ -14,13 +14,10 @@ export const metadata: Metadata = { title: 'Order Confirmed' };
 export default async function ConfirmationPage({ params }: PageProps) {
   const { locale } = await getLocale();
   const { orderId } = await params;
-  const [session, localeData, t] = await Promise.all([
+  const [session, t] = await Promise.all([
     getSession(),
-    getLocale(),
     getTranslations('confirmation'),
   ]);
-  const lp = (p: string) => `/${toUrlLocale(localeData.country)}${p}`;
-
   let order = null;
   try {
     order = await getOrderById(orderId);
@@ -128,11 +125,11 @@ export default async function ConfirmationPage({ params }: PageProps) {
           <p className="text-charcoal text-sm">
             {t('subscriptionSetUp')}{' '}
             {session.customerId ? (
-              <Link href={lp('/account/subscriptions')} className="text-terra hover:underline">
+              <Link href="/account/subscriptions" className="text-terra hover:underline">
                 {t('mySubscriptions')}
               </Link>
             ) : (
-              <Link href={lp('/login')} className="text-terra hover:underline">
+              <Link href="/login" className="text-terra hover:underline">
                 {t('yourAccount')}
               </Link>
             )}
@@ -144,14 +141,14 @@ export default async function ConfirmationPage({ params }: PageProps) {
       <div className="flex flex-col justify-center gap-3 sm:flex-row">
         {session.customerId && (
           <Link
-            href={lp('/account/orders')}
+            href="/account/orders"
             className="bg-charcoal hover:bg-charcoal/80 rounded-sm px-6 py-3 text-sm font-medium text-white transition-colors"
           >
             {t('viewMyOrders')}
           </Link>
         )}
         <Link
-          href={lp('/')}
+          href="/"
           className="border-border text-charcoal hover:bg-cream rounded-sm border px-6 py-3 text-sm font-medium transition-colors"
         >
           {t('continueShopping')}

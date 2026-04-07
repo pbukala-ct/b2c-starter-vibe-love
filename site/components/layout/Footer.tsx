@@ -1,11 +1,9 @@
 'use client';
 
-import Link from 'next/link';
-import { useLocale } from '@/context/LocaleContext';
+import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 
 export default function Footer() {
-  const { localePath } = useLocale();
   const t = useTranslations('footer');
   const tCommon = useTranslations('common');
 
@@ -32,7 +30,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-white/70">
               <li>
                 <Link
-                  href={localePath('/category/furniture')}
+                  href="/category/furniture"
                   className="hover:text-terra transition-colors"
                 >
                   {t('furniture')}
@@ -40,7 +38,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href={localePath('/category/home-decor')}
+                  href="/category/home-decor"
                   className="hover:text-terra transition-colors"
                 >
                   {t('homeDecor')}
@@ -48,7 +46,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href={localePath('/category/kitchen')}
+                  href="/category/kitchen"
                   className="hover:text-terra transition-colors"
                 >
                   {t('kitchen')}
@@ -56,7 +54,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href={localePath('/search?newArrival=true')}
+                  href="/search?newArrival=true"
                   className="hover:text-terra transition-colors"
                 >
                   {t('newArrivals')}
@@ -73,7 +71,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-white/70">
               <li>
                 <Link
-                  href={localePath('/account/orders')}
+                  href="/account/orders"
                   className="hover:text-terra transition-colors"
                 >
                   {t('trackOrder')}
@@ -81,7 +79,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href={localePath('/account/subscriptions')}
+                  href="/account/subscriptions"
                   className="hover:text-terra transition-colors"
                 >
                   {t('manageSubscriptions')}
@@ -97,17 +95,17 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2 text-sm text-white/70">
               <li>
-                <Link href={localePath('/login')} className="hover:text-terra transition-colors">
+                <Link href="/login" className="hover:text-terra transition-colors">
                   {t('signIn')}
                 </Link>
               </li>
               <li>
-                <Link href={localePath('/register')} className="hover:text-terra transition-colors">
+                <Link href="/register" className="hover:text-terra transition-colors">
                   {t('createAccount')}
                 </Link>
               </li>
               <li>
-                <Link href={localePath('/account')} className="hover:text-terra transition-colors">
+                <Link href="/account" className="hover:text-terra transition-colors">
                   {t('myAccount')}
                 </Link>
               </li>

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import heroConfig from '@/config/hero.json';
 import { DEFAULT_LOCALE } from '@/lib/utils';
 import { getLocale } from '@/lib/session';
@@ -32,7 +32,7 @@ export default async function HeroBanner() {
             {buttons.map((btn) => (
               <Link
                 key={btn.href}
-                href={`/${locale.toLowerCase()}${btn.href}`}
+                href={btn.href}
                 className={
                   btn.variant === 'primary'
                     ? 'text-charcoal hover:bg-cream rounded-sm bg-white px-6 py-3 text-sm font-medium transition-colors'
