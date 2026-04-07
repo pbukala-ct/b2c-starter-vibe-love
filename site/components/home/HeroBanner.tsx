@@ -1,13 +1,10 @@
 import Link from 'next/link';
 import heroConfig from '@/config/hero.json';
 import { DEFAULT_LOCALE } from '@/lib/utils';
+import { getLocale } from '@/lib/session';
 
-interface HeroBannerProps {
-  locale: string;
-  localizedPath: (path: string) => string;
-}
-
-export default function HeroBanner({ locale, localizedPath }: HeroBannerProps) {
+export default async function HeroBanner() {
+  const { locale } = await getLocale();
   const { backgroundImage, subTitle, title, text, buttons } = heroConfig;
   const l = (field: Record<string, string>) => field[locale] ?? field[DEFAULT_LOCALE.locale];
 
@@ -35,7 +32,7 @@ export default function HeroBanner({ locale, localizedPath }: HeroBannerProps) {
             {buttons.map((btn) => (
               <Link
                 key={btn.href}
-                href={localizedPath(btn.href)}
+                href={`/${locale.toLowerCase()}${btn.href}`}
                 className={
                   btn.variant === 'primary'
                     ? 'text-charcoal hover:bg-cream rounded-sm bg-white px-6 py-3 text-sm font-medium transition-colors'
