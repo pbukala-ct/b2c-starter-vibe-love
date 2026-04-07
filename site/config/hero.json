@@ -1,0 +1,38 @@
+{
+  "backgroundImage": "https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Canela_Three_Seater_Sofa-1.1.jpeg",
+  "subTitle": {
+    "en-US": "Curated for Modern Living",
+    "en-GB": "Curated for Modern Living",
+    "de-DE": "Kuratiert für modernes Wohnen"
+  },
+  "title": {
+    "en-US": "Design Your<br/><span class=\"font-semibold\">Perfect Space</span>",
+    "en-GB": "Design Your<br/><span class=\"font-semibold\">Perfect Space</span>",
+    "de-DE": "Gestalten Sie Ihren<br/><span class=\"font-semibold\">perfekten Raum</span>"
+  },
+  "text": {
+    "en-US": "Premium furniture and home goods, thoughtfully selected for the modern home.",
+    "en-GB": "Premium furniture and home goods, thoughtfully selected for the modern home.",
+    "de-DE": "Premium-Möbel und Wohnaccessoires, sorgfältig für das moderne Zuhause ausgewählt."
+  },
+  "buttons": [
+    {
+      "href": "/category/furniture",
+      "variant": "primary",
+      "label": {
+        "en-US": "Shop Furniture",
+        "en-GB": "Shop Furniture",
+        "de-DE": "Möbel kaufen"
+      }
+    },
+    {
+      "href": "/category/home-decor",
+      "variant": "outline",
+      "label": {
+        "en-US": "Home Decor",
+        "en-GB": "Home Décor",
+        "de-DE": "Wohndekoration"
+      }
+    }
+  ]
+}

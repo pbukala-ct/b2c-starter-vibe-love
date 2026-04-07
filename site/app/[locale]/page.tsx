@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { searchProducts } from '@/lib/ct/search';
 import { getCategoryTree } from '@/lib/ct/categories';
 import ProductCard from '@/components/product/ProductCard';
+import HeroBanner from '@/components/home/HeroBanner';
 import { getLocalizedString, toUrlLocale } from '@/lib/utils';
 import { getLocale } from '@/lib/session';
 import { getTranslations } from 'next-intl/server';
@@ -28,43 +29,7 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="bg-charcoal relative flex min-h-[60vh] items-center overflow-hidden text-white">
-        <div className="from-charcoal via-charcoal/90 to-charcoal/60 absolute inset-0 z-10 bg-gradient-to-r" />
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-30"
-          style={{
-            backgroundImage: `url('https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Canela_Sofa-1.1.jpeg')`,
-          }}
-        />
-        <div className="relative z-20 mx-auto max-w-7xl px-4 py-20 lg:px-8">
-          <div className="max-w-xl">
-            <p className="text-terra mb-4 text-sm font-medium tracking-widest uppercase">
-              {t('curatedForModernLiving')}
-            </p>
-            <h1 className="mb-6 text-4xl leading-tight font-light md:text-6xl">
-              {t('designYourPerfectSpace')}
-              <br />
-              <span className="font-semibold">{t('perfectSpace')}</span>
-            </h1>
-            <p className="mb-8 text-lg leading-relaxed text-white/70">{t('heroDescription')}</p>
-            <div className="flex gap-4">
-              <Link
-                href={lp('/category/furniture')}
-                className="text-charcoal hover:bg-cream rounded-sm bg-white px-6 py-3 text-sm font-medium transition-colors"
-              >
-                {t('shopFurniture')}
-              </Link>
-              <Link
-                href={lp('/category/home-decor')}
-                className="rounded-sm border border-white/40 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10"
-              >
-                {t('homeDecor')}
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroBanner locale={locale} localizedPath={lp} />
 
       {/* Category cards */}
       <section className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
@@ -100,7 +65,7 @@ export default async function HomePage() {
                     sizes="(max-width: 768px) 50vw, 25vw"
                   />
                 )}
-                <div className="from-charcoal/60 absolute inset-0 bg-gradient-to-t to-transparent" />
+                <div className="from-charcoal/60 absolute inset-0 bg-linear-to-t to-transparent" />
                 <div className="absolute right-0 bottom-0 left-0 p-4">
                   <h3 className="text-sm font-semibold text-white">{name}</h3>
                   <p className="mt-0.5 text-xs text-white/70 transition-colors group-hover:text-white">
