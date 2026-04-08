@@ -3,7 +3,6 @@ import { getCategoryBySlug, getCategoryTree } from '@/lib/ct/categories';
 import { searchProducts, parseSortParam } from '@/lib/ct/search';
 import ProductGrid from '@/components/product/ProductGrid';
 import ProductFilters from '@/components/product/ProductFilters';
-import { getLocalizedString } from '@/lib/utils';
 import { getLocale } from '@/lib/session';
 import { Suspense } from 'react';
 import { Link } from '@/i18n/routing';
@@ -17,13 +16,12 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const { locale } = await getLocale();
-  const category = await getCategoryBySlug(slug);
+  const category = await getCategoryBySlug(slug, locale);
   if (!category) return { title: 'Category Not Found' };
   return {
-    title:
-      getLocalizedString(category.metaTitle, locale) || getLocalizedString(category.name, locale),
-    description: getLocalizedString(category.metaDescription, locale) || undefined,
-    keywords: getLocalizedString(category.metaKeywords, locale) || undefined,
+    title: category.metaTitle || category.name,
+    description: category.metaDescription || undefined,
+    keywords: category.metaKeywords || undefined,
   };
 }
 
@@ -32,11 +30,14 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const sp = await searchParams;
   const { country, currency, locale } = await getLocale();
 
-  const [category, categoryTree] = await Promise.all([getCategoryBySlug(slug), getCategoryTree()]);
+  const [category, categoryTree] = await Promise.all([
+    getCategoryBySlug(slug, locale),
+    getCategoryTree(locale),
+  ]);
 
   if (!category) notFound();
 
-  const name = getLocalizedString(category.name, locale);
+  const name = category.name;
   const limit = 24;
 
   const { sort: sortParam, offset: offsetParam, ...rawFacetFilters } = sp;
@@ -70,10 +71,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   while (current.parent) {
     const parent = categoryTree.flat().find((c) => c.id === current.parent?.id);
     if (parent) {
-      breadcrumb.unshift({
-        name: getLocalizedString(parent.name, locale),
-        slug: getLocalizedString(parent.slug, locale),
-      });
+      breadcrumb.unshift({ name: parent.name, slug: parent.slug });
       current = parent;
     } else break;
   }
@@ -129,20 +127,16 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                     All {name}
                   </Link>
                 </li>
-                {category.children.map((child) => {
-                  const childName = getLocalizedString(child.name, locale);
-                  const childSlug = getLocalizedString(child.slug, locale);
-                  return (
-                    <li key={child.id}>
-                      <Link
-                        href={`/category/${childSlug}`}
-                        className="text-charcoal-light hover:text-terra block py-1 text-sm"
-                      >
-                        {childName}
-                      </Link>
-                    </li>
-                  );
-                })}
+                {category.children.map((child) => (
+                  <li key={child.id}>
+                    <Link
+                      href={`/category/${child.slug}`}
+                      className="text-charcoal-light hover:text-terra block py-1 text-sm"
+                    >
+                      {child.name}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
           )}

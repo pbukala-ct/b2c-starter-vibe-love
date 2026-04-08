@@ -441,7 +441,10 @@ export default function CheckoutStepPage() {
         : billingAddr;
 
     const body: Record<string, unknown> = {};
-    if (shippingSource && !ctAddrEq(cartRef.current?.shippingAddress, toCtAddress(shippingSource))) {
+    if (
+      shippingSource &&
+      !ctAddrEq(cartRef.current?.shippingAddress, toCtAddress(shippingSource))
+    ) {
       body.shippingAddress = toCtAddress(shippingSource);
     }
     if (billingSource && !ctAddrEq(cartRef.current?.billingAddress, toCtAddress(billingSource))) {
@@ -599,10 +602,7 @@ export default function CheckoutStepPage() {
           {!isLoggedIn && (
             <div className="bg-cream border-border rounded-sm border p-4 text-sm">
               <span className="text-charcoal-light">{t('guestNotice')} </span>
-              <Link
-                href="/login?redirect=/checkout"
-                className="text-terra hover:underline"
-              >
+              <Link href="/login?redirect=/checkout" className="text-terra hover:underline">
                 {t('signIn')}
               </Link>
               <span className="text-charcoal-light"> {t('signInForFaster')}</span>

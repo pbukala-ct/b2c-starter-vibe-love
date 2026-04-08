@@ -139,10 +139,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-3 text-center">
-            <Link
-              href="/forgot-password"
-              className="text-charcoal-light text-xs hover:underline"
-            >
+            <Link href="/forgot-password" className="text-charcoal-light text-xs hover:underline">
               {t('forgotPassword')}
             </Link>
           </div>

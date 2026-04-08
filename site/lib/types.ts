@@ -1,13 +1,15 @@
 // Shared domain types for use in frontend components.
 // Components must import types from here — never directly from @/lib/ct/*.
 
+import { JSX } from 'react';
+
 export interface Price {
   centAmount: number;
   currencyCode: string;
   discounted?: {
     centAmount: number;
     currencyCode: string;
-    discountName?: Record<string, string>;
+    discountName?: string;
   };
   recurrencePolicy?: { id: string };
   country?: string;
@@ -25,16 +27,17 @@ export interface Variant {
 }
 
 export interface Product {
+  type: 'Product';
   id: string;
   key?: string;
-  name: Record<string, string>;
-  slug: Record<string, string>;
-  description?: Record<string, string>;
+  name: string;
+  slug: string;
+  description?: string;
   categories: Array<{ id: string }>;
   variants: Variant[]; // index 0 is the master variant
-  metaTitle?: Record<string, string>;
-  metaDescription?: Record<string, string>;
-  metaKeywords?: Record<string, string>;
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
 }
 
 export interface FacetResult {
@@ -43,13 +46,60 @@ export interface FacetResult {
 }
 
 export interface Category {
+  type: 'Category';
   id: string;
-  name: Record<string, string>;
-  slug: Record<string, string>;
+  images: string[];
+  name: string;
+  slug: string;
   parent?: { typeId: string; id: string };
   orderHint?: string;
   children?: Category[];
-  metaTitle?: Record<string, string>;
-  metaDescription?: Record<string, string>;
-  metaKeywords?: Record<string, string>;
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
+}
+
+export interface LayoutSection {
+  sectionId: string;
+  layoutElements: LayoutElement[];
+}
+
+export interface LayoutElement {
+  layoutElementId?: string;
+  configuration: LayoutElementConfiguration;
+  items: LayoutItem[];
+}
+
+export interface LayoutElementConfiguration extends Configuration {
+  size: number;
+}
+
+export interface LayoutItem {
+  layoutItemId?: string;
+  layoutItemType: string;
+  configuration: LayoutItemConfiguration;
+}
+
+export type LayoutItemConfiguration = Configuration & {
+  name?: string;
+} & Record<string, any>;
+
+export interface Configuration {
+  mobile: boolean;
+  tablet: boolean;
+  desktop: boolean;
+}
+
+export interface ImageProps {
+  src?: string;
+  alt?: string;
+}
+
+export interface ItemProps<T = object> {
+  data: T;
+  [key: string]: unknown;
+}
+
+export interface ItemRegistry {
+  [key: string]: (props: ItemProps) => JSX.Element | Promise<JSX.Element>;
 }

@@ -55,10 +55,7 @@ export default function ForgotPasswordPage() {
           </div>
           <h1 className="text-charcoal mb-3 text-2xl font-semibold">Check your email</h1>
           <p className="text-charcoal-light mb-6 text-sm">{t('requestResetSuccess')}</p>
-          <Link
-            href="/login"
-            className="text-terra text-sm font-medium hover:underline"
-          >
+          <Link href="/login" className="text-terra text-sm font-medium hover:underline">
             {t('loginInstead')}
           </Link>
         </div>
@@ -108,10 +105,7 @@ export default function ForgotPasswordPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link
-              href="/login"
-              className="text-terra text-sm font-medium hover:underline"
-            >
+            <Link href="/login" className="text-terra text-sm font-medium hover:underline">
               {t('loginInstead')}
             </Link>
           </div>

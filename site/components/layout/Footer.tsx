@@ -29,34 +29,22 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2 text-sm text-white/70">
               <li>
-                <Link
-                  href="/category/furniture"
-                  className="hover:text-terra transition-colors"
-                >
+                <Link href="/category/furniture" className="hover:text-terra transition-colors">
                   {t('furniture')}
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/category/home-decor"
-                  className="hover:text-terra transition-colors"
-                >
+                <Link href="/category/home-decor" className="hover:text-terra transition-colors">
                   {t('homeDecor')}
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/category/kitchen"
-                  className="hover:text-terra transition-colors"
-                >
+                <Link href="/category/kitchen" className="hover:text-terra transition-colors">
                   {t('kitchen')}
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/search?newArrival=true"
-                  className="hover:text-terra transition-colors"
-                >
+                <Link href="/search?newArrival=true" className="hover:text-terra transition-colors">
                   {t('newArrivals')}
                 </Link>
               </li>
@@ -70,18 +58,12 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2 text-sm text-white/70">
               <li>
-                <Link
-                  href="/account/orders"
-                  className="hover:text-terra transition-colors"
-                >
+                <Link href="/account/orders" className="hover:text-terra transition-colors">
                   {t('trackOrder')}
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/account/subscriptions"
-                  className="hover:text-terra transition-colors"
-                >
+                <Link href="/account/subscriptions" className="hover:text-terra transition-colors">
                   {t('manageSubscriptions')}
                 </Link>
               </li>

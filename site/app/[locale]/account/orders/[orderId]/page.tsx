@@ -74,10 +74,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   return (
     <div>
       <div className="mb-6 flex items-center gap-3">
-        <Link
-          href="/account/orders"
-          className="text-charcoal-light hover:text-charcoal text-sm"
-        >
+        <Link href="/account/orders" className="text-charcoal-light hover:text-charcoal text-sm">
           {t('backToOrders')}
         </Link>
         <span className="text-border">/</span>

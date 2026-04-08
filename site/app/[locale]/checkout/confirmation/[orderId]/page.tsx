@@ -14,10 +14,7 @@ export const metadata: Metadata = { title: 'Order Confirmed' };
 export default async function ConfirmationPage({ params }: PageProps) {
   const { locale } = await getLocale();
   const { orderId } = await params;
-  const [session, t] = await Promise.all([
-    getSession(),
-    getTranslations('confirmation'),
-  ]);
+  const [session, t] = await Promise.all([getSession(), getTranslations('confirmation')]);
   let order = null;
   try {
     order = await getOrderById(orderId);

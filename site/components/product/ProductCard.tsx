@@ -18,13 +18,13 @@ function findDisplayVariant(product: Product): Variant {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { formatMoney, getLocalizedString } = useFormatters();
+  const { formatMoney } = useFormatters();
   const { addToCartAndShow } = useCart();
   const [adding, setAdding] = useState(false);
   const t = useTranslations('product');
 
-  const name = getLocalizedString(product.name);
-  const slug = getLocalizedString(product.slug) || product.key || product.id;
+  const name = product.name;
+  const slug = product.slug || product.key || product.id;
   const displayVariant = findDisplayVariant(product);
   const sku = displayVariant?.sku || product.id;
   const image = displayVariant?.images?.[0]
@@ -32,9 +32,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     : undefined;
   const price = displayVariant?.price;
   const discountedPrice = price?.discounted;
-  const discountName = price?.discounted?.discountName
-    ? getLocalizedString(price.discounted.discountName)
-    : null;
+  const discountName = price?.discounted?.discountName ?? null;
   const hasSubscription = displayVariant?.prices?.some((p) => p.recurrencePolicy);
   // === false: treat missing availability data as in-stock; only explicitly false means sold out
   const isSoldOut = displayVariant?.availability?.isOnStock === false;

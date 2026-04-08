@@ -10,7 +10,6 @@ import MiniCart from './MiniCart';
 import CountrySelector from './CountrySelector';
 import SearchBar from './SearchBar';
 import type { Category } from '@/lib/types';
-import { useFormatters } from '@/hooks/useFormatters';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useTranslations } from 'next-intl';
 
@@ -22,7 +21,6 @@ export default function Header({ categories }: HeaderProps) {
   const { data: user } = useAccount();
   const { data: wishlist } = useWishlist();
   const isLoggedIn = !!user;
-  const { getLocalizedString } = useFormatters();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const t = useTranslations('header');
@@ -194,35 +192,27 @@ export default function Header({ categories }: HeaderProps) {
           </div>
           {/* Mobile nav */}
           <nav className="px-4 pb-4">
-            {topLevel.map((cat) => {
-              const name = getLocalizedString(cat.name);
-              const slug = getLocalizedString(cat.slug);
-              return (
-                <div key={cat.id}>
+            {topLevel.map((cat) => (
+              <div key={cat.id}>
+                <Link
+                  href={`/category/${cat.slug}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-charcoal border-border/50 block border-b py-2.5 text-sm font-medium"
+                >
+                  {cat.name}
+                </Link>
+                {cat.children?.map((child) => (
                   <Link
-                    href={`/category/${slug}`}
+                    key={child.id}
+                    href={`/category/${child.slug}`}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="text-charcoal border-border/50 block border-b py-2.5 text-sm font-medium"
+                    className="text-charcoal-light hover:text-charcoal border-border/30 block border-b py-2 pl-4 text-sm"
                   >
-                    {name}
+                    {child.name}
                   </Link>
-                  {cat.children?.map((child) => {
-                    const childName = getLocalizedString(child.name);
-                    const childSlug = getLocalizedString(child.slug);
-                    return (
-                      <Link
-                        key={child.id}
-                        href={`/category/${childSlug}`}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="text-charcoal-light hover:text-charcoal border-border/30 block border-b py-2 pl-4 text-sm"
-                      >
-                        {childName}
-                      </Link>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                ))}
+              </div>
+            ))}
           </nav>
         </div>
       )}

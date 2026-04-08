@@ -422,13 +422,5 @@
     "phone": "Phone",
     "email": "Email",
     "invalidEmail": "Invalid email address"
-  },
-  "home": {
-    "shopByCategory": "Shop by Category",
-    "newArrivals": "New Arrivals",
-    "featuredProducts": "Featured Products",
-    "subscribeAndSaveTitle": "Subscribe & Save",
-    "subscribeAndSaveDescription": "Set up recurring deliveries on select products and save up to 20%. Pause or cancel anytime.",
-    "shopSubscribeAndSave": "Shop Subscribe & Save"
   }
 }

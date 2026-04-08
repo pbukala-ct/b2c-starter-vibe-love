@@ -81,10 +81,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const product = await getProductBySku(sku, locale, currency, country);
   if (!product) return { title: 'Product Not Found' };
   return {
-    title:
-      getLocalizedString(product.metaTitle, locale) || getLocalizedString(product.name, locale),
-    description: getLocalizedString(product.metaDescription, locale) || undefined,
-    keywords: getLocalizedString(product.metaKeywords, locale) || undefined,
+    title: product.metaTitle || product.name,
+    description: product.metaDescription || undefined,
+    keywords: product.metaKeywords || undefined,
   };
 }
 
@@ -102,8 +101,8 @@ export default async function ProductPage({ params }: PageProps) {
 
   const variant = product.variants.find((v) => v?.sku === sku) || product.variants[0];
 
-  const name = getLocalizedString(product.name, locale);
-  const description = getLocalizedString(product.description, locale);
+  const name = product.name;
+  const description = product.description;
   const images = variant?.images || product.variants[0]?.images || [];
   const attrs = variant?.attributes || product.variants[0]?.attributes || [];
   const getAttr = (n: string) => attrs.find((a: { name: string }) => a.name === n)?.value;
@@ -114,9 +113,7 @@ export default async function ProductPage({ params }: PageProps) {
     variant?.price ||
     variant?.prices?.find((p: Price) => !p.recurrencePolicy && p.currencyCode === currency);
   const displayPrice = regularPrice?.discounted ?? regularPrice;
-  const discountName = regularPrice?.discounted?.discountName
-    ? getLocalizedString(regularPrice.discounted.discountName, locale)
-    : null;
+  const discountName = regularPrice?.discounted?.discountName ?? null;
   const recurringPrices = variant?.prices?.filter((p: Price) => !!p.recurrencePolicy) || [];
   const recurrencePolicies = policiesResult.results || [];
 
@@ -133,10 +130,10 @@ export default async function ProductPage({ params }: PageProps) {
   let categoryName = '',
     categorySlug = '';
   if (product.categories?.[0]) {
-    const cat = await getCategoryById(product.categories[0].id);
+    const cat = await getCategoryById(product.categories[0].id, locale);
     if (cat) {
-      categoryName = getLocalizedString(cat.name, locale);
-      categorySlug = getLocalizedString(cat.slug, locale);
+      categoryName = cat.name;
+      categorySlug = cat.slug;
     }
   }
 

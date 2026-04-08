@@ -226,7 +226,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
         const mv = r.matchingVariants;
         const matchingIds =
           mv && !mv.allMatched ? new Set(mv.matchedVariants.map((v) => v.id)) : null;
-        return mapProduct(projection, matchingIds);
+        return mapProduct(projection, matchingIds, params.locale);
       })
       .filter((p) => p !== undefined),
     facets: mapFacets(raw.facets ?? []),
@@ -283,7 +283,7 @@ export async function getProductBySku(
       })
       .execute();
     const projection = body.results[0]?.productProjection;
-    return projection ? mapProduct(projection) : null;
+    return projection ? mapProduct(projection, null, locale) : null;
   } catch {
     return null;
   }

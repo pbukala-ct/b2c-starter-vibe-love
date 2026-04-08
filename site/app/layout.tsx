@@ -18,12 +18,12 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [categories, session, messages, { country: initialCountry }] = await Promise.all([
-    getCategoryTree(),
+  const [session, messages, { country: initialCountry, locale }] = await Promise.all([
     getSession(),
     getMessages(),
     getLocale(),
   ]);
+  const categories = await getCategoryTree(locale);
 
   let initialCart = null;
   if (session.cartId) {

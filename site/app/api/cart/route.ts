@@ -49,7 +49,8 @@ async function applyCartAction<T>(
     try {
       return await action(version);
     } catch (e: unknown) {
-      const status = (e as { statusCode?: number; code?: number }).statusCode ?? (e as { code?: number }).code;
+      const status =
+        (e as { statusCode?: number; code?: number }).statusCode ?? (e as { code?: number }).code;
       if (status === 409 && attempt < 2) continue;
       throw e;
     }

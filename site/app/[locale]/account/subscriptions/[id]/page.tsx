@@ -46,10 +46,7 @@ export default function SubscriptionDetailPage({ params }: { params: Promise<{ i
     return (
       <div className="py-8">
         <p className="text-charcoal-light mb-4">{t('notFound')}</p>
-        <Link
-          href="/account/subscriptions"
-          className="text-terra text-sm hover:underline"
-        >
+        <Link href="/account/subscriptions" className="text-terra text-sm hover:underline">
           ← {t('backToSubscriptions')}
         </Link>
       </div>
@@ -239,10 +236,7 @@ export default function SubscriptionDetailPage({ params }: { params: Promise<{ i
       </div>
 
       <div className="mt-4">
-        <Link
-          href="/account/subscriptions"
-          className="text-terra text-sm hover:underline"
-        >
+        <Link href="/account/subscriptions" className="text-terra text-sm hover:underline">
           ← {t('backToSubscriptions')}
         </Link>
       </div>

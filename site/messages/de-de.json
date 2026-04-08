@@ -422,13 +422,5 @@
     "phone": "Telefon",
     "email": "E-Mail",
     "invalidEmail": "Ungültige E-Mail-Adresse"
-  },
-  "home": {
-    "shopByCategory": "Nach Kategorie einkaufen",
-    "newArrivals": "Neuheiten",
-    "featuredProducts": "Ausgewählte Produkte",
-    "subscribeAndSaveTitle": "Abonnieren & Sparen",
-    "subscribeAndSaveDescription": "Richten Sie wiederkehrende Lieferungen für ausgewählte Produkte ein und sparen Sie bis zu 20%. Jederzeit pausierbar oder kündbar.",
-    "shopSubscribeAndSave": "Abonnieren & Sparen"
   }
 }

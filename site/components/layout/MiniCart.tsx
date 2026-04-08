@@ -199,11 +199,7 @@ export default function MiniCart() {
         title={`${t('title')}${itemCount > 0 ? ` (${itemCount})` : ''}`}
         footer={
           cart && cart.lineItems.length > 0 ? (
-            <MiniCartFooter
-              cart={cart}
-              country={country}
-              onClose={() => setShowMiniCart(false)}
-            />
+            <MiniCartFooter cart={cart} country={country} onClose={() => setShowMiniCart(false)} />
           ) : undefined
         }
       >

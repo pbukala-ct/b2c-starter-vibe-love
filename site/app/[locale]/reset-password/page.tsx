@@ -124,10 +124,7 @@ function ResetPasswordContent() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link
-              href="/login"
-              className="text-terra text-sm font-medium hover:underline"
-            >
+            <Link href="/login" className="text-terra text-sm font-medium hover:underline">
               {t('loginInstead')}
             </Link>
           </div>
