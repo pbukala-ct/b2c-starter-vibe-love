@@ -1,18 +1,78 @@
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { getProductBySku } from '@/lib/ct/search';
 import { getCategoryById } from '@/lib/ct/categories';
 import { getRecurrencePolicies } from '@/lib/ct/auth';
-import { formatMoney, getLocalizedString, toUrlLocale } from '@/lib/utils';
+import { formatMoney, getLocalizedString } from '@/lib/utils';
 import { getLocale } from '@/lib/session';
 import { getTranslations } from 'next-intl/server';
 import PDPActions from '@/components/product/PDPActions';
-import type { Price } from '@/lib/ct/search';
+import ProductImageCarousel from '@/components/product/ProductImageCarousel';
+import VariantSelector from '@/components/product/VariantSelector';
+import type { VariantAttributeGroup } from '@/components/product/VariantSelector';
+import {
+  VARIANT_SELECTOR_BLOCKLIST,
+  VARIANT_RENDERER_MAP,
+  VARIANT_COLOR_CODE_ATTR,
+  VARIANT_SORT_ORDER,
+  PDP_INFO_ATTRIBUTES,
+} from '@/lib/ct/variant-config';
+import { getAttributeLabels } from '@/lib/ct/facets';
 import { Metadata } from 'next';
+import type { Price } from '@/lib/types';
 
 interface PageProps {
   params: Promise<{ slug: string; sku: string }>;
+}
+
+/** Convert any CT attribute value to a human-readable string. */
+function attrToLabel(value: unknown, locale: string): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    if (typeof obj[locale] === 'string') return obj[locale] as string;
+    if (typeof obj['en-US'] === 'string') return obj['en-US'] as string;
+    if (obj.label !== undefined) return attrToLabel(obj.label, locale);
+    if (typeof obj.key === 'string') return obj.key;
+  }
+  return '';
+}
+
+/** Derive a display label from a CT attribute name. */
+function deriveDisplayLabel(name: string): string {
+  return name
+    .replace(/-label$/, '')
+    .replace(/^search-/, '')
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+interface SerializedVariant {
+  sku: string;
+  attrs: Record<string, string>;
+  colorCodes: Record<string, string>;
+  isAvailable: boolean;
+}
+
+/** Find the best-matching variant SKU for a given attribute value selection. */
+function findBestMatch(
+  variants: SerializedVariant[],
+  currentAttrs: Record<string, string>,
+  forAttr: string,
+  targetLabel: string
+): string {
+  const candidates = variants.filter((v) => v.attrs[forAttr] === targetLabel);
+  if (!candidates.length) return '';
+  return candidates
+    .map((v) => ({
+      sku: v.sku,
+      score: Object.entries(currentAttrs).filter(([k, val]) => k !== forAttr && v.attrs[k] === val)
+        .length,
+    }))
+    .reduce((best, c) => (c.score > best.score ? c : best)).sku;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -20,71 +80,164 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { currency, locale, country } = await getLocale();
   const product = await getProductBySku(sku, locale, currency, country);
   if (!product) return { title: 'Product Not Found' };
-  return { title: getLocalizedString(product.name, locale) };
+  return {
+    title: product.metaTitle || product.name,
+    description: product.metaDescription || undefined,
+    keywords: product.metaKeywords || undefined,
+  };
 }
 
 export default async function ProductPage({ params }: PageProps) {
-  const { sku } = await params;
+  const { sku, slug } = await params;
   const { country, currency, locale } = await getLocale();
-  const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
   const t = await getTranslations('product');
   const tCommon = await getTranslations('common');
-  const [product, policiesResult] = await Promise.all([
+  const [product, policiesResult, attributeLabels] = await Promise.all([
     getProductBySku(sku, locale, currency, country),
     getRecurrencePolicies(),
+    getAttributeLabels(locale),
   ]);
   if (!product) notFound();
 
-  // Find the variant matching the SKU (CT returns the full product, so locate the right variant)
-  const allVariants = [product.masterVariant, ...(product.variants || [])];
-  const variant = allVariants.find((v) => v?.sku === sku) || product.masterVariant;
+  const variant = product.variants.find((v) => v?.sku === sku) || product.variants[0];
 
-  const name = getLocalizedString(product.name, locale);
-  const description = getLocalizedString(product.description, locale);
-  const images = variant?.images || product.masterVariant?.images || [];
-  const attrs = variant?.attributes || product.masterVariant?.attributes || [];
+  const name = product.name;
+  const description = product.description;
+  const images = variant?.images || product.variants[0]?.images || [];
+  const attrs = variant?.attributes || product.variants[0]?.attributes || [];
   const getAttr = (n: string) => attrs.find((a: { name: string }) => a.name === n)?.value;
 
+  // variant.price is the CT-embedded price (currency/country selected by CT) and is the only
+  // source that carries the discounted field. variant.prices entries are raw and never have it.
   const regularPrice =
-    variant?.prices?.find((p: Price) => !p.recurrencePolicy && p.value.currencyCode === currency) ||
-    variant?.price;
+    variant?.price ||
+    variant?.prices?.find((p: Price) => !p.recurrencePolicy && p.currencyCode === currency);
+  const displayPrice = regularPrice?.discounted ?? regularPrice;
+  const discountName = regularPrice?.discounted?.discountName ?? null;
   const recurringPrices = variant?.prices?.filter((p: Price) => !!p.recurrencePolicy) || [];
   const recurrencePolicies = policiesResult.results || [];
 
-  const specText = (() => {
-    const v = getAttr('productspec') || getAttr('product-spec');
-    return v ? getLocalizedString(v as Record<string, string>, locale) : '';
-  })();
-  const colorText = (() => {
-    const v = getAttr('color-label');
-    return v ? getLocalizedString(v as Record<string, string>, locale) : '';
-  })();
-  const sizeText = (() => {
-    const v = getAttr('size');
-    return v ? getLocalizedString(v as Record<string, string>, locale) : '';
-  })();
+  const infoSections = PDP_INFO_ATTRIBUTES.map((name) => ({
+    name,
+    label: attributeLabels[name] ?? deriveDisplayLabel(name),
+    text: (() => {
+      const v = getAttr(name);
+      return v ? getLocalizedString(v as Record<string, string>, locale) : '';
+    })(),
+  })).filter((s) => s.text);
   const isSubscriptionEligible = getAttr('subscription-eligible') === true;
 
   let categoryName = '',
     categorySlug = '';
   if (product.categories?.[0]) {
-    const cat = await getCategoryById(product.categories[0].id);
+    const cat = await getCategoryById(product.categories[0].id, locale);
     if (cat) {
-      categoryName = getLocalizedString(cat.name, locale);
-      categorySlug = getLocalizedString(cat.slug, locale);
+      categoryName = cat.name;
+      categorySlug = cat.slug;
     }
   }
+
+  // --- Variant selector data ---
+  const serializedVariants: SerializedVariant[] = product.variants
+    .filter((v) => v?.sku)
+    .map((v) => {
+      const variantAttrs = v!.attributes || [];
+      const variantAttrMap: Record<string, string> = {};
+      const colorCodes: Record<string, string> = {};
+
+      for (const a of variantAttrs) {
+        const label = attrToLabel(a.value, locale);
+        if (label) variantAttrMap[a.name] = label;
+        if ((a.name === 'color-code' || a.name === 'finish-code') && typeof a.value === 'string') {
+          colorCodes[a.name] = a.value;
+        }
+      }
+
+      return {
+        sku: v!.sku!,
+        attrs: variantAttrMap,
+        colorCodes,
+        isAvailable: v!.availability?.isOnStock === true,
+      };
+    });
+
+  const currentVariant = serializedVariants.find((v) => v.sku === sku);
+  const isSoldOut = !(currentVariant?.isAvailable ?? false);
+  const currentAttrs = currentVariant?.attrs ?? {};
+  const urlPrefix = `/${slug}/p/`;
+
+  // Find attributes that vary across variants and are not blocked
+  const attrValueSets: Record<string, Set<string>> = {};
+  for (const v of serializedVariants) {
+    for (const [attrName, label] of Object.entries(v.attrs)) {
+      if (VARIANT_SELECTOR_BLOCKLIST.includes(attrName)) continue;
+      if (!attrValueSets[attrName]) attrValueSets[attrName] = new Set();
+      attrValueSets[attrName].add(label);
+    }
+  }
+
+  // All selectable attribute names (used for cross-attribute availability filtering)
+  const selectableAttrNames = Object.keys(attrValueSets);
+
+  const variantGroups: VariantAttributeGroup[] = Object.entries(attrValueSets)
+    .sort(([a], [b]) => {
+      const ai = VARIANT_SORT_ORDER.indexOf(a);
+      const bi = VARIANT_SORT_ORDER.indexOf(b);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    })
+    .map(([attrName]) => {
+      const renderer = VARIANT_RENDERER_MAP[attrName] ?? 'pill';
+      const codeAttr = VARIANT_COLOR_CODE_ATTR[attrName];
+      const seen = new Set<string>();
+
+      const options = serializedVariants
+        .filter((v) => v.attrs[attrName])
+        .reduce<VariantAttributeGroup['options']>((acc, v) => {
+          const label = v.attrs[attrName];
+          if (seen.has(label)) return acc;
+          seen.add(label);
+          const targetSku = findBestMatch(serializedVariants, currentAttrs, attrName, label);
+          if (!targetSku) return acc;
+          const isAvailable = serializedVariants.some(
+            (sv) =>
+              sv.attrs[attrName] === label &&
+              sv.isAvailable &&
+              selectableAttrNames
+                .filter((a) => a !== attrName)
+                .every((a) => !currentAttrs[a] || sv.attrs[a] === currentAttrs[a])
+          );
+          acc.push({
+            label,
+            targetUrl: `${urlPrefix}${targetSku}`,
+            colorCode: codeAttr ? v.colorCodes[codeAttr] : undefined,
+            isActive: label === currentAttrs[attrName],
+            isAvailable,
+          });
+          return acc;
+        }, []);
+
+      return {
+        name: attrName,
+        displayLabel: attributeLabels[attrName] ?? deriveDisplayLabel(attrName),
+        currentLabel: currentAttrs[attrName] ?? '',
+        renderer,
+        options,
+      };
+    });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
       <nav className="text-charcoal-light mb-6 flex items-center gap-2 text-xs">
-        <Link href={lp('/')} className="hover:text-terra">
+        <Link href="/" className="hover:text-terra">
           {tCommon('home')}
         </Link>
         {categorySlug && (
           <>
             <span>/</span>
-            <Link href={lp(`/category/${categorySlug}`)} className="hover:text-terra">
+            <Link href={`/category/${categorySlug}`} className="hover:text-terra">
               {categoryName}
             </Link>
           </>
@@ -94,82 +247,44 @@ export default async function ProductPage({ params }: PageProps) {
       </nav>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
-        <div className="space-y-3">
-          {images.length > 0 ? (
-            <>
-              <div className="bg-cream-dark relative aspect-square overflow-hidden rounded-sm">
-                <Image
-                  src={images[0].url}
-                  alt={name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority
-                />
-              </div>
-              {images.length > 1 && (
-                <div className="grid grid-cols-4 gap-2">
-                  {images.slice(1, 5).map((img, i) => (
-                    <div
-                      key={i}
-                      className="bg-cream-dark relative aspect-square overflow-hidden rounded-sm"
-                    >
-                      <Image
-                        src={img.url}
-                        alt={`${name} ${i + 2}`}
-                        fill
-                        className="object-cover"
-                        sizes="25vw"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="bg-cream-dark text-border flex aspect-square items-center justify-center rounded-sm">
-              <svg className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-          )}
-        </div>
+        <ProductImageCarousel images={images} name={name} />
 
         <div className="space-y-6">
           <div>
             <h1 className="text-charcoal mb-3 text-2xl font-semibold lg:text-3xl">{name}</h1>
-            {regularPrice && (
-              <p className="text-charcoal text-2xl font-medium">
-                {formatMoney(regularPrice.value.centAmount, regularPrice.value.currencyCode)}
-              </p>
+            {regularPrice && displayPrice && (
+              <div className="space-y-1">
+                <div className="flex items-baseline gap-3">
+                  <p
+                    className={`text-2xl font-medium ${regularPrice.discounted ? 'text-terra' : 'text-charcoal'}`}
+                  >
+                    {formatMoney(displayPrice.centAmount, displayPrice.currencyCode)}
+                  </p>
+                  {regularPrice.discounted && (
+                    <p className="text-charcoal-light text-lg line-through">
+                      {formatMoney(regularPrice.centAmount, regularPrice.currencyCode)}
+                    </p>
+                  )}
+                </div>
+                {discountName && (
+                  <span className="bg-terra inline-block rounded-sm px-2 py-0.5 text-xs font-medium text-white">
+                    {discountName}
+                  </span>
+                )}
+              </div>
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {colorText && (
-              <span className="border-border text-charcoal-light rounded-full border px-3 py-1 text-xs">
-                {t('color')}: <span className="text-charcoal">{colorText}</span>
-              </span>
-            )}
-            {sizeText && (
-              <span className="border-border text-charcoal-light rounded-full border px-3 py-1 text-xs">
-                {t('size')}: <span className="text-charcoal">{sizeText}</span>
-              </span>
-            )}
-          </div>
+          <VariantSelector groups={variantGroups} />
 
           {regularPrice && (
             <PDPActions
               productId={product.id}
-              variantId={variant?.id || product.masterVariant.id}
+              variantId={variant?.id || product.variants[0].id}
               regularPrice={regularPrice}
               recurringPrices={recurringPrices}
               isSubscriptionEligible={isSubscriptionEligible && recurrencePolicies.length > 0}
+              isSoldOut={isSoldOut}
             />
           )}
 
@@ -182,16 +297,16 @@ export default async function ProductPage({ params }: PageProps) {
             </div>
           )}
 
-          {specText && (
-            <div>
+          {infoSections.map((section) => (
+            <div key={section.name}>
               <h2 className="text-charcoal mb-2 text-xs font-semibold tracking-wider uppercase">
-                {t('specifications')}
+                {section.label}
               </h2>
               <pre className="text-charcoal-light font-sans text-sm leading-relaxed whitespace-pre-wrap">
-                {specText}
+                {section.text}
               </pre>
             </div>
-          )}
+          ))}
 
           <div className="border-border space-y-2 border-t pt-4">
             {[t('freeShipping'), t('splitShipments'), t('shipsWithin')].map((line) => (

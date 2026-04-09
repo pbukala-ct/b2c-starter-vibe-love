@@ -26,7 +26,7 @@ export default function QuantitySelector({
           aria-label={t('decreaseQuantity')}
           onClick={() => onChange(Math.max(min, value - 1))}
           disabled={value <= min}
-          className="text-charcoal hover:bg-cream disabled:text-border px-3 py-2 text-lg leading-none transition-colors disabled:cursor-not-allowed"
+          className="text-charcoal hover:bg-cream disabled:text-border cursor-pointer px-3 py-2 text-lg leading-none transition-colors disabled:cursor-not-allowed"
         >
           −
         </button>
@@ -36,7 +36,7 @@ export default function QuantitySelector({
           aria-label={t('increaseQuantity')}
           onClick={() => onChange(Math.min(max, value + 1))}
           disabled={value >= max}
-          className="text-charcoal hover:bg-cream disabled:text-border px-3 py-2 text-lg leading-none transition-colors disabled:cursor-not-allowed"
+          className="text-charcoal hover:bg-cream disabled:text-border cursor-pointer px-3 py-2 text-lg leading-none transition-colors disabled:cursor-not-allowed"
         >
           +
         </button>

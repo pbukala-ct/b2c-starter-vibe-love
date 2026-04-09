@@ -1,31 +1,41 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
-import type { ProductProjection } from '@/lib/types';
+import { Link } from '@/i18n/routing';
 import { useFormatters } from '@/hooks/useFormatters';
-import { useLocale } from '@/context/LocaleContext';
 import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { transformListingImageUrl } from '@/lib/ct/image-config';
+import type { Product, Variant } from '@/lib/types';
 
 interface ProductCardProps {
-  product: ProductProjection;
+  product: Product;
+}
+
+function findDisplayVariant(product: Product): Variant {
+  return product.variants.find((v) => v.isMatchingVariant) ?? product.variants[0];
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { localePath } = useLocale();
-  const { formatMoney, getLocalizedString } = useFormatters();
+  const { formatMoney } = useFormatters();
   const { addToCartAndShow } = useCart();
   const [adding, setAdding] = useState(false);
   const t = useTranslations('product');
 
-  const name = getLocalizedString(product.name);
-  const slug = getLocalizedString(product.slug) || product.key || product.id;
-  const sku = product.masterVariant?.sku || product.id;
-  const image = product.masterVariant?.images?.[0]?.url;
-  const price = product.masterVariant?.price;
-  const hasSubscription = product.masterVariant?.recurrencePrices?.some((p) => p.recurrencePolicy);
+  const name = product.name;
+  const slug = product.slug || product.key || product.id;
+  const displayVariant = findDisplayVariant(product);
+  const sku = displayVariant?.sku || product.id;
+  const image = displayVariant?.images?.[0]
+    ? transformListingImageUrl(displayVariant.images[0])
+    : undefined;
+  const price = displayVariant?.price;
+  const discountedPrice = price?.discounted;
+  const discountName = price?.discounted?.discountName ?? null;
+  const hasSubscription = displayVariant?.prices?.some((p) => p.recurrencePolicy);
+  // === false: treat missing availability data as in-stock; only explicitly false means sold out
+  const isSoldOut = displayVariant?.availability?.isOnStock === false;
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -47,7 +57,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link href={localePath(`/${slug}/p/${sku}`)} className="group block">
+    <Link href={`/${slug}/p/${sku}`} className="group block">
       <div className="bg-cream-dark relative mb-3 aspect-square overflow-hidden rounded-sm">
         {image ? (
           <Image
@@ -76,14 +86,25 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {/* Quick add button */}
-        <button
-          onClick={handleAddToCart}
-          disabled={adding}
-          className="text-charcoal hover:bg-charcoal absolute right-2 bottom-2 rounded-sm bg-white px-3 py-1.5 text-xs font-medium opacity-0 shadow-sm transition-all duration-200 group-hover:opacity-100 hover:text-white"
-        >
-          {adding ? t('adding') : t('addToCart')}
-        </button>
+        {discountName && (
+          <div className="bg-terra absolute top-2 right-2 rounded-sm px-2 py-0.5 text-xs font-medium text-white">
+            {discountName}
+          </div>
+        )}
+
+        {isSoldOut ? (
+          <span className="absolute right-2 bottom-2 rounded-sm bg-white px-3 py-1.5 text-xs font-medium text-gray-400 opacity-0 shadow-sm transition-all duration-200 group-hover:opacity-100">
+            {t('outOfStock')}
+          </span>
+        ) : (
+          <button
+            onClick={handleAddToCart}
+            disabled={adding}
+            className="text-charcoal hover:bg-charcoal absolute right-2 bottom-2 rounded-sm bg-white px-3 py-1.5 text-xs font-medium opacity-0 shadow-sm transition-all duration-200 group-hover:opacity-100 hover:text-white"
+          >
+            {adding ? t('adding') : t('addToCart')}
+          </button>
+        )}
       </div>
 
       <div>
@@ -91,8 +112,21 @@ export default function ProductCard({ product }: ProductCardProps) {
           {name}
         </h3>
         {price ? (
-          <p className="text-charcoal-light text-sm">
-            {formatMoney(price.value.centAmount, price.value.currencyCode)}
+          <p className="flex items-baseline gap-2 text-sm">
+            {discountedPrice ? (
+              <>
+                <span className="text-terra font-medium">
+                  {formatMoney(discountedPrice.centAmount, discountedPrice.currencyCode)}
+                </span>
+                <span className="text-charcoal-light line-through">
+                  {formatMoney(price.centAmount, price.currencyCode)}
+                </span>
+              </>
+            ) : (
+              <span className="text-charcoal-light">
+                {formatMoney(price.centAmount, price.currencyCode)}
+              </span>
+            )}
           </p>
         ) : (
           <p className="text-charcoal-light text-sm">{t('seeOptions')}</p>

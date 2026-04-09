@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Link, useRouter } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
 import { useAccount } from '@/hooks/useAccount';
 import { useSWRConfig } from 'swr';
 import { KEY_ACCOUNT } from '@/lib/cache-keys';
-import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
 
 export default function RegisterPage() {
@@ -14,9 +13,8 @@ export default function RegisterPage() {
   const searchParams = useSearchParams();
   const { data: user } = useAccount();
   const { mutate } = useSWRConfig();
-  const { localePath } = useLocale();
   const t = useTranslations('auth');
-  const redirect = searchParams.get('redirect') || localePath('/account');
+  const redirect = searchParams.get('redirect') || '/account';
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -183,7 +181,7 @@ export default function RegisterPage() {
             <p className="text-charcoal-light text-sm">
               {t('alreadyHaveAccount')}{' '}
               <Link
-                href={`${localePath('/login')}${redirect !== localePath('/account') ? `?redirect=${redirect}` : ''}`}
+                href={`/login${redirect !== '/account' ? `?redirect=${redirect}` : ''}`}
                 className="text-terra font-medium hover:underline"
               >
                 {t('signIn')}

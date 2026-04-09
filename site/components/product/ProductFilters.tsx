@@ -3,11 +3,13 @@
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import type { ProductSearchFacetResult } from '@commercetools/platform-sdk';
+import type { FacetResult } from '@/lib/types';
 import type { FacetDefinition, SortValues } from '@/lib/ct/search';
-import { FACET_RENDERER_MAP } from '@/lib/ct/facet-config';
+import { BOOLEAN_FACET_ACTIVE_VALUE, FACET_RENDERER_MAP } from '@/lib/ct/facet-config';
 import ColorFacet from './facets/ColorFacet';
+import MoneyRangeFacet from './facets/MoneyRangeFacet';
 import PillFacet from './facets/PillFacet';
+import ToggleFacet from './facets/ToggleFacet';
 
 const SORT_OPTIONS: Array<{ value: SortValues; translationKey: string }> = [
   {
@@ -39,15 +41,9 @@ function formatFacetLabel(name: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-type BucketFacet = { name: string; buckets: { key: string; count: number }[] };
-
-function isBucketFacet(f: ProductSearchFacetResult): f is BucketFacet {
-  return 'buckets' in f;
-}
-
 interface ProductFiltersProps {
   currentSort?: SortValues;
-  facets?: ProductSearchFacetResult[];
+  facets?: FacetResult[];
   facetDefinitions?: FacetDefinition[];
 }
 
@@ -85,7 +81,7 @@ export default function ProductFilters({
     [router, pathname, searchParams]
   );
 
-  const bucketFacets = facets.filter(isBucketFacet).filter((f) => f.buckets.length > 0);
+  const bucketFacets = facets.filter((f) => f.buckets.length > 0);
 
   const activeFacetParams = bucketFacets.map((f) => {
     const config = FACET_RENDERER_MAP[f.name];
@@ -130,7 +126,10 @@ export default function ProductFilters({
       {/* Dynamic facets */}
       {bucketFacets.map((facet) => {
         const config = FACET_RENDERER_MAP[facet.name];
-        const renderer = config?.renderer ?? 'pill';
+        const facetDef = facetDefinitions.find((d) => d.attributeId === facet.name);
+        const isBoolean = facet.buckets.every((b) => b.key === 'true' || b.key === 'false');
+        const isMoney = facetDef?.attributeType === 'money';
+        const renderer = config?.renderer ?? (isBoolean ? 'toggle' : isMoney ? 'range' : 'pill');
         const paramKey = config?.urlParam ?? facetParamKey(facet.name);
         const currentValue = searchParams.get(paramKey);
 
@@ -138,16 +137,33 @@ export default function ProductFilters({
           <div key={facet.name}>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-charcoal text-xs font-semibold tracking-wider uppercase">
-                {facetDefinitions.find((d) => d.attributeId === facet.name)?.attributeLabel ??
-                  formatFacetLabel(facet.name)}
+                {facetDef?.attributeLabel ?? formatFacetLabel(facet.name)}
               </h3>
-              {currentValue && (
-                <button
-                  onClick={() => updateFilter(paramKey, null)}
-                  className="text-terra text-xs hover:underline"
-                >
-                  {t('clear')}
-                </button>
+              {renderer === 'toggle' ? (
+                <ToggleFacet
+                  isActive={currentValue === BOOLEAN_FACET_ACTIVE_VALUE}
+                  onToggle={() =>
+                    updateFilter(
+                      paramKey,
+                      currentValue === BOOLEAN_FACET_ACTIVE_VALUE
+                        ? null
+                        : BOOLEAN_FACET_ACTIVE_VALUE
+                    )
+                  }
+                  label={
+                    facetDefinitions.find((d) => d.attributeId === facet.name)?.attributeLabel ??
+                    formatFacetLabel(facet.name)
+                  }
+                />
+              ) : (
+                currentValue && (
+                  <button
+                    onClick={() => updateFilter(paramKey, null)}
+                    className="text-terra text-xs hover:underline"
+                  >
+                    {t('clear')}
+                  </button>
+                )
               )}
             </div>
 
@@ -164,6 +180,14 @@ export default function ProductFilters({
 
             {renderer === 'pill' && (
               <PillFacet
+                buckets={facet.buckets}
+                currentValue={currentValue}
+                onSelect={(key) => updateFilter(paramKey, key)}
+              />
+            )}
+
+            {renderer === 'range' && (
+              <MoneyRangeFacet
                 buckets={facet.buckets}
                 currentValue={currentValue}
                 onSelect={(key) => updateFilter(paramKey, key)}

@@ -16,6 +16,8 @@ export interface FacetDefinition {
   attributeId?: string;
   attributeLabel?: string;
   attributeValues?: { key: string; label: string }[];
+  /** Ranges for range/money facets. Values are in the unit the CT field expects (e.g. centAmount for price). */
+  ranges?: Array<{ from?: number; to?: number }>;
 }
 
 function isEnumType(
@@ -37,6 +39,21 @@ async function fetchProductTypes(): Promise<ProductType[]> {
     .execute();
   _productTypesCache = { data: body.results, expiry: Date.now() + 60_000 };
   return body.results;
+}
+
+/** Returns a map of attribute name → localized label from all product types. */
+export async function getAttributeLabels(locale: string): Promise<Record<string, string>> {
+  const productTypes = await fetchProductTypes();
+  const map: Record<string, string> = {};
+  for (const pt of productTypes) {
+    for (const attr of pt.attributes ?? []) {
+      if (!map[attr.name]) {
+        map[attr.name] =
+          getLocalizedString(attr.label as Record<string, string>, locale) || attr.name;
+      }
+    }
+  }
+  return map;
 }
 
 export async function getSearchableAttributes(locale: string): Promise<FacetDefinition[]> {
@@ -158,7 +175,7 @@ export function facetDefinitionsToFacetExpressions(
           ranges: {
             ...facetValue,
             level: 'products',
-            ranges: [{ from: 0 }],
+            ranges: facetDefinition.ranges ?? [{ from: 0 }],
           },
         } as ProductSearchFacetExpression;
       default:

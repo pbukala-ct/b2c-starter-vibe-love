@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession, getLocale, createSessionToken, setSessionCookie } from '@/lib/session';
-import { getCart, createCart } from '@/lib/ct/cart';
+import {
+  getCart,
+  createCart,
+  setShippingAddress,
+  setBillingAddress,
+  setShippingMethod,
+} from '@/lib/ct/cart';
 
 export async function GET(_req: NextRequest) {
   const session = await getSession();
@@ -29,6 +35,50 @@ export async function GET(_req: NextRequest) {
     setSessionCookie(resp, token);
     return resp;
   }
+}
+
+// Re-fetches the cart before each action and retries up to 3 times on 409 conflicts.
+// This handles concurrent PATCH requests (e.g. shipping + billing fired simultaneously)
+// and external modifications from services like CT Checkout SDK.
+async function applyCartAction<T>(
+  cartId: string,
+  action: (version: number) => Promise<T>
+): Promise<T> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { version } = await getCart(cartId);
+    try {
+      return await action(version);
+    } catch (e: unknown) {
+      const status =
+        (e as { statusCode?: number; code?: number }).statusCode ?? (e as { code?: number }).code;
+      if (status === 409 && attempt < 2) continue;
+      throw e;
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
+
+export async function PATCH(req: NextRequest) {
+  const session = await getSession();
+  if (!session.cartId) return NextResponse.json({ error: 'No cart' }, { status: 400 });
+
+  const { shippingAddress, billingAddress, shippingMethodId } = await req.json();
+
+  if (shippingAddress)
+    await applyCartAction(session.cartId, (v) =>
+      setShippingAddress(session.cartId!, v, shippingAddress)
+    );
+  if (billingAddress)
+    await applyCartAction(session.cartId, (v) =>
+      setBillingAddress(session.cartId!, v, billingAddress)
+    );
+  if (shippingMethodId)
+    await applyCartAction(session.cartId, (v) =>
+      setShippingMethod(session.cartId!, v, shippingMethodId)
+    );
+
+  const cart = await getCart(session.cartId);
+  return NextResponse.json({ cart });
 }
 
 export async function POST(_req: NextRequest) {

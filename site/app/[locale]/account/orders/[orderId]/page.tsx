@@ -1,11 +1,10 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { use } from 'react';
 import { useOrder } from '@/hooks/useOrders';
 import { useFormatters } from '@/hooks/useFormatters';
 import { formatStreetAddress } from '@/lib/utils';
-import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
 import type { Order } from '@/hooks/useOrders';
 import AgentOrderBadge from '@/components/agent/AgentOrderBadge';
@@ -14,7 +13,6 @@ type LineItem = Order['lineItems'][number];
 
 export default function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = use(params);
-  const { localePath } = useLocale();
   const t = useTranslations('orderDetail');
   const { formatMoney, getLocalizedString, formatDate } = useFormatters();
   const { data: order, isLoading } = useOrder(orderId);
@@ -36,7 +34,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
     return (
       <div>
         <h1 className="text-charcoal mb-6 text-2xl font-semibold">{t('orderNotFound')}</h1>
-        <Link href={localePath('/account/orders')} className="text-terra text-sm hover:underline">
+        <Link href="/account/orders" className="text-terra text-sm hover:underline">
           {t('backToOrdersList')}
         </Link>
       </div>
@@ -70,16 +68,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
     city: string;
     state?: string;
     postalCode: string;
+    country?: string;
   }) =>
-    `${formatStreetAddress(a.streetNumber, a.streetName)}, ${a.city}${a.state ? ` ${a.state}` : ''} ${a.postalCode}`;
+    `${formatStreetAddress(a.streetNumber, a.streetName, a.country)}, ${a.city}${a.state ? ` ${a.state}` : ''} ${a.postalCode}`;
 
   return (
     <div>
       <div className="mb-6 flex items-center gap-3">
-        <Link
-          href={localePath('/account/orders')}
-          className="text-charcoal-light hover:text-charcoal text-sm"
-        >
+        <Link href="/account/orders" className="text-charcoal-light hover:text-charcoal text-sm">
           {t('backToOrders')}
         </Link>
         <span className="text-border">/</span>
@@ -271,7 +267,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
                   <p>
                     {addr.firstName} {addr.lastName}
                   </p>
-                  <p>{formatStreetAddress(addr.streetNumber, addr.streetName)}</p>
+                  <p>{formatStreetAddress(addr.streetNumber, addr.streetName, addr.country)}</p>
                   {addr.additionalAddressInfo && <p>{addr.additionalAddressInfo}</p>}
                   <p>
                     {addr.city}
@@ -292,7 +288,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
                   <p>
                     {formatStreetAddress(
                       order.billingAddress.streetNumber,
-                      order.billingAddress.streetName
+                      order.billingAddress.streetName,
+                      order.billingAddress.country
                     )}
                   </p>
                   {order.billingAddress.additionalAddressInfo && (

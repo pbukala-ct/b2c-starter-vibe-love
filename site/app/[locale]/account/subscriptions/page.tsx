@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { useFormatters } from '@/hooks/useFormatters';
-import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
 import { useRecurrencePoliciesList } from '@/hooks/useRecurrencePolicies';
 import { useSubscriptions, useSubscriptionAction } from '@/hooks/useSubscriptions';
@@ -17,7 +16,6 @@ const STATE_COLORS: Record<string, string> = {
 };
 
 export default function SubscriptionsPage() {
-  const { localePath } = useLocale();
   const { formatMoney, getLocalizedString, formatDate } = useFormatters();
   const t = useTranslations('subscriptions');
   const policies = useRecurrencePoliciesList();
@@ -72,7 +70,7 @@ export default function SubscriptionsPage() {
           <p className="text-charcoal-light mb-2">{t('noSubscriptions')}</p>
           <p className="text-charcoal-light mb-6 text-sm">{t('noSubscriptionsDescription')}</p>
           <Link
-            href={localePath('/search?subscriptionEligible=true')}
+            href="/search?subscriptionEligible=true"
             className="bg-sage hover:bg-sage/90 inline-block rounded-sm px-6 py-2.5 text-sm font-medium text-white transition-colors"
           >
             {t('shopSubscribeAndSave')}
@@ -121,7 +119,7 @@ export default function SubscriptionsPage() {
                       {formatMoney(total, currency)}
                     </p>
                     <Link
-                      href={localePath(`/account/subscriptions/${sub.id}`)}
+                      href={`/account/subscriptions/${sub.id}`}
                       className="text-terra text-xs hover:underline"
                     >
                       {t('viewDetails')}

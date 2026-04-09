@@ -1,11 +1,10 @@
 'use client';
 
 import { use, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/routing';
 import { useSubscription, useSubscriptionAction } from '@/hooks/useSubscriptions';
 import { useFormatters } from '@/hooks/useFormatters';
 import { useRecurrencePoliciesList } from '@/hooks/useRecurrencePolicies';
-import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
 
 const STATE_COLORS: Record<string, string> = {
@@ -18,7 +17,6 @@ export default function SubscriptionDetailPage({ params }: { params: Promise<{ i
   const { id } = use(params);
   const { data: sub, isLoading } = useSubscription(id);
   const { formatMoney, getLocalizedString, formatDate } = useFormatters();
-  const { localePath } = useLocale();
   const t = useTranslations('subscriptions');
   const router = useRouter();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -48,12 +46,9 @@ export default function SubscriptionDetailPage({ params }: { params: Promise<{ i
     return (
       <div className="py-8">
         <p className="text-charcoal-light mb-4">{t('notFound')}</p>
-        <a
-          href={localePath('/account/subscriptions')}
-          className="text-terra text-sm hover:underline"
-        >
+        <Link href="/account/subscriptions" className="text-terra text-sm hover:underline">
           ← {t('backToSubscriptions')}
-        </a>
+        </Link>
       </div>
     );
   }
@@ -241,12 +236,9 @@ export default function SubscriptionDetailPage({ params }: { params: Promise<{ i
       </div>
 
       <div className="mt-4">
-        <a
-          href={localePath('/account/subscriptions')}
-          className="text-terra text-sm hover:underline"
-        >
+        <Link href="/account/subscriptions" className="text-terra text-sm hover:underline">
           ← {t('backToSubscriptions')}
-        </a>
+        </Link>
       </div>
     </div>
   );

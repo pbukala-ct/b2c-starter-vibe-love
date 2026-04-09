@@ -3,10 +3,9 @@ import { getCategoryBySlug, getCategoryTree } from '@/lib/ct/categories';
 import { searchProducts, parseSortParam } from '@/lib/ct/search';
 import ProductGrid from '@/components/product/ProductGrid';
 import ProductFilters from '@/components/product/ProductFilters';
-import { getLocalizedString, toUrlLocale } from '@/lib/utils';
 import { getLocale } from '@/lib/session';
 import { Suspense } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { Metadata } from 'next';
 
 interface PageProps {
@@ -16,23 +15,29 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const category = await getCategoryBySlug(slug);
+  const { locale } = await getLocale();
+  const category = await getCategoryBySlug(slug, locale);
   if (!category) return { title: 'Category Not Found' };
-  const name = getLocalizedString(category.name);
-  return { title: name };
+  return {
+    title: category.metaTitle || category.name,
+    description: category.metaDescription || undefined,
+    keywords: category.metaKeywords || undefined,
+  };
 }
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const sp = await searchParams;
   const { country, currency, locale } = await getLocale();
-  const lp = (p: string) => `/${toUrlLocale(country)}${p}`;
 
-  const [category, categoryTree] = await Promise.all([getCategoryBySlug(slug), getCategoryTree()]);
+  const [category, categoryTree] = await Promise.all([
+    getCategoryBySlug(slug, locale),
+    getCategoryTree(locale),
+  ]);
 
   if (!category) notFound();
 
-  const name = getLocalizedString(category.name, locale);
+  const name = category.name;
   const limit = 24;
 
   const { sort: sortParam, offset: offsetParam, ...rawFacetFilters } = sp;
@@ -66,10 +71,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   while (current.parent) {
     const parent = categoryTree.flat().find((c) => c.id === current.parent?.id);
     if (parent) {
-      breadcrumb.unshift({
-        name: getLocalizedString(parent.name, locale),
-        slug: getLocalizedString(parent.slug, locale),
-      });
+      breadcrumb.unshift({ name: parent.name, slug: parent.slug });
       current = parent;
     } else break;
   }
@@ -82,7 +84,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
       {/* Breadcrumb */}
       <nav className="text-charcoal-light mb-6 flex items-center gap-2 text-xs">
-        <Link href={lp('/')} className="hover:text-terra">
+        <Link href="/" className="hover:text-terra">
           Home
         </Link>
         {breadcrumb.map((crumb, i) => (
@@ -91,7 +93,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             {i === breadcrumb.length - 1 ? (
               <span className="text-charcoal">{crumb.name}</span>
             ) : (
-              <Link href={lp(`/category/${crumb.slug}`)} className="hover:text-terra">
+              <Link href={`/category/${crumb.slug}`} className="hover:text-terra">
                 {crumb.name}
               </Link>
             )}
@@ -101,7 +103,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
       <div className="flex gap-8">
         {/* Filters sidebar */}
-        <aside className="hidden w-52 flex-shrink-0 md:block">
+        <aside className="hidden w-52 shrink-0 md:block">
           <Suspense>
             <ProductFilters
               currentSort={sortParam ? parseSortParam(sortParam) : undefined}
@@ -119,26 +121,22 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
               <ul className="space-y-1">
                 <li>
                   <Link
-                    href={lp(`/category/${slug}`)}
+                    href={`/category/${slug}`}
                     className="text-charcoal hover:text-terra block py-1 text-sm font-medium"
                   >
                     All {name}
                   </Link>
                 </li>
-                {category.children.map((child) => {
-                  const childName = getLocalizedString(child.name, locale);
-                  const childSlug = getLocalizedString(child.slug, locale);
-                  return (
-                    <li key={child.id}>
-                      <Link
-                        href={lp(`/category/${childSlug}`)}
-                        className="text-charcoal-light hover:text-terra block py-1 text-sm"
-                      >
-                        {childName}
-                      </Link>
-                    </li>
-                  );
-                })}
+                {category.children.map((child) => (
+                  <li key={child.id}>
+                    <Link
+                      href={`/category/${child.slug}`}
+                      className="text-charcoal-light hover:text-terra block py-1 text-sm"
+                    >
+                      {child.name}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
           )}

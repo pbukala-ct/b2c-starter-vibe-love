@@ -25,6 +25,7 @@
     "cart": "Warenkorb",
     "search": "Suchen",
     "selectCountry": "Land auswählen",
+    "allCategory": "Alle {name}",
     "profile": "Profil",
     "orders": "Bestellungen",
     "subscriptions": "Abonnements",
@@ -57,6 +58,8 @@
     "description": "Beschreibung",
     "specifications": "Spezifikationen",
     "addToCart": "In den Warenkorb",
+    "outOfStock": "Nicht vorrätig",
+    "currentlyUnavailable": "Derzeit nicht verfügbar",
     "adding": "...",
     "color": "Farbe",
     "size": "Größe",
@@ -97,7 +100,9 @@
     "discountCodePlaceholder": "Code eingeben",
     "applyCode": "Einlösen",
     "removeCode": "Entfernen",
-    "invalidCode": "Ungültiger oder abgelaufener Rabattcode"
+    "invalidCode": "Ungültiger oder abgelaufener Rabattcode",
+    "decreaseQuantity": "Menge verringern",
+    "increaseQuantity": "Menge erhöhen"
   },
   "miniCart": {
     "title": "Warenkorb",
@@ -161,6 +166,8 @@
     "stateRegion": "Bundesland / Region",
     "country": "Land",
     "email": "E-Mail",
+    "invalidPostalCode": "Ungültige Postleitzahl für dieses Land",
+    "invalidEmail": "Ungültige E-Mail-Adresse",
     "cardNumber": "Kartennummer",
     "cardholderName": "Name des Karteninhabers",
     "cardholderNamePlaceholder": "Name wie auf der Karte",
@@ -172,7 +179,10 @@
     "shipTo": "Liefern an: {name} —",
     "signInPrompt": "Haben Sie ein Konto?",
     "signInLink": "Anmelden",
-    "miniLoginTitle": "Anmelden für schnelleren Checkout"
+    "miniLoginTitle": "Anmelden für schnelleren Checkout",
+    "continueToShipping": "Weiter zur Lieferung",
+    "continueToPayment": "Weiter zur Zahlung",
+    "edit": "Bearbeiten"
   },
   "pdp": {
     "oneTimePurchase": "Einmaliger Kauf",
@@ -395,18 +405,22 @@
     "noProductsHint": "Versuchen Sie, Ihre Filter oder Suchbegriffe anzupassen",
     "productCount": "{count, plural, one {# Produkt} other {# Produkte}}"
   },
-  "home": {
-    "curatedForModernLiving": "Kuratiert für modernes Wohnen",
-    "designYourPerfectSpace": "Gestalten Sie Ihren",
-    "perfectSpace": "perfekten Raum",
-    "heroDescription": "Premium-Möbel und Wohnaccessoires, sorgfältig für das moderne Zuhause ausgewählt.",
-    "shopFurniture": "Möbel kaufen",
-    "homeDecor": "Wohndekoration",
-    "shopByCategory": "Nach Kategorie einkaufen",
-    "newArrivals": "Neuheiten",
-    "featuredProducts": "Ausgewählte Produkte",
-    "subscribeAndSaveTitle": "Abonnieren & Sparen",
-    "subscribeAndSaveDescription": "Richten Sie wiederkehrende Lieferungen für ausgewählte Produkte ein und sparen Sie bis zu 20%. Jederzeit pausierbar oder kündbar.",
-    "shopSubscribeAndSave": "Abonnieren & Sparen"
+  "addressFields": {
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "streetAddress": "Straße und Hausnummer",
+    "streetAddressPlaceholder": "z. B. Musterstraße 1",
+    "streetName": "Straßenname",
+    "streetNumber": "Hausnummer",
+    "additionalAddressInfo": "Adresszusatz (optional)",
+    "additionalAddressInfoPlaceholder": "z. B. Wohnung 4B",
+    "city": "Stadt",
+    "state": "Bundesland / Region",
+    "postalCode": "Postleitzahl",
+    "country": "Land",
+    "invalidPostalCode": "Ungültige Postleitzahl für dieses Land",
+    "phone": "Telefon",
+    "email": "E-Mail",
+    "invalidEmail": "Ungültige E-Mail-Adresse"
   }
 }

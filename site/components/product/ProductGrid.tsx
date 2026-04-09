@@ -1,9 +1,9 @@
 import { getTranslations } from 'next-intl/server';
 import ProductCard from './ProductCard';
-import type { ProductProjection } from '@/lib/types';
+import type { Product } from '@/lib/types';
 
 interface ProductGridProps {
-  products: ProductProjection[];
+  products: Product[];
   title?: string;
   total?: number;
 }

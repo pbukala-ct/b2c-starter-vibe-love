@@ -1,10 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { CartLineItem } from '@/context/CartContext';
 import { useFormatters } from '@/hooks/useFormatters';
-import { useLocale } from '@/context/LocaleContext';
 import { useState } from 'react';
 import { useRecurrencePolicies } from '@/hooks/useRecurrencePolicies';
 import { useTranslations } from 'next-intl';
@@ -16,7 +15,6 @@ interface CartItemProps {
 }
 
 export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
-  const { localePath } = useLocale();
   const { formatMoney, getLocalizedString } = useFormatters();
   const policyMap = useRecurrencePolicies();
   const [qty, setQty] = useState(item.quantity);
@@ -52,7 +50,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
   return (
     <div className="border-border flex gap-4 border-b py-5 last:border-0">
       {/* Image */}
-      <div className="bg-cream-dark relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-sm">
+      <div className="bg-cream-dark relative h-20 w-20 shrink-0 overflow-hidden rounded-sm">
         {image ? (
           <Image src={image} alt={name} fill className="object-cover" sizes="80px" />
         ) : (
@@ -63,7 +61,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
       {/* Details */}
       <div className="min-w-0 flex-1">
         <Link
-          href={localePath(`/${slug}/p/${sku}`)}
+          href={`/${slug}/p/${sku}`}
           className="text-charcoal hover:text-terra line-clamp-2 text-sm font-medium"
         >
           {name}
@@ -114,7 +112,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
       {/* Remove */}
       <button
         onClick={() => onRemove(item.id)}
-        className="text-charcoal-light mt-1 flex-shrink-0 self-start transition-colors hover:text-red-500"
+        className="text-charcoal-light mt-1 shrink-0 self-start transition-colors hover:text-red-500"
         aria-label={t('removeItem')}
       >
         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

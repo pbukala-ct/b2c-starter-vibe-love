@@ -1,40 +1,35 @@
 import { apiRoot } from './client';
+import type { Category as CtCategory } from '@commercetools/platform-sdk';
+import type { Category } from '@/lib/types';
+import { mapCategory } from '@/lib/mappers/category';
+import { DEFAULT_LOCALE } from '@/lib/utils';
 
-export interface Category {
-  id: string;
-  name: Record<string, string>;
-  slug: Record<string, string>;
-  parent?: { typeId: string; id: string };
-  orderHint?: string;
-  children?: Category[];
-}
+export type { Category };
 
-let categoriesCache: Category[] | null = null;
+let rawCache: CtCategory[] | null = null;
 let cacheTime = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-export async function getCategories(): Promise<Category[]> {
-  if (categoriesCache && Date.now() - cacheTime < CACHE_TTL) {
-    return categoriesCache;
+async function getRawCategories(): Promise<CtCategory[]> {
+  if (rawCache && Date.now() - cacheTime < CACHE_TTL) {
+    return rawCache;
   }
-
   const result = await apiRoot
     .categories()
     .get({ queryArgs: { limit: 200 } })
     .execute();
-  categoriesCache = result.body.results.map((c) => ({
-    id: c.id,
-    name: c.name as Record<string, string>,
-    slug: c.slug as Record<string, string>,
-    parent: c.parent,
-    orderHint: c.orderHint,
-  }));
+  rawCache = result.body.results;
   cacheTime = Date.now();
-  return categoriesCache;
+  return rawCache;
 }
 
-export async function getCategoryTree(): Promise<Category[]> {
-  const flat = await getCategories();
+export async function getCategories(locale: string = DEFAULT_LOCALE.locale): Promise<Category[]> {
+  const raw = await getRawCategories();
+  return raw.map((c) => mapCategory(c, locale));
+}
+
+export async function getCategoryTree(locale: string = DEFAULT_LOCALE.locale): Promise<Category[]> {
+  const flat = await getCategories(locale);
   const map = new Map<string, Category>();
   const roots: Category[] = [];
 
@@ -72,12 +67,18 @@ export async function getCategoryTree(): Promise<Category[]> {
   return sortTree(roots);
 }
 
-export async function getCategoryBySlug(slug: string): Promise<Category | null> {
-  const categories = await getCategories();
-  return categories.find((c) => Object.values(c.slug).includes(slug)) || null;
+export async function getCategoryBySlug(
+  slug: string,
+  locale: string = DEFAULT_LOCALE.locale
+): Promise<Category | null> {
+  const categories = await getCategories(locale);
+  return categories.find((c) => c.slug === slug) || null;
 }
 
-export async function getCategoryById(id: string): Promise<Category | null> {
-  const categories = await getCategories();
+export async function getCategoryById(
+  id: string,
+  locale: string = DEFAULT_LOCALE.locale
+): Promise<Category | null> {
+  const categories = await getCategories(locale);
   return categories.find((c) => c.id === id) || null;
 }

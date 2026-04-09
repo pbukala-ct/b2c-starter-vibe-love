@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { apiRoot } from './client';
 import { DEFAULT_LOCALE } from '@/lib/utils';
 import type {
-  ProductSearchFacetResult,
+  ProductPagedSearchResponse,
   ProductSearchRequest,
   SearchSorting,
 } from '@commercetools/platform-sdk';
@@ -13,6 +13,9 @@ import {
 } from './facets';
 import { getExtraFacets, FACET_BLOCKLIST, FACET_RENDERER_MAP } from './facet-config';
 import { facetDefinitionToFacetValue } from './facets';
+import { mapProduct } from '@/lib/mappers/product';
+import { mapFacets } from '@/lib/mappers/facet';
+import type { Product, FacetResult } from '@/lib/types';
 
 export type { FacetDefinition } from './facets';
 
@@ -34,58 +37,13 @@ export interface SearchParams {
   facetDefinitions?: FacetDefinition[];
 }
 
-interface RawSearchResult {
-  total: number;
-  offset: number;
-  limit: number;
-  results: Array<{ id: string; productProjection: ProductProjection }>;
-  facets: ProductSearchFacetResult[];
-}
-
 export interface SearchResult {
   total: number;
   offset: number;
   limit: number;
-  products: ProductProjection[];
-  facets: ProductSearchFacetResult[];
+  products: Product[];
+  facets: FacetResult[];
   facetDefinitions: FacetDefinition[];
-}
-
-export interface ProductProjection {
-  id: string;
-  key?: string;
-  name: Record<string, string>;
-  description?: Record<string, string>;
-  slug: Record<string, string>;
-  categories: Array<{ typeId: string; id: string }>;
-  masterVariant: Variant;
-  variants: Variant[];
-  productType: { typeId: string; id: string };
-  attributes?: Array<{ name: string; value: unknown }>;
-}
-
-export interface Variant {
-  id: number;
-  sku?: string;
-  key?: string;
-  prices?: Price[];
-  price?: Price;
-  images?: Image[];
-  attributes?: Array<{ name: string; value: unknown }>;
-  recurrencePrices?: Price[];
-}
-
-export interface Price {
-  id: string;
-  key?: string;
-  value: { type: string; currencyCode: string; centAmount: number; fractionDigits: number };
-  country?: string;
-  recurrencePolicy?: { typeId: string; id: string };
-}
-
-export interface Image {
-  url: string;
-  dimensions?: { w: number; h: number };
 }
 
 const SORT_FIELD_MAP: Record<string, string> = {
@@ -106,17 +64,33 @@ const URL_PARAM_TO_ATTRIBUTE_ID: Record<string, string> = Object.fromEntries(
     .map(([attributeId, cfg]) => [cfg.urlParam!, attributeId])
 );
 
+function parseRangeKey(value: string): { gte?: number; lt?: number } {
+  const [rawFrom, rawTo] = value.split('-');
+  const result: { gte?: number; lt?: number } = {};
+  if (rawFrom !== '*') result.gte = Number(rawFrom);
+  if (rawTo !== '*') result.lt = Number(rawTo);
+  return result;
+}
+
 function buildFacetFilterQueryParts(
   facetFilters: Record<string, string>,
   facetDefinitions: FacetDefinition[],
   locale: string
 ): unknown[] {
-  return Object.entries(facetFilters).flatMap(([urlParam, value]) => {
+  return Object.entries(facetFilters).flatMap<unknown>(([urlParam, value]) => {
     if (!value) return [];
-    const attributeId = URL_PARAM_TO_ATTRIBUTE_ID[urlParam] ?? `variants.attributes.${urlParam}`;
+    const attributeId =
+      URL_PARAM_TO_ATTRIBUTE_ID[urlParam] ??
+      facetDefinitions.find(
+        (f) => f.attributeId === urlParam || f.attributeId === `variants.attributes.${urlParam}`
+      )?.attributeId ??
+      `variants.attributes.${urlParam}`;
     const facetDef = facetDefinitions.find((f) => f.attributeId === attributeId);
     if (!facetDef) return [];
     const facetValue = facetDefinitionToFacetValue(facetDef, locale);
+    if (facetDef.attributeType === 'money' || facetDef.attributeType === 'range') {
+      return [{ range: { field: facetValue.field, ...parseRangeKey(value) } }];
+    }
     return [
       {
         exact: {
@@ -230,18 +204,32 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
   const body: ProductSearchRequest = {
     limit,
     offset,
-    productProjectionParameters: { priceCurrency: currency, priceCountry: country },
+    markMatchingVariants: true,
+    productProjectionParameters: {
+      priceCurrency: currency,
+      priceCountry: country,
+      expand: ['masterVariant.price.discounted.discount'],
+    },
     sort: sortParam,
     ...(searchQuery ? { query: searchQuery as ProductSearchRequest['query'] } : {}),
     ...(facets ? { facets } : {}),
   };
 
-  const toSearchResult = (raw: RawSearchResult): SearchResult => ({
+  const toSearchResult = (raw: ProductPagedSearchResponse): SearchResult => ({
     total: raw.total,
     offset: raw.offset,
     limit: raw.limit,
-    products: raw.results.map((r) => r.productProjection),
-    facets: raw.facets ?? [],
+    products: raw.results
+      .map((r) => {
+        const projection = r.productProjection;
+        if (!projection) return undefined;
+        const mv = r.matchingVariants;
+        const matchingIds =
+          mv && !mv.allMatched ? new Set(mv.matchedVariants.map((v) => v.id)) : null;
+        return mapProduct(projection, matchingIds, params.locale);
+      })
+      .filter((p) => p !== undefined),
+    facets: mapFacets(raw.facets ?? []),
     facetDefinitions: resolvedFacetDefinitions,
   });
 
@@ -249,7 +237,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
   // CT returns a query_shard_exception. Retry without the custom sort so the page still loads.
   try {
     const { body: result } = await apiRoot.products().search().post({ body: body }).execute();
-    return toSearchResult(result as unknown as RawSearchResult);
+    return toSearchResult(result);
   } catch (err: unknown) {
     const msg =
       (err as { body?: { message?: string } }).body?.message ??
@@ -262,7 +250,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
         .search()
         .post({ body: fallbackBody })
         .execute();
-      return toSearchResult(result as unknown as RawSearchResult);
+      return toSearchResult(result);
     }
     throw new Error(`Product search failed: ${msg}`, { cause: err });
   }
@@ -273,7 +261,7 @@ export async function getProductBySku(
   locale: string,
   currency: string,
   country: string
-): Promise<ProductProjection | null> {
+): Promise<Product | null> {
   try {
     const { body } = await apiRoot
       .products()
@@ -286,34 +274,16 @@ export async function getProductBySku(
             priceCurrency: currency,
             priceCountry: country,
             localeProjection: [locale],
+            expand: [
+              'variants.price.discounted.discount',
+              'masterVariant.price.discounted.discount',
+            ],
           },
         },
       })
       .execute();
-    return (body as unknown as RawSearchResult).results[0]?.productProjection ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export async function getProductById(
-  id: string,
-  currency: string,
-  country: string
-): Promise<ProductProjection | null> {
-  try {
-    const { body } = await apiRoot
-      .products()
-      .search()
-      .post({
-        body: {
-          limit: 1,
-          query: { exact: { field: 'id', value: id } } as ProductSearchRequest['query'],
-          productProjectionParameters: { priceCurrency: currency, priceCountry: country },
-        },
-      })
-      .execute();
-    return (body as unknown as RawSearchResult).results[0]?.productProjection ?? null;
+    const projection = body.results[0]?.productProjection;
+    return projection ? mapProduct(projection, null, locale) : null;
   } catch {
     return null;
   }

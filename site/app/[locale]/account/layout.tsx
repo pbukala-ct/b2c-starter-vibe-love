@@ -1,19 +1,16 @@
 'use client';
 
 import { useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { Link, usePathname, useRouter } from '@/i18n/routing';
 import { useAccount } from '@/hooks/useAccount';
 import { mutate } from 'swr';
-import { KEY_ACCOUNT } from '@/lib/cache-keys';
-import { useLocale } from '@/context/LocaleContext';
+import { KEY_ACCOUNT, KEY_CART, KEY_WISHLIST } from '@/lib/cache-keys';
 import { useTranslations } from 'next-intl';
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: user } = useAccount();
-  const { localePath } = useLocale();
   const t = useTranslations('nav');
 
   const navItems = [
@@ -28,14 +25,16 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     if (user === null) {
-      router.replace(localePath('/login') + '?redirect=' + encodeURIComponent(pathname));
+      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
-  }, [user, router, pathname, localePath]);
+  }, [user, router, pathname]);
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
     mutate(KEY_ACCOUNT, null, { revalidate: false });
-    router.push(localePath('/'));
+    mutate(KEY_CART, null, { revalidate: false });
+    mutate(KEY_WISHLIST, null, { revalidate: false });
+    router.push('/');
   }
 
   if (!user) return null;
@@ -54,7 +53,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
             </div>
             <nav className="py-2">
               {navItems.map((item) => {
-                const href = localePath(item.path);
+                const href = item.path;
                 const isActive = item.exact ? pathname === href : pathname.startsWith(href);
                 return (
                   <Link

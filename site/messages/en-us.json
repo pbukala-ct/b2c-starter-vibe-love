@@ -25,6 +25,7 @@
     "cart": "Cart",
     "search": "Search",
     "selectCountry": "Select country",
+    "allCategory": "All {name}",
     "profile": "Profile",
     "orders": "Orders",
     "subscriptions": "Subscriptions",
@@ -57,6 +58,8 @@
     "description": "Description",
     "specifications": "Specifications",
     "addToCart": "Add to Cart",
+    "outOfStock": "Out of stock",
+    "currentlyUnavailable": "Currently unavailable",
     "adding": "...",
     "color": "Color",
     "size": "Size",
@@ -97,7 +100,9 @@
     "discountCodePlaceholder": "Enter code",
     "applyCode": "Apply",
     "removeCode": "Remove",
-    "invalidCode": "Invalid or expired discount code"
+    "invalidCode": "Invalid or expired discount code",
+    "decreaseQuantity": "Decrease quantity",
+    "increaseQuantity": "Increase quantity"
   },
   "miniCart": {
     "title": "Shopping Cart",
@@ -161,6 +166,8 @@
     "stateRegion": "State / Region",
     "country": "Country",
     "email": "Email",
+    "invalidPostalCode": "Invalid postal code for this country",
+    "invalidEmail": "Invalid email address",
     "cardNumber": "Card Number",
     "cardholderName": "Cardholder Name",
     "cardholderNamePlaceholder": "Full name on card",
@@ -172,7 +179,10 @@
     "shipTo": "Ship to: {name} —",
     "signInPrompt": "Have an account?",
     "signInLink": "Sign in",
-    "miniLoginTitle": "Sign in for faster checkout"
+    "miniLoginTitle": "Sign in for faster checkout",
+    "continueToShipping": "Continue to Shipping",
+    "continueToPayment": "Continue to Payment",
+    "edit": "Edit"
   },
   "pdp": {
     "oneTimePurchase": "One-time purchase",
@@ -395,18 +405,22 @@
     "noProductsHint": "Try adjusting your filters or search terms",
     "productCount": "{count, plural, one {# product} other {# products}}"
   },
-  "home": {
-    "curatedForModernLiving": "Curated for Modern Living",
-    "designYourPerfectSpace": "Design Your",
-    "perfectSpace": "Perfect Space",
-    "heroDescription": "Premium furniture and home goods, thoughtfully selected for the modern home.",
-    "shopFurniture": "Shop Furniture",
-    "homeDecor": "Home Decor",
-    "shopByCategory": "Shop by Category",
-    "newArrivals": "New Arrivals",
-    "featuredProducts": "Featured Products",
-    "subscribeAndSaveTitle": "Subscribe & Save",
-    "subscribeAndSaveDescription": "Set up recurring deliveries on select products and save up to 20%. Pause or cancel anytime.",
-    "shopSubscribeAndSave": "Shop Subscribe & Save"
+  "addressFields": {
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "streetAddress": "Street Address",
+    "streetAddressPlaceholder": "123 Main Street",
+    "streetName": "Street Name",
+    "streetNumber": "Street Number",
+    "additionalAddressInfo": "Apt, Suite, Floor (optional)",
+    "additionalAddressInfoPlaceholder": "e.g. Apt 4B",
+    "city": "City",
+    "state": "State / Region",
+    "postalCode": "Postal Code",
+    "country": "Country",
+    "invalidPostalCode": "Invalid postal code for this country",
+    "phone": "Phone",
+    "email": "Email",
+    "invalidEmail": "Invalid email address"
   }
 }

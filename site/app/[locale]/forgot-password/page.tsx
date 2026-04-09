@@ -1,13 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useLocale } from '@/context/LocaleContext';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 
 export default function ForgotPasswordPage() {
   const t = useTranslations('auth');
-  const { localePath } = useLocale();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -57,10 +55,7 @@ export default function ForgotPasswordPage() {
           </div>
           <h1 className="text-charcoal mb-3 text-2xl font-semibold">Check your email</h1>
           <p className="text-charcoal-light mb-6 text-sm">{t('requestResetSuccess')}</p>
-          <Link
-            href={localePath('/login')}
-            className="text-terra text-sm font-medium hover:underline"
-          >
+          <Link href="/login" className="text-terra text-sm font-medium hover:underline">
             {t('loginInstead')}
           </Link>
         </div>
@@ -110,10 +105,7 @@ export default function ForgotPasswordPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link
-              href={localePath('/login')}
-              className="text-terra text-sm font-medium hover:underline"
-            >
+            <Link href="/login" className="text-terra text-sm font-medium hover:underline">
               {t('loginInstead')}
             </Link>
           </div>

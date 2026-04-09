@@ -1,18 +1,15 @@
 'use client';
 
-import Link from 'next/link';
+import { Link, useRouter } from '@/i18n/routing';
 import { useState } from 'react';
 import { useAccount } from '@/hooks/useAccount';
 import { mutate } from 'swr';
-import { KEY_ACCOUNT } from '@/lib/cache-keys';
-import { useRouter } from 'next/navigation';
+import { KEY_ACCOUNT, KEY_CART, KEY_WISHLIST } from '@/lib/cache-keys';
 import MegaMenu from './MegaMenu';
 import MiniCart from './MiniCart';
 import CountrySelector from './CountrySelector';
 import SearchBar from './SearchBar';
-import type { Category } from '@/lib/ct/categories';
-import { useLocale } from '@/context/LocaleContext';
-import { useFormatters } from '@/hooks/useFormatters';
+import type { Category } from '@/lib/types';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useTranslations } from 'next-intl';
 
@@ -24,8 +21,6 @@ export default function Header({ categories }: HeaderProps) {
   const { data: user } = useAccount();
   const { data: wishlist } = useWishlist();
   const isLoggedIn = !!user;
-  const { getLocalizedString } = useFormatters();
-  const { localePath } = useLocale();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const t = useTranslations('header');
@@ -34,7 +29,9 @@ export default function Header({ categories }: HeaderProps) {
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     mutate(KEY_ACCOUNT, null, { revalidate: false });
-    router.push(localePath('/'));
+    mutate(KEY_CART, null, { revalidate: false });
+    mutate(KEY_WISHLIST, null, { revalidate: false });
+    router.push('/');
     router.refresh();
   };
 
@@ -65,7 +62,7 @@ export default function Header({ categories }: HeaderProps) {
           </button>
 
           {/* Logo */}
-          <Link href={localePath('/')} className="flex-shrink-0">
+          <Link href="/" className="shrink-0">
             <div className="flex items-center gap-2">
               <div className="bg-charcoal flex h-7 w-7 items-center justify-center rounded-sm">
                 <span className="text-xs font-bold tracking-wider text-white">V</span>
@@ -92,7 +89,7 @@ export default function Header({ categories }: HeaderProps) {
             {/* Account */}
             <div className="group relative">
               <Link
-                href={isLoggedIn ? localePath('/account') : localePath('/login')}
+                href={isLoggedIn ? '/account' : '/login'}
                 className="text-charcoal hover:text-terra flex items-center gap-1 transition-colors"
                 aria-label={isLoggedIn ? `Account: ${user?.firstName}` : 'Login'}
               >
@@ -112,31 +109,31 @@ export default function Header({ categories }: HeaderProps) {
               {isLoggedIn && (
                 <div className="border-border invisible absolute top-full right-0 z-50 mt-1 w-48 rounded-sm border bg-white opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:opacity-100">
                   <Link
-                    href={localePath('/account')}
+                    href="/account"
                     className="text-charcoal hover:bg-cream block px-4 py-2.5 text-sm"
                   >
                     {tNav('profile')}
                   </Link>
                   <Link
-                    href={localePath('/account/orders')}
+                    href="/account/orders"
                     className="text-charcoal hover:bg-cream block px-4 py-2.5 text-sm"
                   >
                     {tNav('orders')}
                   </Link>
                   <Link
-                    href={localePath('/account/subscriptions')}
+                    href="/account/subscriptions"
                     className="text-charcoal hover:bg-cream block px-4 py-2.5 text-sm"
                   >
                     {tNav('subscriptions')}
                   </Link>
                   <Link
-                    href={localePath('/account/addresses')}
+                    href="/account/addresses"
                     className="text-charcoal hover:bg-cream block px-4 py-2.5 text-sm"
                   >
                     {tNav('addresses')}
                   </Link>
                   <Link
-                    href={localePath('/account/payments')}
+                    href="/account/payments"
                     className="text-charcoal hover:bg-cream block px-4 py-2.5 text-sm"
                   >
                     {tNav('paymentMethods')}
@@ -195,35 +192,27 @@ export default function Header({ categories }: HeaderProps) {
           </div>
           {/* Mobile nav */}
           <nav className="px-4 pb-4">
-            {topLevel.map((cat) => {
-              const name = getLocalizedString(cat.name);
-              const slug = getLocalizedString(cat.slug);
-              return (
-                <div key={cat.id}>
+            {topLevel.map((cat) => (
+              <div key={cat.id}>
+                <Link
+                  href={`/category/${cat.slug}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-charcoal border-border/50 block border-b py-2.5 text-sm font-medium"
+                >
+                  {cat.name}
+                </Link>
+                {cat.children?.map((child) => (
                   <Link
-                    href={localePath(`/category/${slug}`)}
+                    key={child.id}
+                    href={`/category/${child.slug}`}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="text-charcoal border-border/50 block border-b py-2.5 text-sm font-medium"
+                    className="text-charcoal-light hover:text-charcoal border-border/30 block border-b py-2 pl-4 text-sm"
                   >
-                    {name}
+                    {child.name}
                   </Link>
-                  {cat.children?.map((child) => {
-                    const childName = getLocalizedString(child.name);
-                    const childSlug = getLocalizedString(child.slug);
-                    return (
-                      <Link
-                        key={child.id}
-                        href={localePath(`/category/${childSlug}`)}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="text-charcoal-light hover:text-charcoal border-border/30 block border-b py-2 pl-4 text-sm"
-                      >
-                        {childName}
-                      </Link>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                ))}
+              </div>
+            ))}
           </nav>
         </div>
       )}

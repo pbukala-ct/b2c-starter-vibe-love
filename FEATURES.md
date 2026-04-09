@@ -2,6 +2,13 @@
 
 Comprehensive inventory of implemented storefront features. This file is the source of truth for what exists in the codebase — keep it updated when adding or removing features.
 
+## Design & Theme
+
+- Luxury brand aesthetic: black/white/gold (`#c8a96e`) palette, sharp corners (no border radius), uppercase tracking on labels and buttons
+- Cormorant Garant serif font for headings; Inter for body text (both loaded from Google Fonts)
+- All theme tokens defined in `@theme` block in `site/app/globals.css` (Tailwind CSS v4 — no `tailwind.config.ts`)
+- Color tokens: `cream` (#ffffff), `charcoal` (#000000), `charcoal-light` (muted grey), `terra` (#c8a96e gold), `sage` (green accent), `border` (neutral grey)
+
 ## Search & Discovery
 
 - Full-text product search via commercetools Product Search API
@@ -9,7 +16,11 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - Mega menu with full category tree
 - Dynamic faceted filtering driven by commercetools Product Search facets API
 - Facet definitions auto-fetched from product type attributes (60s module-level cache), filtered by `FACET_BLOCKLIST` and extended with `getExtraFacets(t)` in `facet-config.ts`
-- Per-facet render config in `FACET_RENDERER_MAP`: `'color'` (swatches) or `'pill'` (pills with counts); defaults to `'pill'` for unmapped facets
+- Per-facet render config in `FACET_RENDERER_MAP`: `'color'` (swatches), `'pill'` (pills with counts), `'toggle'` (boolean on/off), or `'range'` (formatted money range pills); defaults to `'pill'` for unmapped facets
+- Boolean facets auto-detected (all bucket keys `'true'`/`'false'`) and rendered as toggle switches via `ToggleFacet`
+- Money/range facets auto-detected via `attributeType === 'money'` and rendered as formatted price range pills via `MoneyRangeFacet`; bucket keys (e.g. `*-10000.0`) formatted as human-readable labels (e.g. `< $100`)
+- Configurable price range facet in `getExtraFacets` with custom `ranges` array (e.g. `[{to:10000},{from:10000,to:20000},{from:20000}]`)
+- Range filter applied server-side via CT `SearchLongRangeExpression` (`gte`/`lt` fields); attributeId resolved by direct match before falling back to `variants.attributes.` prefix
 - Color facet (`search-color`) and finish facet (`search-finish`) rendered as swatches via `ColorFacet`
 - Color swatch labels resolved from CT localized enum (`attributeValues`) — no next-intl translations for color names
 - Extra facets (e.g. price) labeled via `next-intl` `search.price` key (all three locales)
@@ -24,8 +35,26 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 
 ## Product Detail Pages
 
-- Variant selection (color, size, specifications)
-- Image gallery with thumbnail strip
+- Variant selection driven by `lib/ct/variant-config.ts` (see variant-config skill):
+  - Auto-detects selectable attributes (those with >1 distinct value across variants)
+  - `VARIANT_SELECTOR_BLOCKLIST` — attribute names never shown as selectors (e.g. `new-arrival`, `subscription-eligible`, `search-color`, `search-finish`, raw code attrs)
+  - `VARIANT_RENDERER_MAP` — `'pill'` (default) or `'color'` swatch per attribute; `color-label` and `finish-label` render as swatches
+  - `VARIANT_COLOR_CODE_ATTR` — maps display attribute to companion hex-code attribute (`color-label` → `color-code`, `finish-label` → `finish-code`); label value used as swatch tooltip and text fallback
+  - `VARIANT_SORT_ORDER` — explicit display order (color first, finish second, size third); unlisted attributes appended after
+  - Best-match navigation: selecting a value maximises matching of other currently selected attributes (e.g. switching color preserves size)
+  - Cross-attribute availability: an option is only enabled if at least one in-stock variant exists with that value AND all other currently-selected attribute values (e.g. Blue + Matte selected → size S disabled if no Blue + Matte + S variant is in stock)
+  - Unavailable options rendered as non-clickable `<span>` (dimmed, `cursor-not-allowed`, `title="Sold out"`)
+  - Attribute display labels fetched from CT product type model (localized), with derived fallback
+  - Server-rendered `<Link>` elements — no client JS required for navigation
+- Out-of-stock handling: `variant.availability.isOnStock` drives sold-out state; when sold out shows localized "Out of stock" message + disabled "Currently unavailable" button (`product.outOfStock` / `product.currentlyUnavailable` translation keys)
+- Image URL transforms configured in `lib/ct/image-config.ts` — three separate functions for listing (`transformListingImageUrl`), PDP carousel (`transformDetailImageUrl`), and PDP thumbnails (`transformThumbnailImageUrl`); supports CDN prefixes, size suffixes, Imgix, Cloudinary, etc. Next.js image optimization disabled (`unoptimized: true`) to prevent query params being appended to CDN URLs
+- Horizontal image carousel (`ProductImageCarousel`) with portrait (3:4) aspect ratio, `object-contain` (no cropping), white background, and CSS snap scrolling
+- Carousel shows 2 images at a time; left/right arrow buttons overlaid via CSS grid for reliable vertical centering
+- Clickable thumbnail strip below carousel highlights the active image; scrolling the carousel updates the active thumbnail
+- Single-image fallback (no arrows); no-image placeholder
+- Discounted price display: when a CT product discount applies, the discounted price is shown in accent color (`text-terra`) with the original price struck through; both PDP and product cards support this
+- Product discount badge: the CT product discount name (localized, from Merchant Center) is shown as a `bg-terra` badge — top-right on listing cards, below the price on PDP; discount reference is expanded in the search query (`masterVariant.price.discounted.discount` / `variants.price.discounted.discount`)
+- Sold-out listing cards: products with `isOnStock === false` show a localized "Out of stock" label on hover instead of the add-to-cart button
 - Breadcrumb navigation (Home > Category > Product)
 - Quantity selector (− / count / + control, min 1, max 99) above the add-to-cart button
 - Subscribe & Save option (see below)
@@ -50,9 +79,19 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 ## Checkout
 
 - Guest checkout (no account required)
-- Logged-in checkout with saved address pre-fill
-- Shipping address form with country/state/postal code
-- Shipping method selection with pricing
+- Logged-in checkout with saved address dropdown for both shipping and billing
+- On page load, cart's existing shipping address pre-fills the form; if it matches a saved address the dropdown pre-selects it
+- When no cart address exists, auto-selects the saved address matching the current locale's country
+- Selecting a saved address immediately sets it on the cart via `PATCH /api/cart`
+- Typing a new address debounces 600 ms then sets it on the cart once all required fields are filled
+- Shipping method selection immediately sets the method on the cart via `PATCH /api/cart`
+- Billing "same as shipping" checkbox mirrors the shipping address to cart billing in real time
+- Country in address forms pre-selected from the URL locale param (e.g. `de-de` → Germany)
+- Country select populated from global locale config (same source as locale switcher)
+- Postal code validated per country using the `validator` npm package (`isPostalCode`)
+- Email validated using `validator` (`isEmail`)
+- Billing address section appears before split shipment section
+- Shared `AddressFields` component (`components/address/AddressFields.tsx`) used for all address forms — renders first/last name, street (combined for US, split name+number for EU), apt/suite, city, postal code, state, country, phone, and optionally email; postal code validated on blur
 - Credit card payment form with auto-fill test card button (4242 4242 4242 4242)
 - Order confirmation page with subscription setup notification
 
@@ -104,8 +143,10 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 
 - List, add, edit, and delete saved addresses
 - Default shipping and default billing toggles (independent)
-- Optional address nickname
-- Localized address format (US vs. EU street/number)
+- Country defaults to the current locale's country when adding a new address
+- Localized address display: US format (`123 Main St`), European format (`Main St 123`)
+- Phone field included in address form
+- Shared `AddressFields` component used for all address field rendering (same as checkout)
 
 ## My Account — Payment Methods
 
@@ -121,7 +162,7 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 ## Internationalization
 
 - Locale-prefixed URLs: `/en-us/...`, `/en-gb/...`, `/de-de/...`
-- Middleware auto-redirects non-locale paths based on `vibe-country` cookie (falls back to `en-us`)
+- `site/proxy.ts` auto-redirects non-locale paths based on `vibe-country` cookie (falls back to `en-us`)
 - Country selector navigates to locale-correct URL on switch
 - Country selector in header with flag emoji (US, GB, DE)
 - Currency switching (USD, GBP, EUR)
@@ -132,6 +173,13 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - ICU plural format for item counts and skip messages
 - Translation keys organized in JSON message files under `site/messages/` (`en-us.json`, `en-gb.json`, `de-de.json`) by namespace (common, nav, header, footer, product, cart, checkout, confirmation, account, orders, addresses, payments, subscriptions, auth, search, home)
 - Server components use `getTranslations()`, client components use `useTranslations()` hook
+- `site/i18n/routing.ts` — defines supported locales via `defineRouting` and exports locale-aware navigation primitives (`Link`, `useRouter`, `usePathname`, `redirect`, `getPathname`) via `createNavigation`; all components import `Link` from here instead of `next/link` — no manual locale prefix construction anywhere in the codebase
+
+## Homepage
+
+- Hero banner (`site/components/home/HeroBanner.tsx`) configured via `site/config/hero.json` — edit JSON to change background image, eyebrow text, heading parts (with optional `bold` and `newLine` flags), description, and CTA buttons; all text fields are locale maps (`en-US`, `en-GB`, `de-DE`)
+- Home page sections (`site/components/home/Section.tsx`) — reusable wrapper with title, optional "view all" CTA link, and a 4-column product/category grid
+- Category cards (`site/components/category/CategoryCard.tsx`) — resolves localized name and slug internally, builds locale-aware href via next-intl routing
 
 ## Authentication & Sessions
 
@@ -160,7 +208,7 @@ All commercetools calls go through server-side Next.js API routes. The browser n
 | `/api/auth/reset` | POST | Reset password with token |
 | `/api/auth/confirm` | POST | Confirm email with token |
 | `/api/auth/change-password` | POST | Change password (authenticated) |
-| `/api/cart` | GET, POST | Get or create cart |
+| `/api/cart` | GET, POST, PATCH | Get or create cart; PATCH sets shipping address, billing address, and/or shipping method |
 | `/api/cart/items` | POST | Add item |
 | `/api/cart/items/[itemId]` | PUT, DELETE | Update quantity, remove item |
 | `/api/cart/discount` | POST, DELETE | Apply / remove discount code |

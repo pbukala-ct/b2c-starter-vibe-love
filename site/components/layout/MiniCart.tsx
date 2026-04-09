@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { useCart, Cart } from '@/context/CartContext';
 import { useCartSWR, useCartMutations } from '@/hooks/useCartSWR';
@@ -14,12 +14,10 @@ import { Drawer } from '@/components/ui/Drawer';
 function MiniCartFooter({
   cart,
   country,
-  localePath,
   onClose,
 }: {
   cart: Cart;
   country: string;
-  localePath: (path: string) => string;
   onClose: () => void;
 }) {
   const t = useTranslations('miniCart');
@@ -51,14 +49,14 @@ function MiniCartFooter({
       </div>
       <p className="text-charcoal-light text-xs">{t('shippingCalculated')}</p>
       <Link
-        href={localePath('/checkout')}
+        href="/checkout"
         onClick={onClose}
         className="bg-charcoal hover:bg-charcoal/80 block w-full rounded-sm py-3 text-center text-sm font-medium text-white transition-colors"
       >
         {t('checkout')}
       </Link>
       <Link
-        href={localePath('/cart')}
+        href="/cart"
         onClick={onClose}
         className="border-border text-charcoal hover:bg-cream block w-full rounded-sm border py-2.5 text-center text-sm font-medium transition-colors"
       >
@@ -72,7 +70,7 @@ export default function MiniCart() {
   const { showMiniCart, setShowMiniCart } = useCart();
   const { data: cart } = useCartSWR();
   const { removeLineItem } = useCartMutations();
-  const { country, localePath } = useLocale();
+  const { country } = useLocale();
   const { formatMoney, getLocalizedString } = useFormatters();
   const policyMap = useRecurrencePolicies();
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
@@ -107,7 +105,7 @@ export default function MiniCart() {
         </svg>
         <p className="text-charcoal-light">{t('empty')}</p>
         <Link
-          href={localePath('/')}
+          href="/"
           onClick={() => setShowMiniCart(false)}
           className="text-terra text-sm hover:underline"
         >
@@ -132,15 +130,13 @@ export default function MiniCart() {
           return (
             <div key={item.id} className="flex gap-3">
               {image && (
-                <div className="bg-cream-dark relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-sm">
+                <div className="bg-cream-dark relative h-16 w-16 shrink-0 overflow-hidden rounded-sm">
                   <Image src={image} alt={name} fill className="object-cover" sizes="64px" />
                 </div>
               )}
               <div className="min-w-0 flex-1">
                 <Link
-                  href={localePath(
-                    `/${getLocalizedString(item.productSlug) || item.productKey || item.productId}/p/${item.variant?.sku || item.productId}`
-                  )}
+                  href={`/${getLocalizedString(item.productSlug) || item.productKey || item.productId}/p/${item.variant?.sku || item.productId}`}
                   onClick={() => setShowMiniCart(false)}
                   className="text-charcoal hover:text-terra line-clamp-2 text-sm font-medium"
                 >
@@ -179,7 +175,7 @@ export default function MiniCart() {
       {/* Cart icon button */}
       <button
         onClick={() => setShowMiniCart(!showMiniCart)}
-        className="text-charcoal hover:text-terra relative flex items-center gap-1 transition-colors"
+        className="text-charcoal hover:text-terra relative flex cursor-pointer items-center gap-1 transition-colors"
         aria-label={`Cart (${itemCount} items)`}
       >
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,7 +187,7 @@ export default function MiniCart() {
           />
         </svg>
         {itemCount > 0 && (
-          <span className="bg-terra absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full text-xs font-medium text-white">
+          <span className="bg-terra absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] leading-none font-medium text-white">
             {itemCount > 9 ? '9+' : itemCount}
           </span>
         )}
@@ -203,12 +199,7 @@ export default function MiniCart() {
         title={`${t('title')}${itemCount > 0 ? ` (${itemCount})` : ''}`}
         footer={
           cart && cart.lineItems.length > 0 ? (
-            <MiniCartFooter
-              cart={cart}
-              country={country}
-              localePath={localePath}
-              onClose={() => setShowMiniCart(false)}
-            />
+            <MiniCartFooter cart={cart} country={country} onClose={() => setShowMiniCart(false)} />
           ) : undefined
         }
       >
