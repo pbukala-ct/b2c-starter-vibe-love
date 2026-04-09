@@ -44,3 +44,6 @@ yarn-error.log*
 .netlify
 test/playwright-report/
 test/test-results/
+
+# ─── OpenSpec (local change proposals) ───────────────────────────────────────
+openspec/
