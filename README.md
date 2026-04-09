@@ -69,7 +69,7 @@ Open http://localhost:8888
 `netlify.toml` is pre-configured. To deploy:
 
 1. Push your fork to GitHub
-2. In [Netlify](https://app.netlify.com), click **Add new site > Import an existing project**
+2. In [Netlify](https://app.netlify.com), click **Add new project > Import a Git repository > GitHub**
 3. Connect your GitHub repo — build settings are auto-detected from `netlify.toml`
 4. Add your `site/.env` variables in **Site configuration > Environment variables**
 5. Deploy
