@@ -47,7 +47,7 @@ export function mapProduct(
   locale: string = 'en-US'
 ): Product {
   return {
-    type: 'Product',
+    type: 'Product' as const,
     id: p.id,
     key: p.key,
     name: getLocalizedString(p.name as Record<string, string>, locale),
