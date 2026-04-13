@@ -1,5 +1,6 @@
 export const KEY_CART = 'cart';
 export const KEY_ACCOUNT = 'account';
+export const KEY_LOYALTY = 'loyalty';
 export const KEY_ORDERS = 'orders';
 export const KEY_SUBSCRIPTIONS = 'subscriptions';
 export const KEY_RECURRENCE_POLICIES = 'recurrence-policies';

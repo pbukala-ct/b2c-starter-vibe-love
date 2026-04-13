@@ -11,6 +11,7 @@ import CountrySelector from './CountrySelector';
 import SearchBar from './SearchBar';
 import type { Category } from '@/lib/types';
 import { useWishlist } from '@/hooks/useWishlist';
+import { useLoyalty } from '@/hooks/useLoyalty';
 import { useTranslations } from 'next-intl';
 
 interface HeaderProps {
@@ -20,6 +21,7 @@ interface HeaderProps {
 export default function Header({ categories }: HeaderProps) {
   const { data: user } = useAccount();
   const { data: wishlist } = useWishlist();
+  const { data: loyalty } = useLoyalty();
   const isLoggedIn = !!user;
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -104,10 +106,31 @@ export default function Header({ categories }: HeaderProps) {
                 {isLoggedIn && (
                   <span className="hidden text-xs font-medium sm:block">{user?.firstName}</span>
                 )}
+                {isLoggedIn && loyalty?.loyaltyTier && (
+                  <span
+                    className={`hidden rounded-full px-2 py-0.5 text-[10px] font-medium sm:inline-block ${{ Bronze: 'bg-amber-100 text-amber-800', Silver: 'bg-slate-100 text-slate-700', Gold: 'bg-yellow-100 text-yellow-800', Platinum: 'bg-purple-100 text-purple-800' }[loyalty.loyaltyTier] ?? 'bg-blue-100 text-blue-800'}`}
+                  >
+                    {loyalty.loyaltyTier}
+                  </span>
+                )}
               </Link>
 
               {isLoggedIn && (
                 <div className="border-border invisible absolute top-full right-0 z-50 mt-1 w-48 rounded-sm border bg-white opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:opacity-100">
+                  {loyalty && (loyalty.loyaltyTier !== null || loyalty.loyaltyPoints !== null) && (
+                    <div className="border-border border-b px-4 py-2.5">
+                      {loyalty.loyaltyTier !== null && (
+                        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${{Bronze:'bg-amber-100 text-amber-800',Silver:'bg-slate-100 text-slate-700',Gold:'bg-yellow-100 text-yellow-800',Platinum:'bg-purple-100 text-purple-800'}[loyalty.loyaltyTier] ?? 'bg-blue-100 text-blue-800'}`}>
+                          {loyalty.loyaltyTier}
+                        </span>
+                      )}
+                      {loyalty.loyaltyPoints !== null && (
+                        <p className="text-charcoal-light mt-0.5 text-xs">
+                          {loyalty.loyaltyPoints.toLocaleString()} pts
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <Link
                     href="/account"
                     className="text-charcoal hover:bg-cream block px-4 py-2.5 text-sm"

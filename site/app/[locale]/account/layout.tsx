@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { Link, usePathname, useRouter } from '@/i18n/routing';
 import { useAccount } from '@/hooks/useAccount';
+import LoyaltyWidget from '@/components/LoyaltyWidget';
 import { mutate } from 'swr';
 import { KEY_ACCOUNT, KEY_CART, KEY_WISHLIST } from '@/lib/cache-keys';
 import { useTranslations } from 'next-intl';
@@ -51,6 +52,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
               </p>
               <p className="text-charcoal-light truncate text-xs">{user.email}</p>
             </div>
+            <LoyaltyWidget />
             <nav className="py-2">
               {navItems.map((item) => {
                 const href = item.path;

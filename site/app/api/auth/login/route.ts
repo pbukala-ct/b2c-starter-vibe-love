@@ -36,12 +36,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const loyaltyFields = customer.custom?.fields;
     const newSession = {
       ...session,
       customerId: customer.id,
       customerEmail: customer.email,
       customerFirstName: customer.firstName || '',
       customerLastName: customer.lastName || '',
+      loyaltyPoints: (loyaltyFields?.loyaltyPoints as number | undefined) ?? null,
+      loyaltyTier: (loyaltyFields?.loyaltyTier as string | undefined) ?? null,
       cartId,
     };
 

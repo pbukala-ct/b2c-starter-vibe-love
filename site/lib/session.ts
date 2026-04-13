@@ -13,6 +13,8 @@ export interface Session {
   customerEmail?: string;
   customerFirstName?: string;
   customerLastName?: string;
+  loyaltyPoints?: number | null;
+  loyaltyTier?: string | null;
   cartId?: string;
   country?: string;
   currency?: string;
