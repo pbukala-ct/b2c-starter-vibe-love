@@ -175,6 +175,54 @@ Comprehensive inventory of implemented storefront features. This file is the sou
 - Server components use `getTranslations()`, client components use `useTranslations()` hook
 - `site/i18n/routing.ts` — defines supported locales via `defineRouting` and exports locale-aware navigation primitives (`Link`, `useRouter`, `usePathname`, `redirect`, `getPathname`) via `createNavigation`; all components import `Link` from here instead of `next/link` — no manual locale prefix construction anywhere in the codebase
 
+## Loyalty Programme
+
+- Loyalty tier and points stored as CT customer custom fields (`loyaltyTier`, `loyaltyPoints`)
+- Tier badge displayed inline next to the username in the header (both desktop dropdown trigger and mobile nav)
+- Loyalty tier and points shown in the account sidebar (`/account` layout) and on the account overview page
+- `useLoyalty` hook reads directly from `useAccount()` — loyalty data is included in the `/api/account/profile` response, avoiding a separate network round-trip
+- `LoyaltyWidget` client component renders tier badge + points balance; used in both the header dropdown and the account area
+- Backend: `GET /api/account/loyalty` route available for standalone loyalty queries (returns `loyaltyTier` and `loyaltyPoints` from CT customer custom fields)
+
+## Shop the Look
+
+An editorial feature that surfaces curated product bundles stored as commercetools Custom Objects (container: `shop-the-look`).
+
+### Listing Page (`/shop-the-look`)
+- Displays all active bundles as cards in a responsive grid
+- Each card hero shows a real product image collage fetched via a single batch `productProjections` query:
+  - 1 image: full-bleed
+  - 2 images: side-by-side halves
+  - 3 images: left half + 2 stacked on right
+  - Fallback: neutral grey block when no images available
+- Product count badge overlaid on the hero image
+- Bundle name, description, and "Shop now" CTA link on each card
+- BFF route: `GET /api/shop-the-look`
+
+### Detail Page (`/shop-the-look/[key]`)
+- Breadcrumb navigation back to listing page
+- Bundle name, description, and product count in a header section
+- **"Add All to Cart"** button anchored in the header (right-aligned) — always visible without scrolling; extracted into `ShopTheLookActions` client component
+  - Sequential cart additions with spinner state
+  - Success (`✓ All added`) and partial-error states
+- **Adaptive product tile grid** based on bundle size:
+  - 1 product: centred single tile (`max-w-sm mx-auto`)
+  - 2 products: 2-column grid
+  - 3 products: asymmetric editorial layout — featured tile spans 2 rows on the left, two smaller tiles stacked on the right (CSS grid `row-span-2`)
+  - 4 products: 2×2 grid
+  - 5+ products: 2-column (mobile) → 3-column (desktop) grid
+- Each product tile has an individual "Add to Cart" button with adding/added state feedback
+- Featured tile (3-product layout) uses `aspect-[3/4]` tall image area; standard tiles use `aspect-square`
+- Position badge (numbered) overlaid on each product image
+- BFF route: `GET /api/shop-the-look/[key]`
+- Navigation: "Shop the Look" link in MegaMenu and mobile nav
+
+### Data Model
+- Bundles stored in CT Custom Objects, container: `shop-the-look`
+- Bundle fields: `name`, `description`, `status` (`active`|`draft`), `products[]` (each with `productId`, `variantId`, `position`)
+- Only `status: "active"` bundles are shown on the storefront
+- `resolveBundleProducts` batch-fetches all product data in one CT query, resolves pinned variant or falls back to master variant
+
 ## Homepage
 
 - Hero banner (`site/components/home/HeroBanner.tsx`) configured via `site/config/hero.json` — edit JSON to change background image, eyebrow text, heading parts (with optional `bold` and `newLine` flags), description, and CTA buttons; all text fields are locale maps (`en-US`, `en-GB`, `de-DE`)
@@ -223,6 +271,9 @@ All commercetools calls go through server-side Next.js API routes. The browser n
 | `/api/account/subscriptions/[id]` | PUT | Pause/resume/cancel/skip/reschedule |
 | `/api/account/addresses` | GET, POST, PUT, DELETE, PATCH | Address CRUD + set defaults |
 | `/api/account/payments` | GET, POST, DELETE, PATCH | Payment method CRUD + set default |
+| `/api/shop-the-look` | GET | List active Shop the Look bundles |
+| `/api/shop-the-look/[key]` | GET | Single bundle detail |
+| `/api/account/loyalty` | GET | Customer loyalty tier and points |
 | `/api/countries` | GET | Available countries |
 | `/api/shipping-methods` | GET | Shipping options |
 | `/api/recurrence-policies` | GET | Subscription frequencies |
