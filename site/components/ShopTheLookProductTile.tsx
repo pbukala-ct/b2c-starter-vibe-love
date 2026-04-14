@@ -9,11 +9,11 @@ interface ShopTheLookProductTileProps {
   addingId: string | null;
   onAddToCart: (product: ResolvedLookProduct) => void;
   disabled?: boolean;
-  featured?: boolean;
   addToCartLabel: string;
   addingLabel: string;
   addedIds: Set<string>;
   addedLabel: string;
+  viewDetailsLabel: string;
 }
 
 export default function ShopTheLookProductTile({
@@ -22,11 +22,11 @@ export default function ShopTheLookProductTile({
   addingId,
   onAddToCart,
   disabled,
-  featured = false,
   addToCartLabel,
   addingLabel,
   addedIds,
   addedLabel,
+  viewDetailsLabel,
 }: ShopTheLookProductTileProps) {
   const isAdding = addingId === product.productId;
   const isAdded = addedIds.has(product.productId);
@@ -34,11 +34,7 @@ export default function ShopTheLookProductTile({
   return (
     <div className="border-border group flex h-full flex-col overflow-hidden rounded-sm border bg-white">
       {/* Image */}
-      <div
-        className={`relative overflow-hidden bg-gray-50 ${
-          featured ? 'aspect-[3/4] sm:h-full sm:min-h-80' : 'aspect-square'
-        }`}
-      >
+      <div className="relative aspect-square overflow-hidden bg-gray-50">
         <span className="bg-charcoal/70 absolute top-3 left-3 z-10 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold text-white">
           {position + 1}
         </span>
@@ -47,10 +43,7 @@ export default function ShopTheLookProductTile({
             src={product.image}
             alt={product.name}
             fill
-            sizes={featured
-              ? '(max-width: 640px) 100vw, 50vw'
-              : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw'
-            }
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
@@ -62,11 +55,15 @@ export default function ShopTheLookProductTile({
 
       {/* Info */}
       <div className="flex flex-col p-4">
+        <p className="text-charcoal mb-0.5 line-clamp-2 text-sm font-medium">
+          {product.name}
+        </p>
+
         <Link
           href={`/product/${product.slug}`}
-          className="text-charcoal hover:text-terra mb-1 line-clamp-2 text-sm font-medium transition-colors"
+          className="text-charcoal-light hover:text-terra mb-2 text-xs underline-offset-2 hover:underline transition-colors"
         >
-          {product.name}
+          {viewDetailsLabel}
         </Link>
 
         {product.priceCentAmount !== undefined && product.priceCurrency ? (

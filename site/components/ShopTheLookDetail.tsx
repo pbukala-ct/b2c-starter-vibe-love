@@ -13,8 +13,8 @@ interface ShopTheLookDetailProps {
 function getLookLayout(count: number): string {
   if (count === 1) return 'flex justify-center';
   if (count === 2) return 'grid grid-cols-1 gap-5 sm:grid-cols-2';
-  if (count === 3) return 'grid grid-cols-1 gap-5 sm:grid-cols-2';
-  if (count === 4) return 'grid grid-cols-1 gap-5 sm:grid-cols-2';
+  if (count === 3) return 'grid grid-cols-1 gap-5 sm:grid-cols-3';
+  if (count === 4) return 'grid grid-cols-2 gap-5 sm:grid-cols-2';
   return 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3';
 }
 
@@ -49,44 +49,6 @@ export default function ShopTheLookDetail({ products }: ShopTheLookDetailProps) 
 
   const isBusy = addingId !== null;
 
-  // 3-product layout: first tile is "featured" (larger), rendered outside the grid
-  if (products.length === 3) {
-    const [featured, ...rest] = products;
-    return (
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        {/* Featured tile spans 2 rows on sm+ */}
-        <div className="sm:row-span-2">
-          <ShopTheLookProductTile
-            product={featured}
-            position={featured.position}
-            addingId={addingId}
-            addedIds={addedIds}
-            onAddToCart={addSingleToCart}
-            disabled={isBusy}
-            featured
-            addToCartLabel={t('addToCart')}
-            addingLabel={t('adding')}
-            addedLabel={t('added')}
-          />
-        </div>
-        {rest.map((product) => (
-          <ShopTheLookProductTile
-            key={product.productId}
-            product={product}
-            position={product.position}
-            addingId={addingId}
-            addedIds={addedIds}
-            onAddToCart={addSingleToCart}
-            disabled={isBusy}
-            addToCartLabel={t('addToCart')}
-            addingLabel={t('adding')}
-            addedLabel={t('added')}
-          />
-        ))}
-      </div>
-    );
-  }
-
   return (
     <div className={getLookLayout(products.length)}>
       {products.map((product) => (
@@ -101,6 +63,7 @@ export default function ShopTheLookDetail({ products }: ShopTheLookDetailProps) 
           addToCartLabel={t('addToCart')}
           addingLabel={t('adding')}
           addedLabel={t('added')}
+          viewDetailsLabel={t('viewDetails')}
         />
       ))}
     </div>
