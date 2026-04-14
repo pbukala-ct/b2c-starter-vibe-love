@@ -33,7 +33,8 @@
     "paymentMethods": "Zahlungsmethoden",
     "menu": "Menü",
     "security": "Sicherheit",
-    "wishlist": "Wunschliste"
+    "wishlist": "Wunschliste",
+    "shopTheLook": "Den Look shoppen"
   },
   "header": {
     "topBar": "Kostenloser Versand ab 500 € · Premium-Möbel und Wohnaccessoires",
@@ -422,5 +423,19 @@
     "phone": "Telefon",
     "email": "E-Mail",
     "invalidEmail": "Ungültige E-Mail-Adresse"
+  },
+  "shopTheLook": {
+    "title": "Den Look shoppen",
+    "subtitle": "Kuratierte Looks aus unserer Kollektion",
+    "empty": "Derzeit keine Looks verfügbar",
+    "products": "{count, plural, one {# Produkt} other {# Produkte}}",
+    "addToCart": "In den Warenkorb",
+    "adding": "Wird hinzugefügt…",
+    "added": "Hinzugefügt!",
+    "addAllToCart": "Alle in den Warenkorb",
+    "addingAll": "Alle werden hinzugefügt…",
+    "allAdded": "Alle hinzugefügt!",
+    "partialError": "Einige Artikel konnten nicht hinzugefügt werden",
+    "navLink": "Den Look shoppen"
   }
 }

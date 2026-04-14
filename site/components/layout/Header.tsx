@@ -215,6 +215,13 @@ export default function Header({ categories }: HeaderProps) {
           </div>
           {/* Mobile nav */}
           <nav className="px-4 pb-4">
+            <Link
+              href="/shop-the-look"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-charcoal border-border/50 block border-b py-2.5 text-sm font-medium"
+            >
+              {tNav('shopTheLook')}
+            </Link>
             {topLevel.map((cat) => (
               <div key={cat.id}>
                 <Link

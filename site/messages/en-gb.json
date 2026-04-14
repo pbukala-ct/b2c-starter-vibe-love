@@ -33,7 +33,8 @@
     "paymentMethods": "Payment Methods",
     "menu": "Menu",
     "security": "Security",
-    "wishlist": "Wishlist"
+    "wishlist": "Wishlist",
+    "shopTheLook": "Shop the Look"
   },
   "header": {
     "topBar": "Free delivery on orders over £500 · Premium home goods & furniture",
@@ -422,5 +423,19 @@
     "phone": "Phone",
     "email": "Email",
     "invalidEmail": "Invalid email address"
+  },
+  "shopTheLook": {
+    "title": "Shop the Look",
+    "subtitle": "Curated looks from our collection",
+    "empty": "No looks available right now",
+    "products": "{count, plural, one {# product} other {# products}}",
+    "addToCart": "Add to Cart",
+    "adding": "Adding…",
+    "added": "Added!",
+    "addAllToCart": "Add All to Cart",
+    "addingAll": "Adding All…",
+    "allAdded": "All Added!",
+    "partialError": "Some items could not be added to cart",
+    "navLink": "Shop the Look"
   }
 }

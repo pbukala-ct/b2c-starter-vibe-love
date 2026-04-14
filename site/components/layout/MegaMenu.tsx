@@ -17,6 +17,12 @@ export default function MegaMenu({ categories }: MegaMenuProps) {
 
   return (
     <nav className="hidden items-center gap-0 lg:flex">
+      <Link
+        href="/shop-the-look"
+        className="text-charcoal hover:text-terra hover:border-terra border-b-2 border-transparent px-4 py-5 text-sm font-medium transition-colors"
+      >
+        {t('shopTheLook')}
+      </Link>
       {topLevel.map((cat) => {
         const hasChildren = (cat.children?.length || 0) > 0;
 

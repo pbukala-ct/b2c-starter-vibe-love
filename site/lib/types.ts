@@ -103,3 +103,43 @@ export interface ItemProps<T = object> {
 export interface ItemRegistry {
   [key: string]: (props: ItemProps) => JSX.Element | Promise<JSX.Element>;
 }
+
+// ── Shop the Look ──────────────────────────────────────────────────────────────
+
+export type BundleStatus = 'active' | 'draft';
+
+export interface BundleProduct {
+  productId: string;
+  variantId: number;
+  position: number;
+}
+
+export interface ShopTheLookBundle {
+  name: string;
+  description?: string;
+  status: BundleStatus;
+  products: BundleProduct[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShopTheLookCustomObject {
+  id: string;
+  key: string;
+  version: number;
+  container: 'shop-the-look';
+  value: ShopTheLookBundle;
+  lastModifiedAt: string;
+}
+
+export interface ResolvedLookProduct {
+  productId: string;
+  variantId: number;
+  position: number;
+  name: string;
+  slug: string;
+  image: string;
+  priceCentAmount?: number;
+  priceCurrency?: string;
+  sku: string;
+}
