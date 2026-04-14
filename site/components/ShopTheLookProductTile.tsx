@@ -60,7 +60,7 @@ export default function ShopTheLookProductTile({
         </p>
 
         <Link
-          href={`/product/${product.slug}`}
+          href={`/${product.slug}/p/${product.sku}`}
           className="text-charcoal-light hover:text-terra mb-2 text-xs underline-offset-2 hover:underline transition-colors"
         >
           {viewDetailsLabel}
