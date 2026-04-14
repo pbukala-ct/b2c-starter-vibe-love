@@ -9,6 +9,7 @@ interface ShopTheLookProductTileProps {
   addingId: string | null;
   onAddToCart: (product: ResolvedLookProduct) => void;
   disabled?: boolean;
+  featured?: boolean;
   addToCartLabel: string;
   addingLabel: string;
   addedIds: Set<string>;
@@ -21,6 +22,7 @@ export default function ShopTheLookProductTile({
   addingId,
   onAddToCart,
   disabled,
+  featured = false,
   addToCartLabel,
   addingLabel,
   addedIds,
@@ -30,10 +32,14 @@ export default function ShopTheLookProductTile({
   const isAdded = addedIds.has(product.productId);
 
   return (
-    <div className="border-border group flex flex-col overflow-hidden rounded-sm border bg-white">
-      {/* Position badge + image */}
-      <div className="relative aspect-square overflow-hidden bg-gray-50">
-        <span className="bg-charcoal absolute top-3 left-3 z-10 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold text-white">
+    <div className="border-border group flex h-full flex-col overflow-hidden rounded-sm border bg-white">
+      {/* Image */}
+      <div
+        className={`relative overflow-hidden bg-gray-50 ${
+          featured ? 'aspect-[3/4] sm:h-full sm:min-h-80' : 'aspect-square'
+        }`}
+      >
+        <span className="bg-charcoal/70 absolute top-3 left-3 z-10 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold text-white">
           {position + 1}
         </span>
         {product.image ? (
@@ -41,18 +47,21 @@ export default function ShopTheLookProductTile({
             src={product.image}
             alt={product.name}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            sizes={featured
+              ? '(max-width: 640px) 100vw, 50vw'
+              : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw'
+            }
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-4xl text-gray-300">
-            🛋️
+          <div className="flex h-full items-center justify-center">
+            <div className="h-16 w-16 rounded-sm bg-gray-200" />
           </div>
         )}
       </div>
 
       {/* Info */}
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-col p-4">
         <Link
           href={`/product/${product.slug}`}
           className="text-charcoal hover:text-terra mb-1 line-clamp-2 text-sm font-medium transition-colors"
@@ -71,9 +80,9 @@ export default function ShopTheLookProductTile({
         <button
           onClick={() => onAddToCart(product)}
           disabled={disabled || isAdding}
-          className="bg-charcoal hover:bg-charcoal/80 mt-auto w-full rounded-sm py-2 text-xs font-medium text-white transition-colors disabled:opacity-50"
+          className="bg-charcoal hover:bg-charcoal/80 w-full rounded-sm py-2 text-xs font-medium text-white transition-colors disabled:opacity-50"
         >
-          {isAdding ? addingLabel : isAdded ? addedLabel : addToCartLabel}
+          {isAdding ? addingLabel : isAdded ? `✓ ${addedLabel}` : addToCartLabel}
         </button>
       </div>
     </div>

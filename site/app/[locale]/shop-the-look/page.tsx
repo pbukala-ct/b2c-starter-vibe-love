@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { getShopTheLookBundles } from '@/lib/ct/shop-the-look';
+import { getShopTheLookBundles, getShopTheLookPreviews } from '@/lib/ct/shop-the-look';
 import ShopTheLookCard from '@/components/ShopTheLookCard';
 
 export default async function ShopTheLookPage() {
@@ -7,6 +7,8 @@ export default async function ShopTheLookPage() {
     getTranslations('shopTheLook'),
     getShopTheLookBundles(),
   ]);
+
+  const previews = await getShopTheLookPreviews(bundles);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
@@ -25,7 +27,11 @@ export default async function ShopTheLookPage() {
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {bundles.map((bundle) => (
-            <ShopTheLookCard key={bundle.key} bundle={bundle} />
+            <ShopTheLookCard
+              key={bundle.key}
+              bundle={bundle}
+              previewImages={previews[bundle.key] ?? []}
+            />
           ))}
         </div>
       )}

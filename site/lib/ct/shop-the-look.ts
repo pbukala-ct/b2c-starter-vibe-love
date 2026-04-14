@@ -51,6 +51,58 @@ export async function getShopTheLookBundle(
   }
 }
 
+// ── Preview images for listing cards ────────────────────────────────────────
+// One batch query for all unique productIds across all bundles — returns a map
+// of bundleKey → up to 3 master-variant image URLs.
+
+export async function getShopTheLookPreviews(
+  bundles: ShopTheLookCustomObject[]
+): Promise<Record<string, string[]>> {
+  if (bundles.length === 0) return {};
+
+  // Collect up to 3 productIds per bundle, track which bundle each belongs to
+  const bundleProductMap: Record<string, string[]> = {};
+  const allIds = new Set<string>();
+
+  for (const bundle of bundles) {
+    const ids = [...bundle.value.products]
+      .sort((a, b) => a.position - b.position)
+      .slice(0, 3)
+      .map((p) => p.productId);
+    bundleProductMap[bundle.key] = ids;
+    ids.forEach((id) => allIds.add(id));
+  }
+
+  if (allIds.size === 0) return {};
+
+  const whereClause = `id in (${[...allIds].map((id) => `"${id}"`).join(', ')})`;
+
+  const imageMap: Record<string, string> = {};
+  try {
+    const { body } = await apiRoot
+      .productProjections()
+      .get({
+        queryArgs: { where: whereClause, limit: allIds.size },
+      })
+      .execute();
+
+    for (const p of body.results) {
+      const url = (p.masterVariant as { images?: { url: string }[] }).images?.[0]?.url ?? '';
+      if (url) imageMap[p.id] = url;
+    }
+  } catch {
+    // Return empty previews on error — cards fall back to placeholder
+  }
+
+  const result: Record<string, string[]> = {};
+  for (const bundle of bundles) {
+    result[bundle.key] = (bundleProductMap[bundle.key] ?? [])
+      .map((id) => imageMap[id])
+      .filter(Boolean) as string[];
+  }
+  return result;
+}
+
 // ── 1.3  Resolve full product+variant data for a bundle ──────────────────────
 
 export async function resolveBundleProducts(
