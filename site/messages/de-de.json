@@ -37,7 +37,7 @@
     "shopTheLook": "Den Look shoppen"
   },
   "header": {
-    "topBar": "Kostenloser Versand ab 500 € · Premium-Möbel und Wohnaccessoires",
+    "topBar": "Kuratierte Wohnaccessoires — mit Liebe gemacht · Kostenloser Versand ab 500 €",
     "cartItems": "Warenkorb ({count} Artikel)"
   },
   "footer": {
@@ -60,6 +60,8 @@
     "specifications": "Spezifikationen",
     "addToCart": "In den Warenkorb",
     "outOfStock": "Nicht vorrätig",
+    "inStock": "Auf Lager",
+    "lowStock": "Nur noch {count} verfügbar",
     "currentlyUnavailable": "Derzeit nicht verfügbar",
     "adding": "...",
     "color": "Farbe",
@@ -348,7 +350,7 @@
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",
-    "signInToAccount": "Melden Sie sich bei Ihrem Vibe Home-Konto an",
+    "signInToAccount": "Melden Sie sich bei Ihrem Vibe Love-Konto an",
     "emailAddress": "E-Mail-Adresse",
     "emailLabel": "E-Mail-Adresse",
     "emailPlaceholder": "ihre@email.de",
@@ -362,7 +364,7 @@
     "useTestCredentials": "Testdaten verwenden",
     "invalidCredentials": "Ungültige E-Mail oder falsches Passwort",
     "createAccount": "Konto erstellen",
-    "joinVibe": "Werden Sie Teil von Vibe Home für ein besseres Einkaufserlebnis",
+    "joinVibe": "Werden Sie Teil von Vibe Love für ein besseres Einkaufserlebnis",
     "firstName": "Vorname",
     "firstNamePlaceholder": "Jana",
     "lastName": "Nachname",

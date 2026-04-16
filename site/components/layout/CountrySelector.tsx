@@ -40,7 +40,7 @@ export default function CountrySelector() {
             aria-label="Close country selector"
             tabIndex={-1}
           />
-          <div className="border-border absolute top-full right-0 z-50 mt-2 min-w-40 rounded-sm border bg-white shadow-lg">
+          <div className="border-border absolute top-full right-0 z-50 mt-2 min-w-40 rounded-sm border bg-cream shadow-lg">
             {countries.map(([code, cfg]) => (
               <button
                 key={code}

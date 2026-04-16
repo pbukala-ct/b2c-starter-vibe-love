@@ -6,6 +6,9 @@ import type {
 import type { Product, Price, Variant } from '@/lib/types';
 import { getLocalizedString } from '@/lib/utils';
 
+// Read the supply channel ID at import time (server-only)
+const SUPPLY_CHANNEL_ID = process.env.NEXT_PUBLIC_CTP_SUPPLY_CHANNEL_ID ?? '';
+
 function mapPrice(p: CtPrice, locale: string): Price {
   return {
     centAmount: p.value.centAmount,
@@ -36,7 +39,15 @@ function mapVariant(v: CtProductVariant, matchingIds: Set<number> | null, locale
     price: v.price ? mapPrice(v.price, locale) : undefined,
     prices: (v.prices ?? []).map((p) => mapPrice(p, locale)),
     attributes: (v.attributes ?? []).map((a) => ({ name: a.name, value: a.value })),
-    availability: v.availability ? { isOnStock: v.availability.isOnStock } : undefined,
+    availability: (() => {
+      if (!v.availability) return undefined;
+      // Prefer supply channel availability when channels are expanded and the channel is configured
+      const channelAvail = SUPPLY_CHANNEL_ID
+        ? (v.availability.channels as Record<string, { isOnStock?: boolean; availableQuantity?: number }> | undefined)?.[SUPPLY_CHANNEL_ID]
+        : undefined;
+      const source = channelAvail ?? v.availability;
+      return { isOnStock: source.isOnStock, availableQuantity: source.availableQuantity };
+    })(),
     isMatchingVariant: matchingIds ? matchingIds.has(v.id) : undefined,
   };
 }

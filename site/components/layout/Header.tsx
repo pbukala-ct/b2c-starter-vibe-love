@@ -40,9 +40,9 @@ export default function Header({ categories }: HeaderProps) {
   const topLevel = categories.filter((c) => !c.parent);
 
   return (
-    <header className="border-border sticky top-0 z-50 border-b bg-white">
+    <header className="border-border sticky top-0 z-50 border-b bg-cream">
       {/* Top bar */}
-      <div className="bg-charcoal px-4 py-2 text-center text-xs text-white">{t('topBar')}</div>
+      <div className="bg-terra px-4 py-2 text-center text-xs text-white">{t('topBar')}</div>
 
       {/* Main header */}
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
@@ -70,7 +70,7 @@ export default function Header({ categories }: HeaderProps) {
                 <span className="text-xs font-bold tracking-wider text-white">V</span>
               </div>
               <span className="text-charcoal hidden text-lg font-semibold tracking-tight sm:block">
-                Vibe Home
+                Vibe Love
               </span>
             </div>
           </Link>
@@ -116,7 +116,7 @@ export default function Header({ categories }: HeaderProps) {
               </Link>
 
               {isLoggedIn && (
-                <div className="border-border invisible absolute top-full right-0 z-50 mt-1 w-48 rounded-sm border bg-white opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:opacity-100">
+                <div className="border-border invisible absolute top-full right-0 z-50 mt-1 w-48 rounded-sm border bg-cream opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:opacity-100">
                   {loyalty && (loyalty.loyaltyTier !== null || loyalty.loyaltyPoints !== null) && (
                     <div className="border-border border-b px-4 py-2.5">
                       {loyalty.loyaltyTier !== null && (
@@ -208,41 +208,57 @@ export default function Header({ categories }: HeaderProps) {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="border-border border-t bg-white lg:hidden">
+        <div className="border-border border-t bg-cream lg:hidden">
           {/* Mobile search */}
           <div className="px-4 py-3">
             <SearchBar />
           </div>
           {/* Mobile nav */}
           <nav className="px-4 pb-4">
-            <Link
-              href="/shop-the-look"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-charcoal border-border/50 block border-b py-2.5 text-sm font-medium"
-            >
-              {tNav('shopTheLook')}
-            </Link>
-            {topLevel.map((cat) => (
-              <div key={cat.id}>
-                <Link
-                  href={`/category/${cat.slug}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-charcoal border-border/50 block border-b py-2.5 text-sm font-medium"
-                >
-                  {cat.name}
-                </Link>
-                {cat.children?.map((child) => (
+            {process.env.NEXT_PUBLIC_CTP_STORE_KEY ? (
+              // Flat store-specific nav — no submenus, no Shop the Look
+              <>
+                {[
+                  { label: 'Shop All', href: '/search' },
+                  { label: 'Home Decor', href: '/category/home-accents' },
+                  { label: 'Kitchen & Dining', href: '/search' },
+                  { label: 'Bath & Bedroom', href: '/search' },
+                  { label: 'New Arrivals', href: '/search?sort=createdAt' },
+                ].map((item) => (
                   <Link
-                    key={child.id}
-                    href={`/category/${child.slug}`}
+                    key={item.label}
+                    href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="text-charcoal-light hover:text-charcoal border-border/30 block border-b py-2 pl-4 text-sm"
+                    className="text-charcoal border-border/50 block border-b py-2.5 text-sm font-medium"
                   >
-                    {child.name}
+                    {item.label}
                   </Link>
                 ))}
-              </div>
-            ))}
+              </>
+            ) : (
+              // Default: dynamic category tree
+              topLevel.map((cat) => (
+                <div key={cat.id}>
+                  <Link
+                    href={`/category/${cat.slug}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-charcoal border-border/50 block border-b py-2.5 text-sm font-medium"
+                  >
+                    {cat.name}
+                  </Link>
+                  {cat.children?.map((child) => (
+                    <Link
+                      key={child.id}
+                      href={`/category/${child.slug}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-charcoal-light hover:text-charcoal border-border/30 block border-b py-2 pl-4 text-sm"
+                    >
+                      {child.name}
+                    </Link>
+                  ))}
+                </div>
+              ))
+            )}
           </nav>
         </div>
       )}

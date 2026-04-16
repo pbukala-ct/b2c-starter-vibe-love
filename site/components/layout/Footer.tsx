@@ -17,7 +17,7 @@ export default function Footer() {
               <div className="bg-terra flex h-7 w-7 items-center justify-center rounded-sm">
                 <span className="text-xs font-bold text-white">V</span>
               </div>
-              <span className="text-lg font-semibold">Vibe Home</span>
+              <span className="text-lg font-semibold">Vibe Love</span>
             </div>
             <p className="text-sm leading-relaxed text-white/60">{t('tagline')}</p>
           </div>
@@ -97,7 +97,7 @@ export default function Footer() {
 
         <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/50 md:flex-row">
           <p>
-            © {new Date().getFullYear()} Vibe Home. {tCommon('allRightsReserved')}
+            © {new Date().getFullYear()} Vibe Love. {tCommon('allRightsReserved')}
           </p>
           <div className="flex gap-4">
             <span>{tCommon('poweredBy')}</span>

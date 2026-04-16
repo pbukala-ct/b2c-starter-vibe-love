@@ -1,4 +1,4 @@
-import { apiRoot } from './client';
+import { apiRoot, scopedRoot } from './client';
 import type {
   BaseAddress,
   CartUpdateAction,
@@ -7,12 +7,12 @@ import type {
 } from '@commercetools/platform-sdk';
 
 export async function getCart(cartId: string) {
-  const { body } = await apiRoot.carts().withId({ ID: cartId }).get().execute();
+  const { body } = await scopedRoot.carts().withId({ ID: cartId }).get().execute();
   return body;
 }
 
 export async function createCart(currency: string, country: string, customerId?: string) {
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .post({ body: { currency, country, ...(customerId ? { customerId } : {}) } })
     .execute();
@@ -43,7 +43,7 @@ export async function addLineItem(
       : {}),
   } as CartUpdateAction;
 
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .withId({ ID: cartId })
     .post({ body: { version: cartVersion, actions: [action] } })
@@ -52,7 +52,7 @@ export async function addLineItem(
 }
 
 export async function removeLineItem(cartId: string, cartVersion: number, lineItemId: string) {
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .withId({ ID: cartId })
     .post({ body: { version: cartVersion, actions: [{ action: 'removeLineItem', lineItemId }] } })
@@ -66,7 +66,7 @@ export async function changeLineItemQuantity(
   lineItemId: string,
   quantity: number
 ) {
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .withId({ ID: cartId })
     .post({
@@ -80,7 +80,7 @@ export async function changeLineItemQuantity(
 }
 
 export async function setCartCustomerId(cartId: string, cartVersion: number, customerId: string) {
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .withId({ ID: cartId })
     .post({ body: { version: cartVersion, actions: [{ action: 'setCustomerId', customerId }] } })
@@ -93,7 +93,7 @@ export async function setShippingAddress(
   cartVersion: number,
   address: BaseAddress
 ) {
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .withId({ ID: cartId })
     .post({ body: { version: cartVersion, actions: [{ action: 'setShippingAddress', address }] } })
@@ -106,7 +106,7 @@ export async function addItemShippingAddress(
   cartVersion: number,
   address: BaseAddress
 ) {
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .withId({ ID: cartId })
     .post({
@@ -125,7 +125,7 @@ export async function setLineItemShippingDetails(
   lineItemId: string,
   targets: Array<{ addressKey: string; quantity: number }>
 ) {
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .withId({ ID: cartId })
     .post({
@@ -149,7 +149,7 @@ export async function setShippingMethod(
     typeId: 'shipping-method',
     id: shippingMethodId,
   };
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .withId({ ID: cartId })
     .post({
@@ -166,7 +166,7 @@ export async function addShipping(
   shippingMethodId: string,
   addressKey: string
 ) {
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .withId({ ID: cartId })
     .post({
@@ -187,7 +187,7 @@ export async function addShipping(
 }
 
 export async function setBillingAddress(cartId: string, cartVersion: number, address: BaseAddress) {
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .withId({ ID: cartId })
     .post({ body: { version: cartVersion, actions: [{ action: 'setBillingAddress', address }] } })
@@ -221,7 +221,7 @@ export async function createPayment(currency: string, centAmount: number, custom
 }
 
 export async function addPaymentToCart(cartId: string, cartVersion: number, paymentId: string) {
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .withId({ ID: cartId })
     .post({
@@ -235,7 +235,7 @@ export async function addPaymentToCart(cartId: string, cartVersion: number, paym
 }
 
 export async function createOrderFromCart(cartId: string, cartVersion: number) {
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .orders()
     .post({ body: { cart: { typeId: 'cart', id: cartId }, version: cartVersion } })
     .execute();
@@ -243,7 +243,7 @@ export async function createOrderFromCart(cartId: string, cartVersion: number) {
 }
 
 export async function applyDiscountCode(cartId: string, cartVersion: number, code: string) {
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .withId({ ID: cartId })
     .post({ body: { version: cartVersion, actions: [{ action: 'addDiscountCode', code }] } })
@@ -256,7 +256,7 @@ export async function removeDiscountCode(
   cartVersion: number,
   discountCodeId: string
 ) {
-  const { body } = await apiRoot
+  const { body } = await scopedRoot
     .carts()
     .withId({ ID: cartId })
     .post({

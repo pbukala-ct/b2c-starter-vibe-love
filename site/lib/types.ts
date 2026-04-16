@@ -22,7 +22,7 @@ export interface Variant {
   price?: Price;
   prices: Price[];
   attributes: Array<{ name: string; value: unknown }>;
-  availability?: { isOnStock?: boolean };
+  availability?: { isOnStock?: boolean; availableQuantity?: number };
   isMatchingVariant?: boolean;
 }
 

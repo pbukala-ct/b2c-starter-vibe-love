@@ -2,12 +2,27 @@
 
 Comprehensive inventory of implemented storefront features. This file is the source of truth for what exists in the codebase — keep it updated when adding or removing features.
 
-## Design & Theme
+## Design & Theme — Vibe Love
 
-- Luxury brand aesthetic: black/white/gold (`#c8a96e`) palette, sharp corners (no border radius), uppercase tracking on labels and buttons
-- Cormorant Garant serif font for headings; Inter for body text (both loaded from Google Fonts)
+- Premium home accessories brand aesthetic: warm cream/espresso/dusty-rose palette, clean corners
+- **Heading font**: Playfair Display (weights 400, 700) loaded via `next/font/google`; applied to all `h1`, `h2`, `h3` via `--font-heading` CSS variable; Inter used for body text
 - All theme tokens defined in `@theme` block in `site/app/globals.css` (Tailwind CSS v4 — no `tailwind.config.ts`)
-- Color tokens: `cream` (#ffffff), `charcoal` (#000000), `charcoal-light` (muted grey), `terra` (#c8a96e gold), `sage` (green accent), `border` (neutral grey)
+- Color tokens: `cream` (#faf7f4 warm white), `cream-dark` (#f0ebe3), `charcoal` (#2c1a10 warm espresso), `charcoal-light` (#6b4e3d), `terra` (#b5768a dusty rose accent), `terra-dark` (#9a5f74), `sage` (#7d9b7a green accent), `border` (#e5e0d8), `border-dark` (#d0c8bc)
+- **Header top bar**: dusty rose (`bg-terra`) with "Curated home accessories — crafted with love" tagline
+- **Header and nav dropdowns**: warm cream background (`bg-cream`) instead of white; MegaMenu, CountrySelector, SearchBar, mobile panel all use cream
+- **Footer**: warm espresso brown from `charcoal` token (`#2c1a10`)
+- Brand name "Vibe Love" displayed in header logo and footer; page title template `%s | Vibe Love`
+- Homepage hero: "The Art of Home" / "Love Every Corner of Home" with Aria Rug background image
+
+## Multi-Brand / CT Store Scoping
+
+- `NEXT_PUBLIC_CTP_STORE_KEY` env var in `site/.env` sets the CT store context for all API calls
+- When set, all product search, cart, and order operations are automatically scoped to that store via `inStoreKeyWithStoreKeyValue()` on the CT SDK builder
+- Implementation: `scopedRoot` exported from `site/lib/ct/client.ts` — store-scoped root (or base root when env var is unset); used in `cart.ts` (all cart/order ops) and `search.ts` (product search/PDP)
+- Non-store-scoped operations intentionally kept on base `apiRoot`: `getShippingMethods`, `createPayment`, `categories`, `recurringOrders`
+- Currently configured for `home-accessories-store` — products scoped to that store's Product Selection, prices to its price channel, inventory to its inventory channel
+- **Category filtering**: `getStoreScopedCategories(locale, currency, country)` in `categories.ts` fetches the full tree then filters to only categories that have products in the store-scoped search; used in `app/layout.tsx` (Header/MegaMenu) and `lib/layout.ts` (homepage category section); falls back to full tree when no store key is set
+- To redeploy for a different CT store: change `NEXT_PUBLIC_CTP_STORE_KEY` in `site/.env` and redeploy (no code changes required)
 
 ## Search & Discovery
 
@@ -47,6 +62,7 @@ Comprehensive inventory of implemented storefront features. This file is the sou
   - Attribute display labels fetched from CT product type model (localized), with derived fallback
   - Server-rendered `<Link>` elements — no client JS required for navigation
 - Out-of-stock handling: `variant.availability.isOnStock` drives sold-out state; when sold out shows localized "Out of stock" message + disabled "Currently unavailable" button (`product.outOfStock` / `product.currentlyUnavailable` translation keys)
+- **Inventory status indicator on PDP**: stock level shown between variant selector and add-to-cart; logic: `isOnStock=false` → red "Out of stock"; `availableQuantity 1–9` → amber "Low stock — only N left"; otherwise → sage "In stock"; `availableQuantity` mapped from CT `ProductVariantAvailability.availableQuantity` through `lib/mappers/product.ts` → `Variant.availability.availableQuantity`
 - Image URL transforms configured in `lib/ct/image-config.ts` — three separate functions for listing (`transformListingImageUrl`), PDP carousel (`transformDetailImageUrl`), and PDP thumbnails (`transformThumbnailImageUrl`); supports CDN prefixes, size suffixes, Imgix, Cloudinary, etc. Next.js image optimization disabled (`unoptimized: true`) to prevent query params being appended to CDN URLs
 - Horizontal image carousel (`ProductImageCarousel`) with portrait (3:4) aspect ratio, `object-contain` (no cropping), white background, and CSS snap scrolling
 - Carousel shows 2 images at a time; left/right arrow buttons overlaid via CSS grid for reliable vertical centering

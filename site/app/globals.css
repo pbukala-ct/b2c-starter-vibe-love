@@ -7,14 +7,15 @@
 @theme {
   --color-cream: #faf7f4;
   --color-cream-dark: #f0ebe3;
-  --color-charcoal: #1a1a1a;
-  --color-charcoal-light: #4a4a4a;
-  --color-terra: #b5724a;
-  --color-terra-dark: #9a5f3a;
+  --color-charcoal: #2c1a10;
+  --color-charcoal-light: #6b4e3d;
+  --color-terra: #b5768a;
+  --color-terra-dark: #9a5f74;
   --color-sage: #7d9b7a;
   --color-border: #e5e0d8;
   --color-border-dark: #d0c8bc;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-playfair), Georgia, serif;
 }
 
 :root {
@@ -31,6 +32,10 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-heading);
 }
 
 /* Smooth transitions */
@@ -80,9 +85,9 @@ button {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f0ebe3;
+  background: #f0e8e0;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d0c8bc;
+  background: #c4a090;
   border-radius: 3px;
 }

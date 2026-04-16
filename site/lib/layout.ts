@@ -1,7 +1,7 @@
 import { DEFAULT_LOCALE } from './utils';
 import type { LayoutSection } from './types';
-import { getCategoryTree } from '@/lib/ct/categories';
 import { searchProducts } from '@/lib/ct/search';
+import { CTP_STORE_KEY } from '@/lib/ct/client';
 
 /** Recursively resolve locale maps ({ 'en-US': '...', 'de-DE': '...' }) to plain strings. */
 function localizeConfig<T>(value: T, locale: string): T {
@@ -22,35 +22,53 @@ function localizeConfig<T>(value: T, locale: string): T {
   return value;
 }
 
-// Stub — replace with an API call when the layout service is available
+/**
+ * Hardcoded category tiles for the home-accessories-store homepage.
+ * Derived from analysis of the 20 products in home-accessories-selection —
+ * all are in the 'home-accents' CT category, spanning home decor, kitchen,
+ * bath, and bedroom product types.
+ */
+const HOME_ACCESSORIES_CATEGORIES = [
+  {
+    id: 'cat-decor',
+    type: 'Category' as const,
+    name: 'Home Decor',
+    slug: 'home-accents',
+    images: ['https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Braided_Rug-1.1.jpeg'],
+    children: [],
+  },
+  {
+    id: 'cat-kitchen',
+    type: 'Category' as const,
+    name: 'Kitchen & Dining',
+    slug: 'home-accents',
+    images: ['https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Ella_Square_Plate-1.1.jpeg'],
+    children: [],
+  },
+  {
+    id: 'cat-bath',
+    type: 'Category' as const,
+    name: 'Bath & Bedroom',
+    slug: 'home-accents',
+    images: ['https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Aria_Rug-1.1.jpeg'],
+    children: [],
+  },
+  {
+    id: 'cat-new',
+    type: 'Category' as const,
+    name: 'New Arrivals',
+    slug: 'home-accents',
+    images: ['https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Art_Deco_Coffee_Table-1.1.jpeg'],
+    children: [],
+  },
+];
+
 export async function getPageSections(
   _pageId: string,
   locale: string,
   currency: string,
   country: string
 ): Promise<LayoutSection[]> {
-  const catImages: Record<string, string> = {
-    furniture:
-      'https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Art_Deco_Coffee_Table-1.1.jpeg',
-    'home-decor':
-      'https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Braided_Rug-1.1.jpeg',
-    kitchen:
-      'https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Ella_Square_Plate-1.1.jpeg',
-    'new-arrivals':
-      'https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Aria_Rug-1.1.jpeg',
-    'ganz-neu':
-      'https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Aria_Rug-1.1.jpeg',
-  };
-
-  const categories = await getCategoryTree(locale);
-  const topCategories = categories
-    .filter((c) => !c.parent)
-    .slice(0, 4)
-    .map((cat) => ({
-      ...cat,
-      images: cat.images.length > 0 ? cat.images : [catImages[cat.slug] ?? ''],
-    }));
-
   const newArrivals = await searchProducts({
     limit: 4,
     sort: [{ field: 'createdAt', order: 'desc' }],
@@ -60,6 +78,9 @@ export async function getPageSections(
   });
 
   const featuredProducts = await searchProducts({ limit: 8, currency, country, locale });
+
+  // Use store-specific hardcoded category tiles when a store is configured
+  const categoryItems = CTP_STORE_KEY ? HOME_ACCESSORIES_CATEGORIES : [];
 
   const sections: LayoutSection[] = [
     {
@@ -75,63 +96,67 @@ export async function getPageSections(
                 tablet: true,
                 desktop: true,
                 backgroundImage: {
-                  src: 'https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Canela_Three_Seater_Sofa-1.1.jpeg',
+                  src: 'https://storage.googleapis.com/merchant-center-europe/sample-data/b2c-lifestyle/Aria_Rug-1.1.jpeg',
                 },
                 subTitle: {
-                  'en-US': 'Curated for Modern Living',
-                  'en-GB': 'Curated for Modern Living',
-                  'de-DE': 'Kuratiert für modernes Wohnen',
+                  'en-US': 'The Art of Home',
+                  'en-GB': 'The Art of Home',
+                  'de-DE': 'Die Kunst des Wohnens',
                 },
                 title: {
-                  'en-US': 'Design Your<br/><span class="font-semibold">Perfect Space</span>',
-                  'en-GB': 'Design Your<br/><span class="font-semibold">Perfect Space</span>',
+                  'en-US': 'Love Every<br/><span class="font-semibold">Corner of Home</span>',
+                  'en-GB': 'Love Every<br/><span class="font-semibold">Corner of Home</span>',
                   'de-DE':
-                    'Gestalten Sie Ihren<br/><span class="font-semibold">perfekten Raum</span>',
+                    'Liebe jeden<br/><span class="font-semibold">Winkel deines Zuhauses</span>',
                 },
                 text: {
                   'en-US':
-                    'Premium furniture and home goods, thoughtfully selected for the modern home.',
+                    'Curated home accessories and décor, crafted for the spaces you love most.',
                   'en-GB':
-                    'Premium furniture and home goods, thoughtfully selected for the modern home.',
+                    'Curated home accessories and décor, crafted for the spaces you love most.',
                   'de-DE':
-                    'Premium-Möbel und Wohnaccessoires, sorgfältig für das moderne Zuhause ausgewählt.',
+                    'Kuratierte Wohnaccessoires und Dekoration, gestaltet für die Räume, die Sie am meisten lieben.',
                 },
                 buttons: [
                   {
-                    href: '/category/furniture',
+                    href: '/search',
                     variant: 'primary',
                     label: {
-                      'en-US': 'Shop Furniture',
-                      'en-GB': 'Shop Furniture',
-                      'de-DE': 'Möbel kaufen',
+                      'en-US': 'Shop Collections',
+                      'en-GB': 'Shop Collections',
+                      'de-DE': 'Kollektionen entdecken',
                     },
                   },
                   {
-                    href: '/category/home-decor',
+                    href: '/search?sort=createdAt',
                     variant: 'outline',
                     label: {
-                      'en-US': 'Home Decor',
-                      'en-GB': 'Home Décor',
-                      'de-DE': 'Wohndekoration',
+                      'en-US': 'New Arrivals',
+                      'en-GB': 'New Arrivals',
+                      'de-DE': 'Neuheiten',
                     },
                   },
                 ],
               },
             },
-            {
-              layoutItemType: 'content/section',
-              configuration: {
-                mobile: true,
-                tablet: true,
-                desktop: true,
-                title: {
-                  'en-US': 'Shop by Category',
-                  'en-GB': 'Shop by Category',
-                  'de-DE': 'Nach Kategorie einkaufen',
-                },
-                items: topCategories,
-              },
-            },
+            ...(categoryItems.length > 0
+              ? [
+                  {
+                    layoutItemType: 'content/section',
+                    configuration: {
+                      mobile: true,
+                      tablet: true,
+                      desktop: true,
+                      title: {
+                        'en-US': 'Shop by Category',
+                        'en-GB': 'Shop by Category',
+                        'de-DE': 'Nach Kategorie einkaufen',
+                      },
+                      items: categoryItems,
+                    },
+                  },
+                ]
+              : []),
             {
               layoutItemType: 'content/section',
               configuration: {
@@ -152,36 +177,6 @@ export async function getPageSections(
                   target: '/search?sort=createdAt',
                 },
                 items: newArrivals.products,
-              },
-            },
-
-            {
-              layoutItemType: 'content/message',
-              configuration: {
-                mobile: true,
-                tablet: true,
-                desktop: true,
-                title: {
-                  'en-US': 'Subscribe & Save',
-                  'en-GB': 'Subscribe & Save',
-                  'de-DE': 'Abonnieren & Sparen',
-                },
-                description: {
-                  'en-US':
-                    'Set up recurring deliveries on select products and save up to 20%. Pause or cancel anytime.',
-                  'en-GB':
-                    'Set up recurring deliveries on select products and save up to 20%. Pause or cancel anytime.',
-                  'de-DE':
-                    'Richten Sie wiederkehrende Lieferungen für ausgewählte Produkte ein und sparen Sie bis zu 20%. Jederzeit pausierbar oder kündbar.',
-                },
-                cta: {
-                  label: {
-                    'en-US': 'Shop Subscribe & Save',
-                    'en-GB': 'Shop Subscribe & Save',
-                    'de-DE': 'Abonnieren & Sparen',
-                  },
-                  target: '/search?sort=createdAt',
-                },
               },
             },
             {

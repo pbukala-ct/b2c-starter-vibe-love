@@ -37,7 +37,7 @@
     "shopTheLook": "Shop the Look"
   },
   "header": {
-    "topBar": "Free shipping on orders over $500 · Premium home goods & furniture",
+    "topBar": "Curated home accessories — crafted with love · Free shipping over $500",
     "cartItems": "Cart ({count} items)"
   },
   "footer": {
@@ -60,6 +60,8 @@
     "specifications": "Specifications",
     "addToCart": "Add to Cart",
     "outOfStock": "Out of stock",
+    "inStock": "In stock",
+    "lowStock": "Low stock — only {count} left",
     "currentlyUnavailable": "Currently unavailable",
     "adding": "...",
     "color": "Color",
@@ -348,7 +350,7 @@
   },
   "auth": {
     "welcomeBack": "Welcome Back",
-    "signInToAccount": "Sign in to your Vibe Home account",
+    "signInToAccount": "Sign in to your Vibe Love account",
     "emailAddress": "Email address",
     "emailLabel": "Email address",
     "emailPlaceholder": "you@example.com",
@@ -362,7 +364,7 @@
     "useTestCredentials": "Use test credentials",
     "invalidCredentials": "Invalid email or password",
     "createAccount": "Create Account",
-    "joinVibe": "Join Vibe Home for a better shopping experience",
+    "joinVibe": "Join Vibe Love for a better shopping experience",
     "firstName": "First name",
     "firstNamePlaceholder": "Jane",
     "lastName": "Last name",

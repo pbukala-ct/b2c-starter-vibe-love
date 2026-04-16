@@ -163,6 +163,7 @@ export default async function ProductPage({ params }: PageProps) {
 
   const currentVariant = serializedVariants.find((v) => v.sku === sku);
   const isSoldOut = !(currentVariant?.isAvailable ?? false);
+  const availableQuantity = variant?.availability?.availableQuantity;
   const currentAttrs = currentVariant?.attrs ?? {};
   const urlPrefix = `/${slug}/p/`;
 
@@ -276,6 +277,26 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
 
           <VariantSelector groups={variantGroups} />
+
+          {/* Inventory status */}
+          {isSoldOut ? (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="h-2 w-2 rounded-full bg-red-400" />
+              <span className="text-charcoal-light">{t('outOfStock')}</span>
+            </div>
+          ) : availableQuantity !== undefined && availableQuantity <= 9 ? (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="h-2 w-2 rounded-full bg-amber-400" />
+              <span className="font-medium text-amber-700">
+                {t('lowStock', { count: availableQuantity })}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="bg-sage h-2 w-2 rounded-full" />
+              <span className="text-sage font-medium">{t('inStock')}</span>
+            </div>
+          )}
 
           {regularPrice && (
             <PDPActions

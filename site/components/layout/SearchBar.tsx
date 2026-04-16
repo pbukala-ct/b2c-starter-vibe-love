@@ -23,7 +23,7 @@ export default function SearchBar() {
   return (
     <form onSubmit={handleSubmit} className="relative">
       <div
-        className={`flex items-center rounded-sm border transition-all duration-150 ${focused ? 'border-charcoal' : 'border-border'} bg-white`}
+        className={`flex items-center rounded-sm border transition-all duration-150 ${focused ? 'border-charcoal' : 'border-border'} bg-cream`}
       >
         <input
           ref={inputRef}

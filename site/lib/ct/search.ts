@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
-import { apiRoot } from './client';
+import { apiRoot, CTP_STORE_KEY, CTP_DISTRIBUTION_CHANNEL_ID, CTP_SUPPLY_CHANNEL_ID } from './client';
 import { DEFAULT_LOCALE } from '@/lib/utils';
+import { getSelectionProductIds } from './product-selection';
 import type {
   ProductPagedSearchResponse,
   ProductSearchRequest,
@@ -53,7 +54,7 @@ const SORT_FIELD_MAP: Record<string, string> = {
 export function parseSortParam(sort: string): SortValues {
   return sort.split(',').map((s) => {
     const [field, order] = s.split(':');
-    return { field: SORT_FIELD_MAP[field] ?? field, order: order as 'asc' | 'desc' };
+    return { field: SORT_FIELD_MAP[field] ?? field, order: (order ?? 'desc') as 'asc' | 'desc' };
   });
 }
 
@@ -106,6 +107,31 @@ function buildFacetFilterQueryParts(
   });
 }
 
+/**
+ * Executes a Product Search request.
+ * When NEXT_PUBLIC_CTP_STORE_KEY is set, injects product IDs from the store's
+ * Product Selection as a filter — since the CT in-store product search and
+ * product projections endpoints are not available for this project, this is the
+ * mechanism that scopes the catalogue to the store's selection.
+ */
+async function executeProductSearch(body: ProductSearchRequest): Promise<ProductPagedSearchResponse> {
+  try {
+    const { body: result } = await apiRoot.products().search().post({ body }).execute();
+    return result;
+  } catch (err: unknown) {
+    const msg =
+      (err as { body?: { message?: string } }).body?.message ??
+      (err as { message?: string }).message ??
+      '';
+    if (msg.includes('query_shard_exception')) {
+      const fallback = { ...body, sort: [{ field: 'createdAt', order: 'desc' as const }] };
+      const { body: result } = await apiRoot.products().search().post({ body: fallback }).execute();
+      return result;
+    }
+    throw err;
+  }
+}
+
 export async function searchProducts(params: SearchParams): Promise<SearchResult> {
   const {
     query,
@@ -123,42 +149,26 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
 
   const queryParts: unknown[] = [];
 
+  // When a store key is configured, fetch the product selection IDs and inject
+  // them as an OR filter. The CT in-store product endpoints are not available for
+  // this project, so explicit ID filtering is the mechanism for catalogue scoping.
+  if (CTP_STORE_KEY) {
+    const selectionIds = await getSelectionProductIds();
+    if (selectionIds && selectionIds.length > 0) {
+      queryParts.push({
+        or: selectionIds.map((id) => ({ exact: { field: 'id', value: id } })),
+      });
+    }
+  }
+
   if (query) {
     const wildcardValue = `*${query}*`;
     queryParts.push({
       or: [
-        {
-          wildcard: {
-            field: 'name',
-            language: locale,
-            value: wildcardValue,
-            caseInsensitive: true,
-          },
-        },
-        {
-          wildcard: {
-            field: 'description',
-            language: locale,
-            value: wildcardValue,
-            caseInsensitive: true,
-          },
-        },
-        {
-          wildcard: {
-            field: 'slug',
-            language: locale,
-            value: wildcardValue,
-            caseInsensitive: true,
-          },
-        },
-        {
-          wildcard: {
-            field: 'searchKeywords',
-            language: locale,
-            value: wildcardValue,
-            caseInsensitive: true,
-          },
-        },
+        { wildcard: { field: 'name', language: locale, value: wildcardValue, caseInsensitive: true } },
+        { wildcard: { field: 'description', language: locale, value: wildcardValue, caseInsensitive: true } },
+        { wildcard: { field: 'slug', language: locale, value: wildcardValue, caseInsensitive: true } },
+        { wildcard: { field: 'searchKeywords', language: locale, value: wildcardValue, caseInsensitive: true } },
         { exact: { field: 'variants.sku', value: query, caseInsensitive: true } },
       ],
     });
@@ -166,10 +176,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
 
   if (categoryId) {
     queryParts.push({
-      exact: {
-        field: categorySubTree ? 'categoriesSubTree' : 'categories',
-        value: categoryId,
-      },
+      exact: { field: categorySubTree ? 'categoriesSubTree' : 'categories', value: categoryId },
     });
   }
 
@@ -178,9 +185,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
     ? baseFacets
     : [
         ...baseFacets.filter((f) => !FACET_BLOCKLIST.includes(f.attributeId ?? '')),
-        ...getExtraFacets(
-          await getTranslations({ locale: locale.toLowerCase(), namespace: 'search' })
-        ),
+        ...getExtraFacets(await getTranslations({ locale: locale.toLowerCase(), namespace: 'search' })),
       ];
 
   queryParts.push(...buildFacetFilterQueryParts(facetFilters, resolvedFacetDefinitions, locale));
@@ -208,7 +213,15 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
     productProjectionParameters: {
       priceCurrency: currency,
       priceCountry: country,
-      expand: ['masterVariant.price.discounted.discount'],
+      // Scope prices to the store's distribution channel
+      ...(CTP_DISTRIBUTION_CHANNEL_ID ? { priceChannel: CTP_DISTRIBUTION_CHANNEL_ID } : {}),
+      // storeProjection scopes inventory to the store's supply channel
+      ...(CTP_STORE_KEY ? { storeProjection: CTP_STORE_KEY } : {}),
+      expand: [
+        'masterVariant.price.discounted.discount',
+        // Expand per-channel inventory so the supply channel availability is available
+        ...(CTP_SUPPLY_CHANNEL_ID ? ['masterVariant.availability.channels'] : []),
+      ],
     },
     sort: sortParam,
     ...(searchQuery ? { query: searchQuery as ProductSearchRequest['query'] } : {}),
@@ -233,25 +246,13 @@ export async function searchProducts(params: SearchParams): Promise<SearchResult
     facetDefinitions: resolvedFacetDefinitions,
   });
 
-  // If the sort field has no data in the index (e.g. categoryOrderHints not set in Merchant Center),
-  // CT returns a query_shard_exception. Retry without the custom sort so the page still loads.
   try {
-    const { body: result } = await apiRoot.products().search().post({ body: body }).execute();
-    return toSearchResult(result);
+    return toSearchResult(await executeProductSearch(body));
   } catch (err: unknown) {
     const msg =
       (err as { body?: { message?: string } }).body?.message ??
       (err as { message?: string }).message ??
       '';
-    if (msg.includes('query_shard_exception')) {
-      const fallbackBody = { ...body, sort: [{ field: 'createdAt', order: 'desc' as const }] };
-      const { body: result } = await apiRoot
-        .products()
-        .search()
-        .post({ body: fallbackBody })
-        .execute();
-      return toSearchResult(result);
-    }
     throw new Error(`Product search failed: ${msg}`, { cause: err });
   }
 }
@@ -274,9 +275,14 @@ export async function getProductBySku(
             priceCurrency: currency,
             priceCountry: country,
             localeProjection: [locale],
+            // Scope price to store's distribution channel
+            ...(CTP_DISTRIBUTION_CHANNEL_ID ? { priceChannel: CTP_DISTRIBUTION_CHANNEL_ID } : {}),
+            // Scope inventory to store's supply channel
+            ...(CTP_STORE_KEY ? { storeProjection: CTP_STORE_KEY } : {}),
             expand: [
               'variants.price.discounted.discount',
               'masterVariant.price.discounted.discount',
+              ...(CTP_SUPPLY_CHANNEL_ID ? ['masterVariant.availability.channels', 'variants.availability.channels'] : []),
             ],
           },
         },

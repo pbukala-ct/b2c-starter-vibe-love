@@ -176,3 +176,47 @@ Using the browser, run through the following tests.  Fix any found errors and re
   h. Click "Place order on behalf of customer"
   i. Verify the modal shows a message directing the agent to add an address; confirm button is disabled
 
+19. Vibe Love brand identity
+  a. Load the homepage
+  b. Verify the header shows "Vibe Love" as the brand name (not "Vibe Home" or any other name)
+  c. Verify the page title contains "Vibe Love"
+  d. Verify the footer shows "Vibe Love" in both the logo area and the copyright line
+  e. Verify the homepage hero headline contains "Love Every Corner of Home" or similar home-accessories copy
+  f. Verify the hero does NOT reference "furniture" as a product category
+  g. Verify the primary CTA button links to /search (not /category/furniture)
+  h. Verify the accent colour throughout the site is a dusty rose / warm pink tone (not orange/terracotta)
+
+20. CT store scoping — product catalogue
+  a. Browse the product listing page (PLP)
+  b. Verify products shown are from the home-accessories-store Product Selection (home accessories, not furniture)
+  c. Attempt to navigate directly to the PDP URL of a product known to be outside the store's Product Selection
+  d. Verify a 404 response is returned for out-of-selection products
+
+21. CT store scoping — end-to-end checkout
+  a. Add any product from the PLP to the cart
+  b. Complete checkout (guest or registered user)
+  c. Verify the order confirmation page is shown
+  d. Verify the order appears in CT Merchant Center with storeRef.key = home-accessories-store
+
+22. Vibe Love visual identity — heading font and colour palette
+  a. Load the homepage
+  b. Verify the hero headline and "Shop by Category" section heading render in a serif font (Playfair Display)
+  c. Verify the top bar background is dusty rose (not dark/charcoal)
+  d. Verify the top bar text reads "Curated home accessories — crafted with love" (or locale equivalent)
+  e. Verify the header navigation bar background is warm cream, not white
+  f. Verify the footer background is warm brown/espresso, not cold black
+  g. Verify h1/h2/h3 headings on the PDP and category page also use the serif font
+
+23. Vibe Love visual identity — category filtering
+  a. With NEXT_PUBLIC_CTP_STORE_KEY set, open the MegaMenu
+  b. Verify only categories that contain products in the store's product selection are listed
+  c. Verify no categories appear that have zero store products
+  d. Check the homepage "Shop by Category" section — verify the same filtering applies
+
+24. PDP inventory status
+  a. Navigate to any product detail page
+  b. Verify an inventory status indicator is shown between the variant selector and the add-to-cart button
+  c. For an in-stock product with no low quantity: verify a sage/green "In stock" indicator appears
+  d. For a product with low stock (1–9 units): verify an amber "Low stock — only N left" message appears with the correct count
+  e. For an out-of-stock product: verify a red/muted "Out of stock" indicator appears and the add-to-cart button is disabled
+
