@@ -115,13 +115,17 @@ async function main() {
   console.log('  These are the storefront (site/.env) credentials — NOT the admin tools credentials.\n');
 
   const envPrompts = [
-    { key: 'CTP_PROJECT_KEY',    label: 'CTP_PROJECT_KEY' },
-    { key: 'CTP_CLIENT_ID',      label: 'CTP_CLIENT_ID' },
-    { key: 'CTP_CLIENT_SECRET',  label: 'CTP_CLIENT_SECRET' },
-    { key: 'CTP_AUTH_URL',       label: 'CTP_AUTH_URL (e.g. https://auth.europe-west1.gcp.commercetools.com)' },
-    { key: 'CTP_API_URL',        label: 'CTP_API_URL  (e.g. https://api.europe-west1.gcp.commercetools.com)' },
-    { key: 'CTP_SCOPES',         label: 'CTP_SCOPES   (e.g. manage_project:my-project)' },
-    { key: 'SESSION_SECRET',     label: 'SESSION_SECRET (long random string for JWT signing)' },
+    { key: 'CTP_PROJECT_KEY',                        label: 'CTP_PROJECT_KEY' },
+    { key: 'CTP_CLIENT_ID',                          label: 'CTP_CLIENT_ID' },
+    { key: 'CTP_CLIENT_SECRET',                      label: 'CTP_CLIENT_SECRET' },
+    { key: 'CTP_AUTH_URL',                           label: 'CTP_AUTH_URL (e.g. https://auth.europe-west1.gcp.commercetools.com)' },
+    { key: 'CTP_API_URL',                            label: 'CTP_API_URL  (e.g. https://api.europe-west1.gcp.commercetools.com)' },
+    { key: 'CTP_SCOPES',                             label: 'CTP_SCOPES   (e.g. manage_project:my-project)' },
+    { key: 'SESSION_SECRET',                         label: 'SESSION_SECRET (long random string for JWT signing)' },
+    { key: 'AGENT_SESSION_SECRET',                   label: 'AGENT_SESSION_SECRET (separate secret for agent JWT sessions)' },
+    { key: 'NEXT_PUBLIC_CTP_STORE_KEY',              label: 'NEXT_PUBLIC_CTP_STORE_KEY (CT store key, e.g. home-accessories-store)' },
+    { key: 'NEXT_PUBLIC_CTP_DISTRIBUTION_CHANNEL_ID', label: 'NEXT_PUBLIC_CTP_DISTRIBUTION_CHANNEL_ID (price channel ID)' },
+    { key: 'NEXT_PUBLIC_CTP_SUPPLY_CHANNEL_ID',      label: 'NEXT_PUBLIC_CTP_SUPPLY_CHANNEL_ID (inventory channel ID)' },
   ];
 
   const env = {};
